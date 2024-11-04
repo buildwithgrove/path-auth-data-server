@@ -3,8 +3,8 @@ module github.com/buildwithgrove/path-auth-grpc-server
 go 1.23.1
 
 require (
-	// TODO_IMPROVE - update to tag version once PATH Envoy gRPC branch is merged
-	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241103145230-011b9a4dbbd6
+	// TODO_IMPROVE - update to tag version once PATH 'envoy-grpc-auth-service' branch is merged
+	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241104155130-b922649e7a84
 	github.com/fsnotify/fsnotify v1.7.0
 	golang.org/x/net v0.28.0
 	google.golang.org/grpc v1.67.1
@@ -14,7 +14,10 @@ require (
 
 require (
 	github.com/jackc/pgx/v5 v5.7.1
+	github.com/jackc/pgxlisten v0.0.0-20241005155529-9d952acd6a6c
+	github.com/joho/godotenv v1.5.1
 	github.com/ory/dockertest/v3 v3.11.0
+	github.com/pokt-network/poktroll v0.0.9
 	github.com/stretchr/testify v1.9.0
 )
 
@@ -26,17 +29,18 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/containerd/continuity v0.4.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/docker/cli v26.1.4+incompatible // indirect
+	github.com/docker/cli v27.0.3+incompatible // indirect
 	github.com/docker/docker v27.1.1+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
@@ -44,7 +48,7 @@ require (
 	github.com/opencontainers/runc v1.1.13 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/rogpeppe/go-internal v1.12.0 // indirect
+	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect

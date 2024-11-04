@@ -41,4 +41,11 @@ VALUES ('endpoint_1', 'account_1'),
     ('endpoint_3', 'account_3'),
     ('endpoint_4', 'account_1'),
     ('endpoint_5', 'account_2');
-    
+
+-- Insert into the 'portal_application_settings' table
+INSERT INTO portal_application_settings (application_id, secret_key_required)
+VALUES ('endpoint_1', FALSE),
+    ('endpoint_2', TRUE),
+    ('endpoint_3', TRUE),
+    ('endpoint_4', FALSE),
+    ('endpoint_5', TRUE);

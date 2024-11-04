@@ -28,6 +28,7 @@ type (
 		RateLimiting rateLimitingYAML `yaml:"rate_limiting"`
 	}
 	authYAML struct {
+		RequireAuth     bool                `yaml:"require_auth"`
 		AuthorizedUsers map[string]struct{} `yaml:"authorized_users"`
 	}
 	userAccountYAML struct {
@@ -67,6 +68,7 @@ func (e *gatewayEndpointYAML) convertToProto() *proto.GatewayEndpoint {
 
 func (a *authYAML) convertToProto() *proto.Auth {
 	authProto := &proto.Auth{
+		RequireAuth:     a.RequireAuth,
 		AuthorizedUsers: make(map[string]*proto.Empty),
 	}
 	for user := range a.AuthorizedUsers {
@@ -89,7 +91,7 @@ type YAMLDataSource struct {
 func NewYAMLDataSource(filename string) (*YAMLDataSource, error) {
 	y := &YAMLDataSource{
 		filename:  filename,
-		updatesCh: make(chan *proto.Update, 100),
+		updatesCh: make(chan *proto.Update, 100_000),
 	}
 
 	initialData, err := y.loadGatewayEndpointsFromYAML()

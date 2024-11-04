@@ -7,8 +7,12 @@ import (
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgxlisten"
+	"github.com/pokt-network/poktroll/pkg/polylog"
 
+	"github.com/buildwithgrove/path-auth-grpc-server/postgres/sqlc"
 	"github.com/buildwithgrove/path-auth-grpc-server/server"
 )
 
@@ -17,11 +21,15 @@ var _ server.DataSource = &postgresDataSource{} // postgresDriver implements the
 type (
 	// The postgresDataSource struct satisfies the server.DataSource interface.
 	postgresDataSource struct {
-		driver *postgresDriver
+		driver         *postgresDriver
+		listener       *pgxlisten.Listener
+		notificationCh chan *Notification
+		updatesCh      chan *proto.Update
+		logger         polylog.Logger
 	}
 	// The postgresDriver struct wraps the sqlc generated queries and the pgxpool.Pool.
 	postgresDriver struct {
-		*Queries
+		*sqlc.Queries
 		DB *pgxpool.Pool
 	}
 )
@@ -40,7 +48,7 @@ NewPostgresDataSource
 - Creates an instance of postgresDriver using the provided pgx connection and sqlc queries.
 - Returns the created postgresDataSource instance.
 */
-func NewPostgresDataSource(connectionString string) (*postgresDataSource, func(), error) {
+func NewPostgresDataSource(ctx context.Context, connectionString string, logger polylog.Logger) (*postgresDataSource, func(), error) {
 
 	if !isValidPostgresConnectionString(connectionString) {
 		return nil, nil, fmt.Errorf("invalid postgres connection string")
@@ -51,25 +59,31 @@ func NewPostgresDataSource(connectionString string) (*postgresDataSource, func()
 		return nil, nil, err
 	}
 
-	// Enforce that connections are read-only, as the PATH auth gRPC server does not make any modifications to the database.
-	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		_, err := conn.Exec(ctx, "SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
-		return err
-	}
-
-	pool, err := pgxpool.NewWithConfig(context.Background(), config)
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, nil, fmt.Errorf("pgxpool.NewWithConfig: %v", err)
 	}
 
-	cleanup := pool.Close
+	cleanup := func() {
+		pool.Close()
+	}
 
 	driver := &postgresDriver{
-		Queries: New(pool),
+		Queries: sqlc.New(pool),
 		DB:      pool,
 	}
 
-	return &postgresDataSource{driver: driver}, cleanup, nil
+	postgresDataSource := &postgresDataSource{
+		driver:         driver,
+		listener:       newPGXPoolListener(pool, logger),
+		notificationCh: make(chan *Notification),
+		updatesCh:      make(chan *proto.Update, 100_000),
+		logger:         logger,
+	}
+
+	go postgresDataSource.listenForUpdates(ctx)
+
+	return postgresDataSource, cleanup, nil
 }
 
 // isValidPostgresConnectionString checks if a string is a valid PostgreSQL connection string.
@@ -92,39 +106,150 @@ func (d *postgresDataSource) GetInitialData() (*proto.InitialDataResponse, error
 
 // TODO: Implement this
 func (d *postgresDataSource) SubscribeUpdates() (<-chan *proto.Update, error) {
-	return nil, nil
+	return d.updatesCh, nil
+}
+
+/* ---------- Data Update Funcs ---------- */
+
+const portalApplicationChangesChannel = "portal_application_changes"
+
+type Notification struct {
+	Payload string
+}
+
+type PGXNotificationHandler struct {
+	outCh chan *Notification
+}
+
+func (h *PGXNotificationHandler) HandleNotification(ctx context.Context, n *pgconn.Notification, conn *pgx.Conn) error {
+	h.outCh <- &Notification{Payload: n.Payload}
+	return nil
+}
+
+// newPGXPoolListener creates a new pgxlisten.Listener with a connection from the provided pool and output channel.
+func newPGXPoolListener(pool *pgxpool.Pool, logger polylog.Logger) *pgxlisten.Listener {
+	connectFunc := func(ctx context.Context) (*pgx.Conn, error) {
+		conn, err := pool.Acquire(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to acquire connection: %v", err)
+		}
+		return conn.Conn(), nil
+	}
+
+	listener := &pgxlisten.Listener{
+		Connect: connectFunc,
+		LogError: func(ctx context.Context, err error) {
+			logger.Error().Err(err).Msg("listener error")
+		},
+	}
+
+	return listener
+}
+
+func (d *postgresDataSource) listenForUpdates(ctx context.Context) {
+	handler := &PGXNotificationHandler{outCh: d.notificationCh}
+	d.listener.Handle(portalApplicationChangesChannel, handler)
+
+	go func() {
+		if err := d.listener.Listen(ctx); err != nil {
+			d.logger.Error().Err(err).Msg("listener error")
+		}
+	}()
+
+	go func() {
+		for range d.notificationCh {
+			// Process the notification
+			if err := d.processPortalApplicationChanges(ctx); err != nil {
+				d.logger.Error().Err(err).Msg("failed to process portal application changes")
+			}
+		}
+	}()
+}
+
+func (d *postgresDataSource) processPortalApplicationChanges(ctx context.Context) error {
+
+	changes, err := d.driver.GetPortalApplicationChanges(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(changes) == 0 {
+		return nil
+	}
+
+	var changeIDs []int32
+
+	for _, change := range changes {
+
+		if change.IsDelete {
+			update := &proto.Update{
+				EndpointId: change.PortalAppID,
+				Delete:     true,
+			}
+			d.updatesCh <- update
+		} else {
+			portalAppRow, err := d.driver.SelectPortalApplication(ctx, change.PortalAppID)
+			if err != nil {
+				d.logger.Error().Err(err).Msg("failed to get portal application")
+				continue
+			}
+
+			gatewayEndpoint := convertSelectPortalApplicationRow(portalAppRow).convertToProto()
+
+			// Send the update
+			update := &proto.Update{
+				EndpointId:      gatewayEndpoint.EndpointId,
+				GatewayEndpoint: gatewayEndpoint,
+				Delete:          false,
+			}
+			d.updatesCh <- update
+		}
+
+		changeIDs = append(changeIDs, change.ID)
+	}
+
+	// Use the autogenerated method to delete the processed changes
+	err = d.driver.DeletePortalApplicationChanges(ctx, changeIDs)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 /* ---------- Struct Conversion Funcs ---------- */
 
 type PortalApplicationRow struct {
-	EndpointID      string   `json:"endpoint_id"`
-	AccountID       string   `json:"account_id"`
-	Plan            string   `json:"plan"`
-	CapacityLimit   int32    `json:"capacity_limit"`
-	ThroughputLimit int32    `json:"throughput_limit"`
-	AuthorizedUsers []string `json:"authorized_users"`
+	EndpointID        string   `json:"endpoint_id"`
+	AccountID         string   `json:"account_id"`
+	SecretKeyRequired bool     `json:"secret_key_required"`
+	Plan              string   `json:"plan"`
+	CapacityLimit     int32    `json:"capacity_limit"`
+	ThroughputLimit   int32    `json:"throughput_limit"`
+	AuthorizedUsers   []string `json:"authorized_users"`
 }
 
-func (r *SelectPortalApplicationsRow) toPortalApplicationRow() *PortalApplicationRow {
+func convertSelectPortalApplicationsRow(r sqlc.SelectPortalApplicationsRow) *PortalApplicationRow {
 	return &PortalApplicationRow{
-		EndpointID:      r.EndpointID,
-		AccountID:       r.AccountID.String,
-		Plan:            r.Plan.String,
-		CapacityLimit:   r.CapacityLimit.Int32,
-		ThroughputLimit: r.ThroughputLimit.Int32,
-		AuthorizedUsers: r.AuthorizedUsers,
+		EndpointID:        r.EndpointID,
+		AccountID:         r.AccountID.String,
+		SecretKeyRequired: r.SecretKeyRequired.Bool,
+		Plan:              r.Plan.String,
+		CapacityLimit:     r.CapacityLimit.Int32,
+		ThroughputLimit:   r.ThroughputLimit.Int32,
+		AuthorizedUsers:   r.AuthorizedUsers,
 	}
 }
 
-func (r *SelectPortalApplicationRow) toPortalApplicationRow() *PortalApplicationRow {
+func convertSelectPortalApplicationRow(r sqlc.SelectPortalApplicationRow) *PortalApplicationRow {
 	return &PortalApplicationRow{
-		EndpointID:      r.EndpointID,
-		AccountID:       r.AccountID.String,
-		Plan:            r.Plan.String,
-		CapacityLimit:   r.CapacityLimit.Int32,
-		ThroughputLimit: r.ThroughputLimit.Int32,
-		AuthorizedUsers: r.AuthorizedUsers,
+		EndpointID:        r.EndpointID,
+		AccountID:         r.AccountID.String,
+		SecretKeyRequired: r.SecretKeyRequired.Bool,
+		Plan:              r.Plan.String,
+		CapacityLimit:     r.CapacityLimit.Int32,
+		ThroughputLimit:   r.ThroughputLimit.Int32,
+		AuthorizedUsers:   r.AuthorizedUsers,
 	}
 }
 
@@ -138,10 +263,12 @@ func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
 		RateLimiting: &proto.RateLimiting{
 			ThroughputLimit: int32(r.ThroughputLimit),
 			CapacityLimit:   int32(r.CapacityLimit),
-			// TODO_IMPROVE(@commoddity): Add support for different capacity limit periods
+			// The current Portal DB only supports monthly capacity limit periods
 			CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 		},
 		Auth: &proto.Auth{
+			// TODO_IMPROVE(@commoddity): Add a dedicated field for requiring auth for backwards compatibility
+			RequireAuth:     r.SecretKeyRequired,
 			AuthorizedUsers: convertToProtoAuthorizedUsers(r.AuthorizedUsers),
 		},
 	}
@@ -155,10 +282,10 @@ func convertToProtoAuthorizedUsers(users []string) map[string]*proto.Empty {
 	return authUsers
 }
 
-func convertPortalApplicationsRows(rows []SelectPortalApplicationsRow) *proto.InitialDataResponse {
+func convertPortalApplicationsRows(rows []sqlc.SelectPortalApplicationsRow) *proto.InitialDataResponse {
 	endpointsProto := make(map[string]*proto.GatewayEndpoint, len(rows))
 	for _, row := range rows {
-		portalAppRow := row.toPortalApplicationRow()
+		portalAppRow := convertSelectPortalApplicationsRow(row)
 		endpointsProto[portalAppRow.EndpointID] = portalAppRow.convertToProto()
 	}
 

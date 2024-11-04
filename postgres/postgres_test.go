@@ -1,12 +1,15 @@
 package postgres
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
 	"github.com/stretchr/testify/require"
 
+	"github.com/buildwithgrove/path-auth-grpc-server/postgres/sqlc"
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 )
 
@@ -46,6 +49,7 @@ func Test_Integration_GetInitialData(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
+							RequireAuth: false,
 							AuthorizedUsers: map[string]*proto.Empty{
 								"provider_user_1": {},
 							},
@@ -63,6 +67,7 @@ func Test_Integration_GetInitialData(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
+							RequireAuth: true,
 							AuthorizedUsers: map[string]*proto.Empty{
 								"provider_user_2": {},
 							},
@@ -80,6 +85,7 @@ func Test_Integration_GetInitialData(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
+							RequireAuth: true,
 							AuthorizedUsers: map[string]*proto.Empty{
 								"provider_user_3": {},
 							},
@@ -97,6 +103,7 @@ func Test_Integration_GetInitialData(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
+							RequireAuth: false,
 							AuthorizedUsers: map[string]*proto.Empty{
 								"provider_user_1": {},
 							},
@@ -114,6 +121,7 @@ func Test_Integration_GetInitialData(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
+							RequireAuth: true,
 							AuthorizedUsers: map[string]*proto.Empty{
 								"provider_user_2": {},
 							},
@@ -132,7 +140,7 @@ func Test_Integration_GetInitialData(t *testing.T) {
 
 			c := require.New(t)
 
-			dataSource, cleanup, err := NewPostgresDataSource(connectionString)
+			dataSource, cleanup, err := NewPostgresDataSource(context.Background(), connectionString, polyzero.NewLogger())
 			c.NoError(err)
 			defer cleanup()
 
@@ -146,13 +154,13 @@ func Test_Integration_GetInitialData(t *testing.T) {
 func Test_convertPortalApplicationsRows(t *testing.T) {
 	tests := []struct {
 		name     string
-		rows     []SelectPortalApplicationsRow
+		rows     []sqlc.SelectPortalApplicationsRow
 		expected *proto.InitialDataResponse
 		wantErr  bool
 	}{
 		{
 			name: "should convert rows to initial data response successfully",
-			rows: []SelectPortalApplicationsRow{
+			rows: []sqlc.SelectPortalApplicationsRow{
 				{
 					EndpointID: "endpoint_1",
 					AccountID:  pgtype.Text{String: "account_1", Valid: true},
