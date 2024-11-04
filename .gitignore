@@ -1,2 +1,3 @@
 /app
-*.yaml
+gateway-endpoints.yaml
+.env

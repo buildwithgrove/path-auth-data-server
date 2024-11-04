@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 	"golang.org/x/net/http2"
@@ -12,25 +13,34 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/buildwithgrove/path-auth-grpc-server/postgres"
 	"github.com/buildwithgrove/path-auth-grpc-server/server"
-	"github.com/buildwithgrove/path-auth-grpc-server/yaml"
 )
 
 const port = 50051
-const endpointsYAMLPath = "gateway-endpoints.yaml"
+const postgresConnectionStringEnv = "POSTGRES_CONNECTION_STRING"
 
 func main() {
+
+	// Load the Postgres connection string from the environment variable
+	// eg. postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+	postgresConnectionString := os.Getenv(postgresConnectionStringEnv)
+	if postgresConnectionString == "" {
+		panic(fmt.Sprintf("%s is not set", postgresConnectionStringEnv))
+	}
+
+	// Server loads GatewayEndpoints from a Postgres database as the data source
+	// To use a different data source, implement the DataSource interface
+	// eg. yaml.NewYAMLDataSource()
+	dataSource, cleanup, err := postgres.NewPostgresDataSource(postgresConnectionString)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create data source: %v", err))
+	}
+	defer cleanup()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		panic(fmt.Sprintf("failed to listen: %v", err))
-	}
-
-	// Server loads GatewayEndpoints from a YAML file as the data source
-	// To use a different data source, implement the DataSource interface
-	// eg. postgres.NewPostgresDataSource()
-	dataSource, err := yaml.NewYAMLDataSource(endpointsYAMLPath)
-	if err != nil {
-		log.Fatalf("Failed to create data source: %v", err)
 	}
 
 	server, err := server.NewServer(dataSource)
