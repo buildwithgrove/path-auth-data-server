@@ -99,7 +99,7 @@ endpoints:
 
 If the `POSTGRES_CONNECTION_STRING` environment variable is set, PADS will connect to the specified Postgres database.
 
-**TODO - add further details on Postgres implementation**
+The connected Postgres database must contain the tables and schema defined in the [`postgres/sqlc/schema.sql`](postgres/sqlc/schema.sql) file.
 
 ## 3. gRPC Proto File
 
