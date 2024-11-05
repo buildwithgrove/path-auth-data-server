@@ -9,7 +9,7 @@ import (
 	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
 	"github.com/stretchr/testify/require"
 
-	"github.com/buildwithgrove/path-auth-grpc-server/postgres/sqlc"
+	"github.com/buildwithgrove/path-auth-dataserver/postgres/sqlc"
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 )
 

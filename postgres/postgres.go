@@ -12,8 +12,8 @@ import (
 	"github.com/jackc/pgxlisten"
 	"github.com/pokt-network/poktroll/pkg/polylog"
 
-	"github.com/buildwithgrove/path-auth-grpc-server/postgres/sqlc"
-	"github.com/buildwithgrove/path-auth-grpc-server/server"
+	"github.com/buildwithgrove/path-auth-dataserver/postgres/sqlc"
+	"github.com/buildwithgrove/path-auth-dataserver/server"
 )
 
 var _ server.DataSource = &postgresDataSource{} // postgresDriver implements the server.DataSource interface.

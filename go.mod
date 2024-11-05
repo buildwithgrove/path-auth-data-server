@@ -1,10 +1,10 @@
-module github.com/buildwithgrove/path-auth-grpc-server
+module github.com/buildwithgrove/path-auth-dataserver
 
 go 1.23.1
 
 require (
 	// TODO_IMPROVE - update to tag version once PATH 'envoy-grpc-auth-service' branch is merged
-	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241104155130-b922649e7a84
+	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241105172329-5f42c36e388f
 	github.com/fsnotify/fsnotify v1.7.0
 	golang.org/x/net v0.28.0
 	google.golang.org/grpc v1.67.1
@@ -27,12 +27,15 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
+	github.com/cncf/xds/go v0.0.0-20240723142845-024c85f92f20 // indirect
 	github.com/containerd/continuity v0.4.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/docker/cli v27.0.3+incompatible // indirect
 	github.com/docker/docker v27.1.1+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/envoyproxy/go-control-plane v0.13.0 // indirect
+	github.com/envoyproxy/protoc-gen-validate v1.1.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -47,6 +50,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runc v1.1.13 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect

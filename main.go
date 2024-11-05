@@ -15,9 +15,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/buildwithgrove/path-auth-grpc-server/postgres"
-	"github.com/buildwithgrove/path-auth-grpc-server/server"
-	"github.com/buildwithgrove/path-auth-grpc-server/yaml"
+	"github.com/buildwithgrove/path-auth-dataserver/postgres"
+	"github.com/buildwithgrove/path-auth-dataserver/server"
+	"github.com/buildwithgrove/path-auth-dataserver/yaml"
 
 	_ "github.com/joho/godotenv/autoload"
 )

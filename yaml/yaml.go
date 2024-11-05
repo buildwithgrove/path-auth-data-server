@@ -8,7 +8,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"gopkg.in/yaml.v3"
 
-	"github.com/buildwithgrove/path-auth-grpc-server/server"
+	"github.com/buildwithgrove/path-auth-dataserver/server"
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 )
 
