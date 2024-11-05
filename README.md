@@ -6,18 +6,19 @@
 <br/>
 
 # Table of Contents <!-- omit in toc -->
+
 - [1. Introduction](#1-introduction)
-- [Gateway Endpoints](#gateway-endpoints)
-- [2. Data Sources](#2-data-sources)
-  - [2.1. YAML](#21-yaml)
-  - [2.2. Postgres](#22-postgres)
-- [3. gRPC Proto File](#3-grpc-proto-file)
+- [2. Gateway Endpoints](#2-gateway-endpoints)
+- [3. Data Sources](#3-data-sources)
+  - [3.1. YAML](#31-yaml)
+  - [3.2. Postgres](#32-postgres)
+- [4. gRPC Proto File](#4-grpc-proto-file)
 
 ## 1. Introduction
 
 **PADS** (PATH Auth Data Server) is a gRPC server that provides authentication and authorization services for PATH's `Go External Authorization Server`.
 
-## Gateway Endpoints
+## 2. Gateway Endpoints
 
 The PATH repo contains the `auth_Server` packages which contains the `Go External Authorization Server`.
 
@@ -44,7 +45,7 @@ type GatewayEndpoint struct {
 }
 ```
 
-## 2. Data Sources
+## 3. Data Sources
 
 The `server` package contains the `DataSource` interface, which abstracts the data source that provides GatewayEndpoints to the `Go External Authorization Server`.
 
@@ -62,7 +63,7 @@ type DataSource interface {
 - `SubscribeUpdates()` returns a channel that receives updates to the Gateway Endpoints.
   - Updates are streamed as changes are made to the data source.
 
-### 2.1. YAML
+### 3.1. YAML
 
 If the `YAML_FILEPATH` environment variable is set, PADS will load the data from a YAML file at the specified path.
 
@@ -95,13 +96,13 @@ endpoints:
       capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY"
 ```
 
-### 2.2. Postgres
+### 3.2. Postgres
 
 If the `POSTGRES_CONNECTION_STRING` environment variable is set, PADS will connect to the specified Postgres database.
 
 The connected Postgres database must contain the tables and schema defined in the [`postgres/sqlc/schema.sql`](postgres/sqlc/schema.sql) file.
 
-## 3. gRPC Proto File
+## 4. gRPC Proto File
 
 The PATH `auth_server` package contains the file `gateway_endpoint.proto`, which contains:
 - The gRPC auto-generated Go struct definitions for the GatewayEndpoints.
