@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	proto "github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 )
 
 // Server implements the gRPC server for GatewayEndpoints.

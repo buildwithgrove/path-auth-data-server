@@ -1,7 +1,7 @@
 package server
 
 import (
-	proto "github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 )
 
 // DataSource is an interface that abstracts the data source.

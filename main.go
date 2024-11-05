@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -65,35 +64,6 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
-	// DEBUG
-	mux.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		initialData, err := server.GetInitialData(ctx, &proto.InitialDataRequest{})
-		if err != nil {
-			http.Error(w, "Failed to get initial data", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(initialData)
-	})
-	mux.HandleFunc("/debug/{endpoint_id}", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		endpointID := r.PathValue("endpoint_id")
-		initialData, err := server.GetInitialData(ctx, &proto.InitialDataRequest{})
-		if err != nil {
-			http.Error(w, "Failed to get initial data", http.StatusInternalServerError)
-			return
-		}
-		gatewayEndpoint, ok := initialData.Endpoints[endpointID]
-		if !ok {
-			http.Error(w, "Endpoint not found", http.StatusNotFound)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(gatewayEndpoint)
-	})
-	//DEBUG
-
 	// Create a new HTTP handler that serves both gRPC and HTTP
 	grpcAndHTTPHandler := h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.ProtoMajor == 2 && r.Header.Get("Content-Type") == "application/grpc" {
@@ -127,7 +97,6 @@ func getDataSource(logger polylog.Logger) (server.DataSource, func(), error) {
 	}
 
 	if postgresConnectionString != "" {
-
 		logger.Info().Str(postgresConnectionStringEnv, postgresConnectionString).Msg("Using Postgres data source")
 
 		dataSource, cleanup, err := postgres.NewPostgresDataSource(
@@ -142,7 +111,6 @@ func getDataSource(logger polylog.Logger) (server.DataSource, func(), error) {
 	}
 
 	if yamlFilePath != "" {
-
 		logger.Info().Str(yamlFilePathEnv, yamlFilePath).Msg("Using YAML data source")
 
 		dataSource, err := yaml.NewYAMLDataSource(yamlFilePath)

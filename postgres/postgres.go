@@ -200,7 +200,6 @@ func (d *postgresDataSource) processPortalApplicationChanges(ctx context.Context
 			update := &proto.Update{
 				EndpointId:      gatewayEndpoint.EndpointId,
 				GatewayEndpoint: gatewayEndpoint,
-				Delete:          false,
 			}
 			d.updatesCh <- update
 		}
