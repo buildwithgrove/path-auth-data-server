@@ -1,3 +1,4 @@
 /app
 gateway-endpoints.yaml
 .env
+.DS_Store
