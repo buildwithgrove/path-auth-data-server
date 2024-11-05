@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
@@ -12,19 +13,30 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/buildwithgrove/path-auth-dataserver/server"
+	"github.com/buildwithgrove/path-auth-data-server/server"
+	"github.com/buildwithgrove/path-auth-data-server/yaml"
 )
 
-const port = 50051
+const (
+	port            = 50051
+	yamlFilePathEnv = "YAML_FILEPATH"
+)
 
 func main() {
 	// Initialize new polylog logger
 	logger := polyzero.NewLogger()
 
-	// TODO_NEXT - data sources added in subsequent PRs
-	// YAML - https://github.com/buildwithgrove/path-auth-dataserver/pull/2
-	// Postgres - https://github.com/buildwithgrove/path-auth-dataserver/pull/3
-	var dataSource server.DataSource
+	yamlFilePath := os.Getenv(yamlFilePathEnv)
+	if yamlFilePath == "" {
+		panic(fmt.Errorf("YAML_FILEPATH environment variable is not set"))
+	}
+
+	// TODO_NEXT - Postgres data source added in subsequent PR
+	// https://github.com/buildwithgrove/path-auth-data-server/pull/3
+	dataSource, err := yaml.NewYAMLDataSource(yamlFilePath)
+	if err != nil {
+		panic(fmt.Errorf("failed to create YAML data source: %v", err))
+	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -61,7 +73,7 @@ func main() {
 	// Create a new HTTP server that uses the gRPC and HTTP handler
 	httpServer := &http.Server{Handler: grpcAndHTTPHandler}
 
-	logger.Info().Int("port", port).Msg("PATH Auth Dataserver listening.")
+	logger.Info().Int("port", port).Msg("PATH Auth Data Server listening.")
 	if err := httpServer.Serve(lis); err != nil {
 		panic(fmt.Sprintf("failed to serve: %v", err))
 	}
