@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/buildwithgrove/path-auth-dataserver/server"
+	"github.com/buildwithgrove/path-auth-data-server/server"
 )
 
 const port = 50051
@@ -22,8 +22,8 @@ func main() {
 	logger := polyzero.NewLogger()
 
 	// TODO_NEXT - data sources added in subsequent PRs
-	// YAML - https://github.com/buildwithgrove/path-auth-dataserver/pull/2
-	// Postgres - https://github.com/buildwithgrove/path-auth-dataserver/pull/3
+	// YAML - https://github.com/buildwithgrove/path-auth-data-server/pull/2
+	// Postgres - https://github.com/buildwithgrove/path-auth-data-server/pull/3
 	var dataSource server.DataSource
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))

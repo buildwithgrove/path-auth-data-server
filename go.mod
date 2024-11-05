@@ -1,20 +1,12 @@
-module github.com/buildwithgrove/path-auth-dataserver
+module github.com/buildwithgrove/path-auth-data-server
 
 go 1.23.1
 
 require (
-	// TODO_IMPROVE - update to tag version once PATH 'envoy-grpc-auth-service' branch is merged
 	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241105172329-5f42c36e388f
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/pokt-network/poktroll v0.0.9
 	golang.org/x/net v0.28.0
 	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.35.1 // indirect
-	gopkg.in/yaml.v3 v3.0.1
-)
-
-require (
-	github.com/joho/godotenv v1.5.1
-	github.com/pokt-network/poktroll v0.0.9
 )
 
 require (
@@ -24,5 +16,5 @@ require (
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241007155032-5fefd90f89a9 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+	google.golang.org/protobuf v1.35.1 // indirect
 )
