@@ -20,7 +20,7 @@
 
 ## 2. Gateway Endpoints
 
-The PATH repo contains the `auth_Server` packages which contains the `Go External Authorization Server`.
+The PATH repo contains the `auth_server` package, which contains the `Go External Authorization Server`.
 
 This package defines the `gateway_endpoint.proto` file, which contains the definitions for the `GatewayEndpoints` that PADS must provides to the `Go External Authorization Server`.
 
