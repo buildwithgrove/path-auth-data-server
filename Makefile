@@ -10,6 +10,18 @@ help: ## Prints all the targets in all the Makefiles
 	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-60s\033[0m %s\n", $$1, $$2}'
 
 ####################
+### Test Targets ###
+####################
+
+.PHONY: test
+test: ## Runs all tests
+	go test ./... -count=1
+
+.PHONY: test_unit
+test_unit: ## Runs unit tests
+	go test ./... -short -count=1
+
+####################
 ### Mock Targets ###
 ####################
 
