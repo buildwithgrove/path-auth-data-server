@@ -17,7 +17,10 @@ import (
 	"github.com/buildwithgrove/path-auth-data-server/yaml"
 )
 
-const port = 50051
+const (
+	port            = 50051
+	yamlFilePathEnv = "YAML_FILEPATH"
+)
 
 func main() {
 	// Initialize new polylog logger

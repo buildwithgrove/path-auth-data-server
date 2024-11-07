@@ -106,8 +106,8 @@ func NewYAMLDataSource(filename string) (*YAMLDataSource, error) {
 	return y, nil
 }
 
-// GetInitialData loads the initial data from the YAML file.
-func (y *YAMLDataSource) GetInitialData() (*proto.InitialDataResponse, error) {
+// FetchInitialData loads the initial data from the YAML file.
+func (y *YAMLDataSource) FetchInitialData() (*proto.InitialDataResponse, error) {
 	return y.loadGatewayEndpointsFromYAML()
 }
 

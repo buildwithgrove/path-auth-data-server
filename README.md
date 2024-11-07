@@ -16,13 +16,15 @@
 
 ## 1. Introduction
 
-**PADS** (PATH Auth Data Server) is a gRPC server that provides authentication and authorization services for PATH's `Go External Authorization Server`.
+**PADS** (PATH Auth Data Server) is a gRPC server that provides `Gateway Endpoint` data to the `Go External Authorization Server` in order to enable authorization for the PATH Gateway.
 
 ## 2. Gateway Endpoints
 
 The PATH repo contains the `auth_Server` packages which contains the `Go External Authorization Server`.
 
-This package defines the `GatewayEndpoints` proto file, which contains the definitions for the Gateway Endpoints that PADS must provides to the `Go External Authoriza tion Server`.
+This package defines the `gateway_endpoint.proto` file, which contains the definitions for the `GatewayEndpoints` that PADS must provides to the `Go External Authorization Server`.
+
+A single `GatewayEndpoint` represents a single authorized endpoint of the PATH Gateway service, which may be authorized for use by any number of users.
 
 ```go
 // Simplified representation of the GatewayEndpoint proto message that 
