@@ -11,21 +11,22 @@ import (
 // It uses a DataSource to retrieve initial data and updates.
 type Server struct {
 	proto.UnimplementedGatewayEndpointsServer
+	dataSource       DataSource
 	GatewayEndpoints map[string]*proto.GatewayEndpoint
 	updateCh         chan *proto.Update
 	mu               sync.RWMutex
-	dataSource       DataSource
 }
 
 // NewServer creates a new Server instance using the provided DataSource.
 func NewServer(dataSource DataSource) (*Server, error) {
 	server := &Server{
+		dataSource:       dataSource,
 		GatewayEndpoints: make(map[string]*proto.GatewayEndpoint),
 		updateCh:         make(chan *proto.Update, 100),
-		dataSource:       dataSource,
+		mu:               sync.RWMutex{},
 	}
 
-	initialData, err := dataSource.GetInitialData()
+	initialData, err := dataSource.FetchInitialData()
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,8 @@ require (
 	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241105172329-5f42c36e388f
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/pokt-network/poktroll v0.0.9
+	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.4.0
 	golang.org/x/net v0.28.0
 	google.golang.org/grpc v1.67.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -18,7 +20,6 @@ require (
 	github.com/jackc/pgxlisten v0.0.0-20241005155529-9d952acd6a6c
 	github.com/joho/godotenv v1.5.1
 	github.com/ory/dockertest/v3 v3.11.0
-	github.com/stretchr/testify v1.9.0
 )
 
 require (
