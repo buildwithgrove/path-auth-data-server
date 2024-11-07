@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func Test_Integration_GetInitialData(t *testing.T) {
+func Test_Integration_FetchInitialData(t *testing.T) {
 	tests := []struct {
 		name     string
 		expected *proto.InitialDataResponse
@@ -144,7 +144,7 @@ func Test_Integration_GetInitialData(t *testing.T) {
 			c.NoError(err)
 			defer cleanup()
 
-			initialData, err := dataSource.GetInitialData()
+			initialData, err := dataSource.FetchInitialData()
 			c.NoError(err)
 			c.Equal(test.expected, initialData)
 		})

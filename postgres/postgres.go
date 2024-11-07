@@ -93,8 +93,8 @@ func isValidPostgresConnectionString(s string) bool {
 
 /* ---------- Data Source Funcs ---------- */
 
-// GetInitialData retrieves all GatewayEndpoints from the database and returns them as a map.
-func (d *postgresDataSource) GetInitialData() (*proto.InitialDataResponse, error) {
+// FetchInitialData retrieves all GatewayEndpoints from the database and returns them as a map.
+func (d *postgresDataSource) FetchInitialData() (*proto.InitialDataResponse, error) {
 
 	rows, err := d.driver.Queries.SelectPortalApplications(context.Background())
 	if err != nil {
