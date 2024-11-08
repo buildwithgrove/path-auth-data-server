@@ -1,4 +1,4 @@
--- This file updates the ephemeral Docker Postgres test database initialized in db/driver/driver_test.go
+-- This file updates the ephemeral Docker Postgres test database initialized in postgres/docker_test.go
 -- with just enough data to run the test of the database driver using an actual Postgres DB instance.
 
 -- Insert into the 'pay_plans' table
