@@ -2,15 +2,9 @@ name: Path Auth Data Server tests
 
 on:
   push:
-    branches: [
-      main,
-      github-actions # TODO_DEV: remove
-    ]
+    branches: [main]
   pull_request:
-    branches: [
-      main,
-      github-actions # TODO_DEV: remove
-    ]
+    branches: [main]
 
 jobs:
   linter:
