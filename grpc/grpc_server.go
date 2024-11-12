@@ -1,4 +1,4 @@
-package server
+package grpc
 
 import (
 	"context"
@@ -9,21 +9,20 @@ import (
 
 // Server implements the gRPC server for GatewayEndpoints.
 // It uses a DataSource to retrieve initial data and updates.
-type Server struct {
+type grpcServer struct {
 	proto.UnimplementedGatewayEndpointsServer
 	dataSource       DataSource
-	GatewayEndpoints map[string]*proto.GatewayEndpoint
+	gatewayEndpoints map[string]*proto.GatewayEndpoint
 	updateCh         chan *proto.Update
 	mu               sync.RWMutex
 }
 
-// NewServer creates a new Server instance using the provided DataSource.
-func NewServer(dataSource DataSource) (*Server, error) {
-	server := &Server{
+// NewGRPCServer creates a new grpcServer instance using the provided DataSource.
+func NewGRPCServer(dataSource DataSource) (*grpcServer, error) {
+	server := &grpcServer{
 		dataSource:       dataSource,
-		GatewayEndpoints: make(map[string]*proto.GatewayEndpoint),
+		gatewayEndpoints: make(map[string]*proto.GatewayEndpoint),
 		updateCh:         make(chan *proto.Update, 100),
-		mu:               sync.RWMutex{},
 	}
 
 	initialData, err := dataSource.FetchInitialData()
@@ -31,11 +30,9 @@ func NewServer(dataSource DataSource) (*Server, error) {
 		return nil, err
 	}
 
-	server.mu.Lock()
-	server.GatewayEndpoints = initialData.Endpoints
-	server.mu.Unlock()
+	server.gatewayEndpoints = initialData.Endpoints
 
-	updatesCh, err := dataSource.SubscribeUpdates()
+	updatesCh, err := dataSource.GetUpdatesChan()
 	if err != nil {
 		return nil, err
 	}
@@ -46,14 +43,14 @@ func NewServer(dataSource DataSource) (*Server, error) {
 }
 
 // GetInitialData handles the gRPC request to retrieve initial GatewayEndpoints data.
-func (s *Server) GetInitialData(ctx context.Context, req *proto.InitialDataRequest) (*proto.InitialDataResponse, error) {
+func (s *grpcServer) GetInitialData(ctx context.Context, req *proto.InitialDataRequest) (*proto.InitialDataResponse, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return &proto.InitialDataResponse{Endpoints: s.GatewayEndpoints}, nil
+	return &proto.InitialDataResponse{Endpoints: s.gatewayEndpoints}, nil
 }
 
 // StreamUpdates streams updates to the client whenever the data source changes.
-func (s *Server) StreamUpdates(req *proto.UpdatesRequest, stream proto.GatewayEndpoints_StreamUpdatesServer) error {
+func (s *grpcServer) StreamUpdates(req *proto.UpdatesRequest, stream proto.GatewayEndpoints_StreamUpdatesServer) error {
 	for update := range s.updateCh {
 		if err := stream.Send(update); err != nil {
 			return err
@@ -63,13 +60,13 @@ func (s *Server) StreamUpdates(req *proto.UpdatesRequest, stream proto.GatewayEn
 }
 
 // handleDataSourceUpdates listens for updates from the DataSource and updates the server state accordingly.
-func (s *Server) handleDataSourceUpdates(updatesCh <-chan *proto.Update) {
+func (s *grpcServer) handleDataSourceUpdates(updatesCh <-chan *proto.Update) {
 	for update := range updatesCh {
 		s.mu.Lock()
 		if update.Delete {
-			delete(s.GatewayEndpoints, update.EndpointId)
+			delete(s.gatewayEndpoints, update.EndpointId)
 		} else {
-			s.GatewayEndpoints[update.EndpointId] = update.GatewayEndpoint
+			s.gatewayEndpoints[update.EndpointId] = update.GatewayEndpoint
 		}
 		s.mu.Unlock()
 
