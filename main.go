@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/buildwithgrove/path-auth-data-server/server"
+	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 	"github.com/buildwithgrove/path-auth-data-server/yaml"
 )
 
@@ -43,7 +43,7 @@ func main() {
 		panic(fmt.Sprintf("failed to listen: %v", err))
 	}
 
-	server, err := server.NewServer(dataSource)
+	server, err := grpc_server.NewGRPCServer(dataSource)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create server: %v", err))
 	}

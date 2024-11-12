@@ -9,10 +9,10 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"gopkg.in/yaml.v3"
 
-	"github.com/buildwithgrove/path-auth-data-server/server"
+	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
-var _ server.DataSource = &YAMLDataSource{} // YAMLDataSource implements the DataSource interface
+var _ grpc_server.DataSource = &YAMLDataSource{} // YAMLDataSource implements the DataSource interface
 
 /* --------------------------- YAMLDataSource Struct ---------------------------- */
 
@@ -49,7 +49,7 @@ func (y *YAMLDataSource) FetchInitialData() (*proto.InitialDataResponse, error) 
 }
 
 // SubscribeUpdates returns a channel that streams updates when the YAML file changes.
-func (y *YAMLDataSource) SubscribeUpdates() (<-chan *proto.Update, error) {
+func (y *YAMLDataSource) GetUpdatesChan() (<-chan *proto.Update, error) {
 	return y.updatesCh, nil
 }
 

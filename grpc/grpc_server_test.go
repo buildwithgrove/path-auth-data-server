@@ -1,4 +1,4 @@
-package server
+package grpc
 
 import (
 	"context"
@@ -61,10 +61,10 @@ func Test_GetInitialData(t *testing.T) {
 
 			mockDataSource.EXPECT().FetchInitialData().Return(test.expectedResponse, test.expectedError)
 			if test.expectedError == nil {
-				mockDataSource.EXPECT().SubscribeUpdates().Return(nil, nil)
+				mockDataSource.EXPECT().GetUpdatesChan().Return(nil, nil)
 			}
 
-			server, err := NewServer(mockDataSource)
+			server, err := NewGRPCServer(mockDataSource)
 			c.Equal(test.expectedError, err)
 
 			if test.expectedError == nil {
@@ -131,9 +131,9 @@ func Test_StreamUpdates(t *testing.T) {
 			mockDataSource.EXPECT().FetchInitialData().Return(&proto.InitialDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{},
 			}, nil)
-			mockDataSource.EXPECT().SubscribeUpdates().Return(updateCh, nil)
+			mockDataSource.EXPECT().GetUpdatesChan().Return(updateCh, nil)
 
-			server, err := NewServer(mockDataSource)
+			server, err := NewGRPCServer(mockDataSource)
 			c.NoError(err)
 
 			mockStream := &mockStreamServer{
@@ -226,14 +226,14 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 			close(updateCh)
 
 			mockDataSource.EXPECT().FetchInitialData().Return(&proto.InitialDataResponse{Endpoints: test.initialData}, nil)
-			mockDataSource.EXPECT().SubscribeUpdates().Return(updateCh, nil)
+			mockDataSource.EXPECT().GetUpdatesChan().Return(updateCh, nil)
 
-			server, err := NewServer(mockDataSource)
+			server, err := NewGRPCServer(mockDataSource)
 			c.NoError(err)
 
 			server.handleDataSourceUpdates(updateCh)
 
-			c.Equal(test.expectedDataAfterUpdates, server.GatewayEndpoints)
+			c.Equal(test.expectedDataAfterUpdates, server.gatewayEndpoints)
 		})
 	}
 }
