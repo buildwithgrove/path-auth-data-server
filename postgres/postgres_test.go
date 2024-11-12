@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"flag"
 	"os"
 	"testing"
 
@@ -16,6 +17,11 @@ import (
 var connectionString string
 
 func TestMain(m *testing.M) {
+	flag.Parse()
+	if testing.Short() {
+		return
+	}
+
 	// Initialize the ephemeral postgres docker container
 	pool, resource, databaseURL := setupPostgresDocker()
 	connectionString = databaseURL
@@ -29,6 +35,10 @@ func TestMain(m *testing.M) {
 }
 
 func Test_Integration_FetchInitialData(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping driver integration test")
+	}
+
 	tests := []struct {
 		name     string
 		expected *proto.InitialDataResponse
