@@ -12,11 +12,11 @@ import (
 	"github.com/jackc/pgxlisten"
 	"github.com/pokt-network/poktroll/pkg/polylog"
 
+	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 	"github.com/buildwithgrove/path-auth-data-server/postgres/sqlc"
-	"github.com/buildwithgrove/path-auth-data-server/server"
 )
 
-var _ server.DataSource = &postgresDataSource{} // postgresDriver implements the server.DataSource interface.
+var _ grpc_server.DataSource = &postgresDataSource{} // postgresDriver implements the grpc_server.DataSource interface.
 
 type (
 	// The postgresDataSource struct satisfies the server.DataSource interface.
@@ -105,7 +105,7 @@ func (d *postgresDataSource) FetchInitialData() (*proto.InitialDataResponse, err
 }
 
 // TODO: Implement this
-func (d *postgresDataSource) SubscribeUpdates() (<-chan *proto.Update, error) {
+func (d *postgresDataSource) GetUpdatesChan() (<-chan *proto.Update, error) {
 	return d.updatesCh, nil
 }
 

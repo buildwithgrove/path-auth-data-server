@@ -303,7 +303,7 @@ func Test_handleUpdates(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			c := require.New(t)
 
-			yamlDataSource := &YAMLDataSource{
+			yamlDataSource := &yamlDataSource{
 				endpoints: test.initialEndpoints,
 				updatesCh: make(chan *proto.Update, len(test.expectedUpdates)),
 			}

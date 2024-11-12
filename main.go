@@ -15,11 +15,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 	"github.com/buildwithgrove/path-auth-data-server/postgres"
-	"github.com/buildwithgrove/path-auth-data-server/server"
 	"github.com/buildwithgrove/path-auth-data-server/yaml"
 
-	_ "github.com/joho/godotenv/autoload" // Autoload env vars
+	_ "github.com/joho/godotenv/autoload"
 )
 
 const (
@@ -46,7 +46,7 @@ func main() {
 		panic(fmt.Sprintf("failed to listen: %v", err))
 	}
 
-	server, err := server.NewServer(dataSource)
+	server, err := grpc_server.NewGRPCServer(dataSource)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create server: %v", err))
 	}
@@ -66,7 +66,7 @@ func main() {
 
 	// Create a new HTTP handler that serves both gRPC and HTTP
 	grpcAndHTTPHandler := h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && r.Header.Get("Content-Type") == "application/grpc" {
+		if isRequestGRPC(r) {
 			grpcServer.ServeHTTP(w, r)
 		} else {
 			mux.ServeHTTP(w, r)
@@ -88,7 +88,7 @@ func main() {
 // The specific data source loaded depends on the environment variables:
 // - POSTGRES_CONNECTION_STRING - use a Postgres database as the data source
 // - YAML_FILEPATH - use a local YAML file as the data source
-func getDataSource(logger polylog.Logger) (server.DataSource, func(), error) {
+func getDataSource(logger polylog.Logger) (grpc_server.DataSource, func(), error) {
 	postgresConnectionString := os.Getenv(postgresConnectionStringEnv)
 	yamlFilePath := os.Getenv(yamlFilePathEnv)
 
@@ -121,4 +121,9 @@ func getDataSource(logger polylog.Logger) (server.DataSource, func(), error) {
 	}
 
 	return nil, nil, fmt.Errorf("neither POSTGRES_CONNECTION_STRING nor YAML_FILEPATH is set")
+}
+
+// isRequestGRPC checks the true if the request is a gRPC request by checking the protocol and content type.
+func isRequestGRPC(req *http.Request) bool {
+	return req.ProtoMajor == 2 && req.Header.Get("Content-Type") == "application/grpc"
 }

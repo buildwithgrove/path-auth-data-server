@@ -9,24 +9,24 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"gopkg.in/yaml.v3"
 
-	"github.com/buildwithgrove/path-auth-data-server/server"
+	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
-var _ server.DataSource = &YAMLDataSource{} // YAMLDataSource implements the DataSource interface
+var _ grpc_server.DataSource = &yamlDataSource{} // yamlDataSource implements the DataSource interface
 
-/* --------------------------- YAMLDataSource Struct ---------------------------- */
+/* --------------------------- yamlDataSource Struct ---------------------------- */
 
-// YAMLDataSource implements the DataSource interface for YAML files.
-type YAMLDataSource struct {
+// yamlDataSource implements the DataSource interface for YAML files.
+type yamlDataSource struct {
 	filename  string
 	updatesCh chan *proto.Update
 	endpoints map[string]*proto.GatewayEndpoint
 	mu        sync.Mutex
 }
 
-// NewYAMLDataSource creates a new YAMLDataSource for the specified filename.
-func NewYAMLDataSource(filename string) (*YAMLDataSource, error) {
-	y := &YAMLDataSource{
+// NewYAMLDataSource creates a new yamlDataSource for the specified filename.
+func NewYAMLDataSource(filename string) (*yamlDataSource, error) {
+	y := &yamlDataSource{
 		filename:  filename,
 		updatesCh: make(chan *proto.Update, 100_000),
 	}
@@ -44,17 +44,17 @@ func NewYAMLDataSource(filename string) (*YAMLDataSource, error) {
 }
 
 // FetchInitialData loads the initial data from the YAML file.
-func (y *YAMLDataSource) FetchInitialData() (*proto.InitialDataResponse, error) {
+func (y *yamlDataSource) FetchInitialData() (*proto.InitialDataResponse, error) {
 	return y.loadGatewayEndpointsFromYAML()
 }
 
 // SubscribeUpdates returns a channel that streams updates when the YAML file changes.
-func (y *YAMLDataSource) SubscribeUpdates() (<-chan *proto.Update, error) {
+func (y *yamlDataSource) GetUpdatesChan() (<-chan *proto.Update, error) {
 	return y.updatesCh, nil
 }
 
 // loadGatewayEndpointsFromYAML reads and parses the YAML file into proto format.
-func (y *YAMLDataSource) loadGatewayEndpointsFromYAML() (*proto.InitialDataResponse, error) {
+func (y *yamlDataSource) loadGatewayEndpointsFromYAML() (*proto.InitialDataResponse, error) {
 	data, err := os.ReadFile(y.filename)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (y *YAMLDataSource) loadGatewayEndpointsFromYAML() (*proto.InitialDataRespo
 }
 
 // watchFile monitors the YAML file for changes and triggers updates.
-func (y *YAMLDataSource) watchFile() {
+func (y *yamlDataSource) watchFile() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Printf("Failed to create file watcher: %v", err)
@@ -102,7 +102,7 @@ func (y *YAMLDataSource) watchFile() {
 }
 
 // handleUpdates compares old and new data and sends appropriate updates.
-func (y *YAMLDataSource) handleUpdates(newEndpoints map[string]*proto.GatewayEndpoint) {
+func (y *yamlDataSource) handleUpdates(newEndpoints map[string]*proto.GatewayEndpoint) {
 	y.mu.Lock()
 	defer y.mu.Unlock()
 

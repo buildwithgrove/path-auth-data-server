@@ -15,10 +15,11 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+require github.com/joho/godotenv v1.5.1
+
 require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/jackc/pgxlisten v0.0.0-20241005155529-9d952acd6a6c
-	github.com/joho/godotenv v1.5.1
 	github.com/ory/dockertest/v3 v3.11.0
 )
 

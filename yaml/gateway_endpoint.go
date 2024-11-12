@@ -2,41 +2,33 @@ package yaml
 
 import "github.com/buildwithgrove/path/envoy/auth_server/proto"
 
-/* --------------------------------- YAML Structs -------------------------------- */
+/* ----------------------------- GatewayEndpoint YAML Struct ----------------------------- */
 
-// gatewayEndpointsYAML represents the structure of the YAML file.
 type (
-	gatewayEndpointsYAML struct {
-		Endpoints map[string]gatewayEndpointYAML `yaml:"endpoints"`
-	}
+	// gatewayEndpointYAML represents the structure of a single GatewayEndpoint in the YAML file.
 	gatewayEndpointYAML struct {
 		EndpointID   string           `yaml:"endpoint_id"`
 		Auth         authYAML         `yaml:"auth"`
 		UserAccount  userAccountYAML  `yaml:"user_account"`
 		RateLimiting rateLimitingYAML `yaml:"rate_limiting"`
 	}
+	// authYAML represents the Auth section of a single GatewayEndpoint in the YAML file.
 	authYAML struct {
 		RequireAuth     bool                `yaml:"require_auth"`
 		AuthorizedUsers map[string]struct{} `yaml:"authorized_users"`
 	}
+	// userAccountYAML represents the UserAccount section of a single GatewayEndpoint in the YAML file.
 	userAccountYAML struct {
 		AccountID string `yaml:"account_id"`
 		PlanType  string `yaml:"plan_type"`
 	}
+	// rateLimitingYAML represents the RateLimiting section of a single GatewayEndpoint in the YAML file.
 	rateLimitingYAML struct {
 		ThroughputLimit     int    `yaml:"throughput_limit"`
 		CapacityLimit       int    `yaml:"capacity_limit"`
 		CapacityLimitPeriod string `yaml:"capacity_limit_period"`
 	}
 )
-
-func (g *gatewayEndpointsYAML) convertToProto() *proto.InitialDataResponse {
-	endpointsProto := make(map[string]*proto.GatewayEndpoint)
-	for _, endpointYAML := range g.Endpoints {
-		endpointsProto[endpointYAML.EndpointID] = endpointYAML.convertToProto()
-	}
-	return &proto.InitialDataResponse{Endpoints: endpointsProto}
-}
 
 func (e *gatewayEndpointYAML) convertToProto() *proto.GatewayEndpoint {
 	return &proto.GatewayEndpoint{
