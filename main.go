@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/buildwithgrove/path-auth-data-server/server"
+	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
 const port = 50051
@@ -24,14 +24,14 @@ func main() {
 	// TODO_NEXT - data sources added in subsequent PRs
 	// YAML - https://github.com/buildwithgrove/path-auth-data-server/pull/2
 	// Postgres - https://github.com/buildwithgrove/path-auth-data-server/pull/3
-	var dataSource server.DataSource
+	var dataSource grpc_server.DataSource
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		panic(fmt.Sprintf("failed to listen: %v", err))
 	}
 
-	server, err := server.NewServer(dataSource)
+	server, err := grpc_server.NewGRPCServer(dataSource)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create server: %v", err))
 	}

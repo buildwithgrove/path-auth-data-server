@@ -10,9 +10,17 @@ help: ## Prints all the targets in all the Makefiles
 	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-60s\033[0m %s\n", $$1, $$2}'
 
 ####################
+### Test Targets ###
+####################
+
+.PHONY: test_unit
+test_unit: ## Runs unit tests
+	go test ./... -short -count=1
+
+####################
 ### Mock Targets ###
 ####################
 
 .PHONY: gen_mocks
 gen_mocks: ## Generates mocks for testing
-	mockgen -source=./server/data_source.go -destination=./server/data_source_mock_test.go -package=server
+	mockgen -source=./grpc/data_source.go -destination=./grpc/data_source_mock_test.go -package=grpc

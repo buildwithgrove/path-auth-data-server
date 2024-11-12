@@ -1,4 +1,4 @@
-package server
+package grpc
 
 import (
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
@@ -8,5 +8,5 @@ import (
 // It can be implemented by any data provider (e.g., YAML, Postgres).
 type DataSource interface {
 	FetchInitialData() (*proto.InitialDataResponse, error)
-	SubscribeUpdates() (<-chan *proto.Update, error)
+	GetUpdatesChan() (<-chan *proto.Update, error)
 }
