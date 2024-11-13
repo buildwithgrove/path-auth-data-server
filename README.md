@@ -16,6 +16,7 @@
 
 ## 1. Introduction
 
+<!-- TODO_DOCUMENT(@commoddity): Make sure these docs are accessible in https://path.grove.city/ -->
 **PADS** (PATH Auth Data Server) is a gRPC server that provides `Gateway Endpoint` data from a data source to the `Go External Authorization Server` in order to enable authorization for [the PATH Gateway](https://github.com/buildwithgrove/path). The nature of the data source is configurable, for example it could be a YAML file or a Postgres database.
 
 ## 2. Gateway Endpoints

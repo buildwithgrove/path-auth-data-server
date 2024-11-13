@@ -20,26 +20,50 @@ import (
 )
 
 const (
-	port            = 50051
 	yamlFilePathEnv = "YAML_FILEPATH"
+	portEnv         = "PORT"
+
+	defaultPort = "50051"
 )
+
+type envVars struct {
+	yamlFilepath string
+	port         string
+}
+
+func gatherEnvVars() (envVars, error) {
+	yamlFilepath := os.Getenv(yamlFilePathEnv)
+	if yamlFilepath == "" {
+		return envVars{}, fmt.Errorf("YAML_FILEPATH environment variable is not set")
+	}
+
+	port := os.Getenv(portEnv)
+	if port == "" {
+		port = defaultPort
+	}
+
+	return envVars{
+		yamlFilepath: yamlFilepath,
+		port:         port,
+	}, nil
+}
 
 func main() {
 	// Initialize new polylog logger
 	logger := polyzero.NewLogger()
 
-	yamlFilePath := os.Getenv(yamlFilePathEnv)
-	if yamlFilePath == "" {
-		panic(fmt.Errorf("YAML_FILEPATH environment variable is not set"))
+	env, err := gatherEnvVars()
+	if err != nil {
+		panic(fmt.Errorf("failed to gather environment variables: %v", err))
 	}
 
 	// TODO_UPNEXT(@commoddity): Add implementation for concrete data sources: Postgres(#3)
-	authDataSource, err := yaml.NewYAMLDataSource(yamlFilePath)
+	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath)
 	if err != nil {
 		panic(fmt.Errorf("failed to create YAML data source: %v", err))
 	}
 
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", env.port))
 	if err != nil {
 		panic(fmt.Sprintf("failed to listen: %v", err))
 	}
@@ -53,6 +77,8 @@ func main() {
 	proto.RegisterGatewayEndpointsServer(grpcServer, server)
 
 	// Enable gRPC reflection
+	// TODO_NEXT(@commoddity): Investigate if reflection is needed for production;
+	// if not needed put behind an env flag for local development only.
 	reflection.Register(grpcServer)
 
 	// Create a new HTTP server mux to allow health checks
@@ -76,7 +102,8 @@ func main() {
 	// Create a new HTTP server that uses the gRPC and HTTP handler
 	httpServer := &http.Server{Handler: grpcAndHTTPHandler}
 
-	logger.Info().Int("port", port).Msg("PATH Auth Data Server listening.")
+	logger.Info().Str("port", env.port).Msg("PATH Auth Data Server listening.")
+
 	if err := httpServer.Serve(ln); err != nil {
 		panic(fmt.Sprintf("failed to serve: %v", err))
 	}
