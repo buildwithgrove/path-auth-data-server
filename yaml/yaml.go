@@ -12,49 +12,56 @@ import (
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
-var _ grpc_server.DataSource = &yamlDataSource{} // yamlDataSource implements the DataSource interface
+var _ grpc_server.AuthDataSource = &yamlDataSource{} // yamlDataSource implements the AuthDataSource interface
 
 /* --------------------------- yamlDataSource Struct ---------------------------- */
 
-// yamlDataSource implements the DataSource interface for YAML files.
+// yamlDataSource implements the AuthDataSource interface for YAML files.
+//
+// It uses a file watcher to detect changes to the YAML file and sends updates to the
+// authDataUpdatesCh channel if any changes are detected.
 type yamlDataSource struct {
-	filename  string
-	updatesCh chan *proto.Update
-	endpoints map[string]*proto.GatewayEndpoint
-	mu        sync.Mutex
+	filename string
+
+	gatewayEndpoints   map[string]*proto.GatewayEndpoint
+	gatewayEndpointsMu sync.Mutex
+
+	authDataUpdatesCh chan *proto.AuthDataUpdate
 }
 
 // NewYAMLDataSource creates a new yamlDataSource for the specified filename.
 func NewYAMLDataSource(filename string) (*yamlDataSource, error) {
+
 	y := &yamlDataSource{
-		filename:  filename,
-		updatesCh: make(chan *proto.Update, 100_000),
+		filename:          filename,
+		authDataUpdatesCh: make(chan *proto.AuthDataUpdate, 100_000),
 	}
 
-	initialData, err := y.loadGatewayEndpointsFromYAML()
+	// Warm up the data store with the full set of GatewayEndpoints from the YAML file.
+	gatewayEndpoints, err := y.loadGatewayEndpointsFromYAML()
 	if err != nil {
 		return nil, err
 	}
+	y.gatewayEndpoints = gatewayEndpoints.Endpoints
 
-	y.endpoints = initialData.Endpoints
-
+	// Watch the YAML file for changes.
 	go y.watchFile()
 
 	return y, nil
 }
 
-// FetchInitialData loads the initial data from the YAML file.
-func (y *yamlDataSource) FetchInitialData() (*proto.InitialDataResponse, error) {
+// FetchAuthDataSync loads the full set of GatewayEndpoints from the YAML file.
+func (y *yamlDataSource) FetchAuthDataSync() (*proto.AuthDataResponse, error) {
 	return y.loadGatewayEndpointsFromYAML()
 }
 
-// SubscribeUpdates returns a channel that streams updates when the YAML file changes.
-func (y *yamlDataSource) GetUpdatesChan() (<-chan *proto.Update, error) {
-	return y.updatesCh, nil
+// AuthDataUpdatesChan returns a channel that streams updates when the YAML file changes.
+func (y *yamlDataSource) AuthDataUpdatesChan() (<-chan *proto.AuthDataUpdate, error) {
+	return y.authDataUpdatesCh, nil
 }
 
 // loadGatewayEndpointsFromYAML reads and parses the YAML file into proto format.
-func (y *yamlDataSource) loadGatewayEndpointsFromYAML() (*proto.InitialDataResponse, error) {
+func (y *yamlDataSource) loadGatewayEndpointsFromYAML() (*proto.AuthDataResponse, error) {
 	data, err := os.ReadFile(y.filename)
 	if err != nil {
 		return nil, err
@@ -103,29 +110,33 @@ func (y *yamlDataSource) watchFile() {
 
 // handleUpdates compares old and new data and sends appropriate updates.
 func (y *yamlDataSource) handleUpdates(newEndpoints map[string]*proto.GatewayEndpoint) {
-	y.mu.Lock()
-	defer y.mu.Unlock()
+	y.gatewayEndpointsMu.Lock()
+	defer y.gatewayEndpointsMu.Unlock()
 
-	endpoints := y.endpoints
-	y.endpoints = newEndpoints
+	// Save old set of gateway endpoints in order to
+	// compare with the new set to handle deletions.
+	gatewayEndpoints := y.gatewayEndpoints
+
+	// Assign new set of gateway endpoints.
+	y.gatewayEndpoints = newEndpoints
 
 	// Send updates for new or modified endpoints
 	for id, newEndpoint := range newEndpoints {
-		update := &proto.Update{
+		update := &proto.AuthDataUpdate{
 			EndpointId:      id,
 			GatewayEndpoint: newEndpoint,
 		}
-		y.updatesCh <- update
+		y.authDataUpdatesCh <- update
 	}
 
 	// Send delete updates for removed endpoints
-	for id := range endpoints {
+	for id := range gatewayEndpoints {
 		if _, exists := newEndpoints[id]; !exists {
-			update := &proto.Update{
+			update := &proto.AuthDataUpdate{
 				EndpointId: id,
 				Delete:     true,
 			}
-			y.updatesCh <- update
+			y.authDataUpdatesCh <- update
 		}
 	}
 }

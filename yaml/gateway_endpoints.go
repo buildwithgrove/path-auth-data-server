@@ -9,10 +9,10 @@ type gatewayEndpointsYAML struct {
 	Endpoints map[string]gatewayEndpointYAML `yaml:"endpoints"`
 }
 
-func (g *gatewayEndpointsYAML) convertToProto() *proto.InitialDataResponse {
+func (g *gatewayEndpointsYAML) convertToProto() *proto.AuthDataResponse {
 	endpointsProto := make(map[string]*proto.GatewayEndpoint)
 	for _, endpointYAML := range g.Endpoints {
 		endpointsProto[endpointYAML.EndpointID] = endpointYAML.convertToProto()
 	}
-	return &proto.InitialDataResponse{Endpoints: endpointsProto}
+	return &proto.AuthDataResponse{Endpoints: endpointsProto}
 }

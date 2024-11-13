@@ -1,5 +1,5 @@
-github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241105172329-5f42c36e388f h1:GhFzPnpkx/PYmLkFUN2oR/8inCpAiUEtU58gT+3MlhM=
-github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241105172329-5f42c36e388f/go.mod h1:e7eQJraWpMYsGGDxozdydwZzAwR8S3kfBg//SKoKBx0=
+github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241113085325-36c02a256a51 h1:ntR3ziLi12zMORKtts0r4Ta5sy7Fq/6W8hucQT6N8RU=
+github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241113085325-36c02a256a51/go.mod h1:e7eQJraWpMYsGGDxozdydwZzAwR8S3kfBg//SKoKBx0=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

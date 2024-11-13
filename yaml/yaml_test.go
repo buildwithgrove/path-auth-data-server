@@ -13,13 +13,13 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 	tests := []struct {
 		name     string
 		filePath string
-		want     *proto.InitialDataResponse
+		want     *proto.AuthDataResponse
 		wantErr  bool
 	}{
 		{
 			name:     "should load valid gateway endpoints without error",
 			filePath: "./testdata/gateway-endpoints.example.yaml",
-			want: &proto.InitialDataResponse{
+			want: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
@@ -82,7 +82,7 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 				c.Error(err)
 			} else {
 				c.NoError(err)
-				got, err := yamlDataSource.FetchInitialData()
+				got, err := yamlDataSource.FetchAuthDataSync()
 				c.NoError(err)
 				c.Equal(test.want, got)
 			}
@@ -92,14 +92,14 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 
 func Test_watchFile(t *testing.T) {
 	tests := []struct {
-		name            string
-		initialData     string
-		updatedData     string
-		expectedUpdates []*proto.Update
+		name             string
+		gatewayEndpoints string
+		updatedData      string
+		expectedUpdates  []*proto.AuthDataUpdate
 	}{
 		{
 			name: "should detect and send updates on file change",
-			initialData: `
+			gatewayEndpoints: `
 endpoints:
   endpoint_1:
     endpoint_id: "endpoint_1"
@@ -128,7 +128,7 @@ endpoints:
       account_id: "account_2"
       plan_type: "PLAN_FREE"
 `,
-			expectedUpdates: []*proto.Update{
+			expectedUpdates: []*proto.AuthDataUpdate{
 				{
 					EndpointId: "endpoint_1",
 					GatewayEndpoint: &proto.GatewayEndpoint{
@@ -168,7 +168,7 @@ endpoints:
 			c := require.New(t)
 
 			filePath := "./testdata/temp_gateway_endpoints.yaml"
-			err := os.WriteFile(filePath, []byte(test.initialData), 0644)
+			err := os.WriteFile(filePath, []byte(test.gatewayEndpoints), 0644)
 			c.NoError(err)
 			defer os.Remove(filePath)
 
@@ -183,12 +183,12 @@ endpoints:
 			err = os.WriteFile(filePath, []byte(test.updatedData), 0644)
 			c.NoError(err)
 
-			var receivedUpdates []*proto.Update
+			var receivedUpdates []*proto.AuthDataUpdate
 			timeout := time.After(2 * time.Second)
 
 			for range test.expectedUpdates {
 				select {
-				case update := <-yamlDataSource.updatesCh:
+				case update := <-yamlDataSource.authDataUpdatesCh:
 					receivedUpdates = append(receivedUpdates, update)
 				case <-timeout:
 					t.Fatal("expected update not received")
@@ -203,13 +203,13 @@ endpoints:
 func Test_handleUpdates(t *testing.T) {
 	tests := []struct {
 		name             string
-		initialEndpoints map[string]*proto.GatewayEndpoint
+		gatewayEndpoints map[string]*proto.GatewayEndpoint
 		newEndpoints     map[string]*proto.GatewayEndpoint
-		expectedUpdates  []*proto.Update
+		expectedUpdates  []*proto.AuthDataUpdate
 	}{
 		{
 			name: "should send updates for new and modified endpoints",
-			initialEndpoints: map[string]*proto.GatewayEndpoint{
+			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
@@ -246,7 +246,7 @@ func Test_handleUpdates(t *testing.T) {
 					},
 				},
 			},
-			expectedUpdates: []*proto.Update{
+			expectedUpdates: []*proto.AuthDataUpdate{
 				{
 					EndpointId: "endpoint_1",
 					GatewayEndpoint: &proto.GatewayEndpoint{
@@ -277,7 +277,7 @@ func Test_handleUpdates(t *testing.T) {
 		},
 		{
 			name: "should send delete updates for removed endpoints",
-			initialEndpoints: map[string]*proto.GatewayEndpoint{
+			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
@@ -290,7 +290,7 @@ func Test_handleUpdates(t *testing.T) {
 				},
 			},
 			newEndpoints: map[string]*proto.GatewayEndpoint{},
-			expectedUpdates: []*proto.Update{
+			expectedUpdates: []*proto.AuthDataUpdate{
 				{
 					EndpointId: "endpoint_1",
 					Delete:     true,
@@ -304,15 +304,15 @@ func Test_handleUpdates(t *testing.T) {
 			c := require.New(t)
 
 			yamlDataSource := &yamlDataSource{
-				endpoints: test.initialEndpoints,
-				updatesCh: make(chan *proto.Update, len(test.expectedUpdates)),
+				gatewayEndpoints:  test.gatewayEndpoints,
+				authDataUpdatesCh: make(chan *proto.AuthDataUpdate, len(test.expectedUpdates)),
 			}
 
 			yamlDataSource.handleUpdates(test.newEndpoints)
 
 			for _, expectedUpdate := range test.expectedUpdates {
 				select {
-				case update := <-yamlDataSource.updatesCh:
+				case update := <-yamlDataSource.authDataUpdatesCh:
 					c.Equal(expectedUpdate, update)
 				default:
 					t.Fatal("expected update not received")
