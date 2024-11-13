@@ -29,24 +29,23 @@ const (
 )
 
 func main() {
+
 	// Initialize new polylog logger
 	logger := polyzero.NewLogger()
 
-	// Load the data source from either:
-	// 1. a Postgres database
-	// 2. a YAML file
-	dataSource, cleanup, err := getDataSource(logger)
+	// Load the data source from either: a Postgres database or a YAML file
+	authDataSource, cleanup, err := getDataSource(logger)
 	if err != nil {
 		panic(err)
 	}
 	defer cleanup()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		panic(fmt.Sprintf("failed to listen: %v", err))
 	}
 
-	server, err := grpc_server.NewGRPCServer(dataSource)
+	server, err := grpc_server.NewGRPCServer(authDataSource, logger)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create server: %v", err))
 	}
@@ -61,7 +60,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			logger.Error().Err(err).Msg("failed to write health check response")
+		}
 	})
 
 	// Create a new HTTP handler that serves both gRPC and HTTP
@@ -76,8 +77,8 @@ func main() {
 	// Create a new HTTP server that uses the gRPC and HTTP handler
 	httpServer := &http.Server{Handler: grpcAndHTTPHandler}
 
-	logger.Info().Int("port", port).Msg("PATH Auth gRPC server listening.")
-	if err := httpServer.Serve(lis); err != nil {
+	logger.Info().Int("port", port).Msg("PATH Auth Data Server listening.")
+	if err := httpServer.Serve(ln); err != nil {
 		panic(fmt.Sprintf("failed to serve: %v", err))
 	}
 }
@@ -88,7 +89,7 @@ func main() {
 // The specific data source loaded depends on the environment variables:
 // - POSTGRES_CONNECTION_STRING - use a Postgres database as the data source
 // - YAML_FILEPATH - use a local YAML file as the data source
-func getDataSource(logger polylog.Logger) (grpc_server.DataSource, func(), error) {
+func getDataSource(logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
 	postgresConnectionString := os.Getenv(postgresConnectionStringEnv)
 	yamlFilePath := os.Getenv(yamlFilePathEnv)
 
@@ -99,7 +100,7 @@ func getDataSource(logger polylog.Logger) (grpc_server.DataSource, func(), error
 	if postgresConnectionString != "" {
 		logger.Info().Str(postgresConnectionStringEnv, postgresConnectionString).Msg("Using Postgres data source")
 
-		dataSource, cleanup, err := postgres.NewPostgresDataSource(
+		authDataSource, cleanup, err := postgres.NewPostgresDataSource(
 			context.Background(),
 			postgresConnectionString,
 			logger,
@@ -107,17 +108,17 @@ func getDataSource(logger polylog.Logger) (grpc_server.DataSource, func(), error
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create Postgres data source: %v", err)
 		}
-		return dataSource, cleanup, nil
+		return authDataSource, cleanup, nil
 	}
 
 	if yamlFilePath != "" {
 		logger.Info().Str(yamlFilePathEnv, yamlFilePath).Msg("Using YAML data source")
 
-		dataSource, err := yaml.NewYAMLDataSource(yamlFilePath)
+		authDataSource, err := yaml.NewYAMLDataSource(yamlFilePath)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create YAML data source: %v", err)
 		}
-		return dataSource, func() {}, nil
+		return authDataSource, func() {}, nil
 	}
 
 	return nil, nil, fmt.Errorf("neither POSTGRES_CONNECTION_STRING nor YAML_FILEPATH is set")

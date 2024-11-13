@@ -34,18 +34,18 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func Test_Integration_FetchInitialData(t *testing.T) {
+func Test_Integration_FetchAuthDataSync(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping driver integration test")
 	}
 
 	tests := []struct {
 		name     string
-		expected *proto.InitialDataResponse
+		expected *proto.AuthDataResponse
 	}{
 		{
-			name: "should retrieve all initial data correctly",
-			expected: &proto.InitialDataResponse{
+			name: "should retrieve all gateway endpoints data correctly",
+			expected: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
@@ -154,9 +154,9 @@ func Test_Integration_FetchInitialData(t *testing.T) {
 			c.NoError(err)
 			defer cleanup()
 
-			initialData, err := dataSource.FetchInitialData()
+			authData, err := dataSource.FetchAuthDataSync()
 			c.NoError(err)
-			c.Equal(test.expected, initialData)
+			c.Equal(test.expected, authData)
 		})
 	}
 }
@@ -165,11 +165,11 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 	tests := []struct {
 		name     string
 		rows     []sqlc.SelectPortalApplicationsRow
-		expected *proto.InitialDataResponse
+		expected *proto.AuthDataResponse
 		wantErr  bool
 	}{
 		{
-			name: "should convert rows to initial data response successfully",
+			name: "should convert rows to auth data response successfully",
 			rows: []sqlc.SelectPortalApplicationsRow{
 				{
 					EndpointID: "endpoint_1",
@@ -186,7 +186,7 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 					AuthorizedUsers: []string{"provider_user_1"},
 				},
 			},
-			expected: &proto.InitialDataResponse{
+			expected: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
 					"endpoint_1": {
 						EndpointId: "endpoint_1",

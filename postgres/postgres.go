@@ -16,16 +16,18 @@ import (
 	"github.com/buildwithgrove/path-auth-data-server/postgres/sqlc"
 )
 
-var _ grpc_server.DataSource = &postgresDataSource{} // postgresDriver implements the grpc_server.DataSource interface.
+var _ grpc_server.AuthDataSource = &postgresDataSource{} // postgresDataSource implements the grpc_server.AuthDataSource interface.
 
 type (
-	// The postgresDataSource struct satisfies the server.DataSource interface.
+	// The postgresAuthDataSource struct satisfies the grpc_server.AuthDataSource interface.
 	postgresDataSource struct {
-		driver         *postgresDriver
-		listener       *pgxlisten.Listener
+		driver   *postgresDriver
+		listener *pgxlisten.Listener
+
 		notificationCh chan *Notification
-		updatesCh      chan *proto.Update
-		logger         polylog.Logger
+		updatesCh      chan *proto.AuthDataUpdate
+
+		logger polylog.Logger
 	}
 	// The postgresDriver struct wraps the sqlc generated queries and the pgxpool.Pool.
 	postgresDriver struct {
@@ -73,17 +75,17 @@ func NewPostgresDataSource(ctx context.Context, connectionString string, logger 
 		DB:      pool,
 	}
 
-	postgresDataSource := &postgresDataSource{
+	postgresAuthDataSource := &postgresDataSource{
 		driver:         driver,
 		listener:       newPGXPoolListener(pool, logger),
 		notificationCh: make(chan *Notification),
-		updatesCh:      make(chan *proto.Update, 100_000),
+		updatesCh:      make(chan *proto.AuthDataUpdate, 100_000),
 		logger:         logger,
 	}
 
-	go postgresDataSource.listenForUpdates(ctx)
+	go postgresAuthDataSource.listenForUpdates(ctx)
 
-	return postgresDataSource, cleanup, nil
+	return postgresAuthDataSource, cleanup, nil
 }
 
 // isValidPostgresConnectionString checks if a string is a valid PostgreSQL connection string.
@@ -93,8 +95,8 @@ func isValidPostgresConnectionString(s string) bool {
 
 /* ---------- Data Source Funcs ---------- */
 
-// FetchInitialData retrieves all GatewayEndpoints from the database and returns them as a map.
-func (d *postgresDataSource) FetchInitialData() (*proto.InitialDataResponse, error) {
+// FetchAuthDataSync retrieves all GatewayEndpoints from the database and returns them as a map.
+func (d *postgresDataSource) FetchAuthDataSync() (*proto.AuthDataResponse, error) {
 
 	rows, err := d.driver.Queries.SelectPortalApplications(context.Background())
 	if err != nil {
@@ -104,8 +106,8 @@ func (d *postgresDataSource) FetchInitialData() (*proto.InitialDataResponse, err
 	return convertPortalApplicationsRows(rows), nil
 }
 
-// TODO: Implement this
-func (d *postgresDataSource) GetUpdatesChan() (<-chan *proto.Update, error) {
+// AuthDataUpdatesChan returns a channel that emits updates to the GatewayEndpoints.
+func (d *postgresDataSource) AuthDataUpdatesChan() (<-chan *proto.AuthDataUpdate, error) {
 	return d.updatesCh, nil
 }
 
@@ -182,7 +184,7 @@ func (d *postgresDataSource) processPortalApplicationChanges(ctx context.Context
 	for _, change := range changes {
 
 		if change.IsDelete {
-			update := &proto.Update{
+			update := &proto.AuthDataUpdate{
 				EndpointId: change.PortalAppID,
 				Delete:     true,
 			}
@@ -197,7 +199,7 @@ func (d *postgresDataSource) processPortalApplicationChanges(ctx context.Context
 			gatewayEndpoint := convertSelectPortalApplicationRow(portalAppRow).convertToProto()
 
 			// Send the update
-			update := &proto.Update{
+			update := &proto.AuthDataUpdate{
 				EndpointId:      gatewayEndpoint.EndpointId,
 				GatewayEndpoint: gatewayEndpoint,
 			}
@@ -281,12 +283,12 @@ func convertToProtoAuthorizedUsers(users []string) map[string]*proto.Empty {
 	return authUsers
 }
 
-func convertPortalApplicationsRows(rows []sqlc.SelectPortalApplicationsRow) *proto.InitialDataResponse {
+func convertPortalApplicationsRows(rows []sqlc.SelectPortalApplicationsRow) *proto.AuthDataResponse {
 	endpointsProto := make(map[string]*proto.GatewayEndpoint, len(rows))
 	for _, row := range rows {
 		portalAppRow := convertSelectPortalApplicationsRow(row)
 		endpointsProto[portalAppRow.EndpointID] = portalAppRow.convertToProto()
 	}
 
-	return &proto.InitialDataResponse{Endpoints: endpointsProto}
+	return &proto.AuthDataResponse{Endpoints: endpointsProto}
 }

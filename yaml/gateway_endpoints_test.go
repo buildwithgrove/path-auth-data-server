@@ -11,7 +11,7 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    gatewayEndpointsYAML
-		expected *proto.InitialDataResponse
+		expected *proto.AuthDataResponse
 	}{
 		{
 			name: "should convert YAML to proto format correctly",
@@ -37,7 +37,7 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 					},
 				},
 			},
-			expected: &proto.InitialDataResponse{
+			expected: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
