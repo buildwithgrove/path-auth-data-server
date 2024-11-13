@@ -12,14 +12,14 @@ import (
 	"google.golang.org/grpc"
 )
 
-func Test_GetInitialData(t *testing.T) {
+func Test_FetchAuthDataSync(t *testing.T) {
 	tests := []struct {
 		name             string
 		expectedResponse *proto.AuthDataResponse
 		expectedError    error
 	}{
 		{
-			name: "should return initial data successfully",
+			name: "should return Gateway Endpoints successfully",
 			expectedResponse: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
 					"endpoint1": {
@@ -158,13 +158,13 @@ func Test_StreamUpdates(t *testing.T) {
 func Test_handleDataSourceUpdates(t *testing.T) {
 	tests := []struct {
 		name                     string
-		initialData              map[string]*proto.GatewayEndpoint
+		gatewayEndpoints         map[string]*proto.GatewayEndpoint
 		updates                  []*proto.AuthDataUpdate
 		expectedDataAfterUpdates map[string]*proto.GatewayEndpoint
 	}{
 		{
 			name: "should update server state with new updates",
-			initialData: map[string]*proto.GatewayEndpoint{
+			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
 				"endpoint1": {
 					EndpointId: "endpoint1",
 				},
@@ -197,7 +197,7 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 		},
 		{
 			name: "should handle no updates",
-			initialData: map[string]*proto.GatewayEndpoint{
+			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
 				"endpoint1": {
 					EndpointId: "endpoint1",
 				},
@@ -226,7 +226,7 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 			}
 			close(updateCh)
 
-			mockDataSource.EXPECT().FetchAuthDataSync().Return(&proto.AuthDataResponse{Endpoints: test.initialData}, nil)
+			mockDataSource.EXPECT().FetchAuthDataSync().Return(&proto.AuthDataResponse{Endpoints: test.gatewayEndpoints}, nil)
 			mockDataSource.EXPECT().AuthDataUpdatesChan().Return(updateCh, nil)
 
 			server, err := NewGRPCServer(mockDataSource, polyzero.NewLogger())
