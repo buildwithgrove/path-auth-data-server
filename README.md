@@ -16,13 +16,15 @@
 
 ## 1. Introduction
 
-**PADS** (PATH Auth Data Server) is a gRPC server that provides `Gateway Endpoint` data to the `Go External Authorization Server` in order to enable authorization for the PATH Gateway.
+**PADS** (PATH Auth Data Server) is a gRPC server that provides `Gateway Endpoint` data from a data source to the `Go External Authorization Server` in order to enable authorization for [the PATH Gateway](https://github.com/buildwithgrove/path). The nature of the data source is configurable, for example it could be a YAML file or a Postgres database.
 
 ## 2. Gateway Endpoints
 
-The PATH repo contains the `auth_Server` packages which contains the `Go External Authorization Server`.
+<!-- TODO_IMPROVE(@commoddity): update link to point to main branch once `envoy-grpc-auth-service` branch is merged -->
+[The PATH repo](https://github.com/buildwithgrove/path) contains [the `auth_server` package](https://github.com/buildwithgrove/path/tree/envoy-grpc-auth-service/envoy/auth_server) which contains the `Go External Authorization Server`.
 
-This package defines the `gateway_endpoint.proto` file, which contains the definitions for the `GatewayEndpoints` that PADS must provides to the `Go External Authorization Server`.
+<!-- TODO_IMPROVE(@commoddity): update link to point to main branch once `envoy-grpc-auth-service` branch is merged -->
+[This package also defines the `gateway_endpoint.proto` file](https://github.com/buildwithgrove/path/blob/envoy-grpc-auth-service/envoy/auth_server/proto/gateway_endpoint.proto), which contains the definitions for the `GatewayEndpoints` that PADS must provides to the `Go External Authorization Server`.
 
 A single `GatewayEndpoint` represents a single authorized endpoint of the PATH Gateway service, which may be authorized for use by any number of users.
 

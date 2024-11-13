@@ -16,56 +16,56 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockDataSource is a mock of DataSource interface.
-type MockDataSource struct {
+// MockAuthDataSource is a mock of AuthDataSource interface.
+type MockAuthDataSource struct {
 	ctrl     *gomock.Controller
-	recorder *MockDataSourceMockRecorder
+	recorder *MockAuthDataSourceMockRecorder
 	isgomock struct{}
 }
 
-// MockDataSourceMockRecorder is the mock recorder for MockDataSource.
-type MockDataSourceMockRecorder struct {
-	mock *MockDataSource
+// MockAuthDataSourceMockRecorder is the mock recorder for MockAuthDataSource.
+type MockAuthDataSourceMockRecorder struct {
+	mock *MockAuthDataSource
 }
 
-// NewMockDataSource creates a new mock instance.
-func NewMockDataSource(ctrl *gomock.Controller) *MockDataSource {
-	mock := &MockDataSource{ctrl: ctrl}
-	mock.recorder = &MockDataSourceMockRecorder{mock}
+// NewMockAuthDataSource creates a new mock instance.
+func NewMockAuthDataSource(ctrl *gomock.Controller) *MockAuthDataSource {
+	mock := &MockAuthDataSource{ctrl: ctrl}
+	mock.recorder = &MockAuthDataSourceMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDataSource) EXPECT() *MockDataSourceMockRecorder {
+func (m *MockAuthDataSource) EXPECT() *MockAuthDataSourceMockRecorder {
 	return m.recorder
 }
 
-// FetchInitialData mocks base method.
-func (m *MockDataSource) FetchInitialData() (*proto.InitialDataResponse, error) {
+// AuthDataUpdatesChan mocks base method.
+func (m *MockAuthDataSource) AuthDataUpdatesChan() (<-chan *proto.AuthDataUpdate, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchInitialData")
-	ret0, _ := ret[0].(*proto.InitialDataResponse)
+	ret := m.ctrl.Call(m, "AuthDataUpdatesChan")
+	ret0, _ := ret[0].(<-chan *proto.AuthDataUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FetchInitialData indicates an expected call of FetchInitialData.
-func (mr *MockDataSourceMockRecorder) FetchInitialData() *gomock.Call {
+// AuthDataUpdatesChan indicates an expected call of AuthDataUpdatesChan.
+func (mr *MockAuthDataSourceMockRecorder) AuthDataUpdatesChan() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchInitialData", reflect.TypeOf((*MockDataSource)(nil).FetchInitialData))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthDataUpdatesChan", reflect.TypeOf((*MockAuthDataSource)(nil).AuthDataUpdatesChan))
 }
 
-// GetUpdatesChan mocks base method.
-func (m *MockDataSource) GetUpdatesChan() (<-chan *proto.Update, error) {
+// FetchAuthDataSync mocks base method.
+func (m *MockAuthDataSource) FetchAuthDataSync() (*proto.AuthDataResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUpdatesChan")
-	ret0, _ := ret[0].(<-chan *proto.Update)
+	ret := m.ctrl.Call(m, "FetchAuthDataSync")
+	ret0, _ := ret[0].(*proto.AuthDataResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUpdatesChan indicates an expected call of GetUpdatesChan.
-func (mr *MockDataSourceMockRecorder) GetUpdatesChan() *gomock.Call {
+// FetchAuthDataSync indicates an expected call of FetchAuthDataSync.
+func (mr *MockAuthDataSourceMockRecorder) FetchAuthDataSync() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUpdatesChan", reflect.TypeOf((*MockDataSource)(nil).GetUpdatesChan))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchAuthDataSync", reflect.TypeOf((*MockAuthDataSource)(nil).FetchAuthDataSync))
 }

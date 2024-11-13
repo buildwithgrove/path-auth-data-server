@@ -21,17 +21,15 @@ func main() {
 	// Initialize new polylog logger
 	logger := polyzero.NewLogger()
 
-	// TODO_NEXT - data sources added in subsequent PRs
-	// YAML - https://github.com/buildwithgrove/path-auth-data-server/pull/2
-	// Postgres - https://github.com/buildwithgrove/path-auth-data-server/pull/3
-	var dataSource grpc_server.DataSource
+	// TODO_UPNEXT(@commoddity): Add implementations for concrete data sources: YAML(#2) && Postgres(#3)
+	var authDataSource grpc_server.AuthDataSource
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		panic(fmt.Sprintf("failed to listen: %v", err))
 	}
 
-	server, err := grpc_server.NewGRPCServer(dataSource)
+	server, err := grpc_server.NewGRPCServer(authDataSource, logger)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create server: %v", err))
 	}
@@ -46,7 +44,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			logger.Error().Err(err).Msg("failed to write health check response")
+		}
 	})
 
 	// Create a new HTTP handler that serves both gRPC and HTTP
@@ -62,7 +62,7 @@ func main() {
 	httpServer := &http.Server{Handler: grpcAndHTTPHandler}
 
 	logger.Info().Int("port", port).Msg("PATH Auth Dataserver listening.")
-	if err := httpServer.Serve(lis); err != nil {
+	if err := httpServer.Serve(ln); err != nil {
 		panic(fmt.Sprintf("failed to serve: %v", err))
 	}
 }
