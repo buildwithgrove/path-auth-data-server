@@ -81,19 +81,20 @@ func (s *grpcServer) StreamAuthDataUpdates(req *proto.AuthDataUpdatesRequest, st
 func (s *grpcServer) handleDataSourceUpdates(authDataUpdatesCh <-chan *proto.AuthDataUpdate) {
 
 	for authDataUpdate := range authDataUpdatesCh {
+		logger := s.logger.With("endpoint_id", authDataUpdate.EndpointId)
 
 		s.gatewayEndpointsMu.Lock()
 		if authDataUpdate.Delete {
 
-			s.logger.Info().Str("endpoint_id", authDataUpdate.EndpointId).Msg("deleted gateway endpoint")
+			logger.Info().Msg("deleted gateway endpoint")
 
 			delete(s.gatewayEndpoints, authDataUpdate.EndpointId)
 		} else {
 
 			if _, ok := s.gatewayEndpoints[authDataUpdate.EndpointId]; !ok {
-				s.logger.Info().Str("endpoint_id", authDataUpdate.EndpointId).Msg("created gateway endpoint")
+				logger.Info().Msg("created gateway endpoint")
 			} else {
-				s.logger.Info().Str("endpoint_id", authDataUpdate.EndpointId).Msg("updated gateway endpoint")
+				logger.Info().Msg("updated gateway endpoint")
 			}
 
 			s.gatewayEndpoints[authDataUpdate.EndpointId] = authDataUpdate.GatewayEndpoint

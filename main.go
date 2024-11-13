@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
@@ -15,16 +16,35 @@ import (
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
-const port = 50051
+const portEnv = "PORT"
+
+const defaultPort = "50051"
+
+type envVars struct {
+	port string
+}
+
+func gatherEnvVars() envVars {
+	port := os.Getenv(portEnv)
+	if port == "" {
+		port = defaultPort
+	}
+
+	return envVars{
+		port: port,
+	}
+}
 
 func main() {
 	// Initialize new polylog logger
 	logger := polyzero.NewLogger()
 
+	env := gatherEnvVars()
+
 	// TODO_UPNEXT(@commoddity): Add implementations for concrete data sources: YAML(#2) && Postgres(#3)
 	var authDataSource grpc_server.AuthDataSource
 
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", env.port))
 	if err != nil {
 		panic(fmt.Sprintf("failed to listen: %v", err))
 	}
@@ -38,6 +58,8 @@ func main() {
 	proto.RegisterGatewayEndpointsServer(grpcServer, server)
 
 	// Enable gRPC reflection
+	// TODO_NEXT(@commoddity): Investigate if reflection is needed for production;
+	// if not needed put behind an env flag for local development only.
 	reflection.Register(grpcServer)
 
 	// Create a new HTTP server mux to allow health checks
@@ -61,7 +83,8 @@ func main() {
 	// Create a new HTTP server that uses the gRPC and HTTP handler
 	httpServer := &http.Server{Handler: grpcAndHTTPHandler}
 
-	logger.Info().Int("port", port).Msg("PATH Auth Dataserver listening.")
+	logger.Info().Str("port", env.port).Msg("PATH Auth Data Server listening.")
+
 	if err := httpServer.Serve(ln); err != nil {
 		panic(fmt.Sprintf("failed to serve: %v", err))
 	}

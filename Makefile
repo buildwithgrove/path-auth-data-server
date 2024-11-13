@@ -23,6 +23,7 @@ test_unit: ## Runs unit tests
 ### Mock Targets ###
 ####################
 
+# TODO_IMPROVE(@commoddity): Update to use go:generate pattern for generating mocks from interfaces
 .PHONY: gen_mocks
 gen_mocks: ## Generates mocks for testing
 	mockgen -source=./grpc/data_source.go -destination=./grpc/data_source_mock_test.go -package=grpc
