@@ -2,7 +2,10 @@
 -- It contains all tables required for storing user data needed by the Gateway.
 -- See: https://docs.sqlc.dev/en/latest/tutorials/getting-started-postgresql.html#schema-and-queries
 
--- /*-------------------- Tables Needed to Populate GatewayEndpoints --------------------*/
+-- It uses the tables defined in the Grove Portal database schema defined in the Portal HTTP DB (PHD) repo:
+-- https://github.com/pokt-foundation/portal-http-db/blob/master/postgres-driver/sqlc/schema.sql
+
+-- The `portal_applications` and its associated tables are converted to the `proto.GatewayEndpoint` format.
 
 -- Plans Tables
 CREATE TABLE pay_plans (

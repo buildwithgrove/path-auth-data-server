@@ -19,7 +19,14 @@ import (
 var _ grpc_server.AuthDataSource = &postgresDataSource{} // postgresDataSource implements the grpc_server.AuthDataSource interface.
 
 type (
-	// The postgresAuthDataSource struct satisfies the grpc_server.AuthDataSource interface.
+	// postgresDataSource implements the AuthDataSource interface for a Postgres database.
+	// The database driver is generated using SQLC: https://docs.sqlc.dev/en/latest/index.html
+	//
+	// The schema defined in ./postgres/sqlc/schema.sql is compatible with the existing
+	// Grove Portal database schema to allow PATH to stream updates from Grove Portal DB.
+	//
+	// For the current Grove Portal DB schema as defined in the Portal HTTP DB (PHD) repo:
+	// https://github.com/pokt-foundation/portal-http-db/blob/master/postgres-driver/sqlc/schema.sql
 	postgresDataSource struct {
 		driver   *postgresDriver
 		listener *pgxlisten.Listener
@@ -29,7 +36,8 @@ type (
 
 		logger polylog.Logger
 	}
-	// The postgresDriver struct wraps the sqlc generated queries and the pgxpool.Pool.
+	// The postgresDriver struct wraps the SQLC generated queries and the pgxpool.Pool.
+	// See: https://docs.sqlc.dev/en/latest/tutorials/getting-started-postgresql.html
 	postgresDriver struct {
 		*sqlc.Queries
 		DB *pgxpool.Pool
@@ -45,7 +53,6 @@ var postgresConnectionStringRegex = regexp.MustCompile(`^postgres://[^:]+:[^@]+@
 NewPostgresDataSource
 - Ensures the connection string is valid.
 - Parses the connection string into a pgx pool configuration object.
-- Ensures connections are read-only.
 - Creates a pool of connections to a PostgreSQL database using the provided connection string.
 - Creates an instance of postgresDriver using the provided pgx connection and sqlc queries.
 - Returns the created postgresDataSource instance.
@@ -75,7 +82,7 @@ func NewPostgresDataSource(ctx context.Context, connectionString string, logger 
 		DB:      pool,
 	}
 
-	postgresAuthDataSource := &postgresDataSource{
+	postgresDataSource := &postgresDataSource{
 		driver:         driver,
 		listener:       newPGXPoolListener(pool, logger),
 		notificationCh: make(chan *Notification),
@@ -83,9 +90,10 @@ func NewPostgresDataSource(ctx context.Context, connectionString string, logger 
 		logger:         logger,
 	}
 
-	go postgresAuthDataSource.listenForUpdates(ctx)
+	// Start listening for updates from the Postgres database
+	go postgresDataSource.listenForUpdates(ctx)
 
-	return postgresAuthDataSource, cleanup, nil
+	return postgresDataSource, cleanup, nil
 }
 
 // isValidPostgresConnectionString checks if a string is a valid PostgreSQL connection string.
@@ -95,7 +103,7 @@ func isValidPostgresConnectionString(s string) bool {
 
 /* ---------- Data Source Funcs ---------- */
 
-// FetchAuthDataSync retrieves all GatewayEndpoints from the database and returns them as a map.
+// FetchAuthDataSync loads the full set of GatewayEndpoints from the Postgres database.
 func (d *postgresDataSource) FetchAuthDataSync() (*proto.AuthDataResponse, error) {
 
 	rows, err := d.driver.Queries.SelectPortalApplications(context.Background())
@@ -106,12 +114,12 @@ func (d *postgresDataSource) FetchAuthDataSync() (*proto.AuthDataResponse, error
 	return convertPortalApplicationsRows(rows), nil
 }
 
-// AuthDataUpdatesChan returns a channel that emits updates to the GatewayEndpoints.
+// AuthDataUpdatesChan returns a channel that streams updates when the Postgres database changes.
 func (d *postgresDataSource) AuthDataUpdatesChan() (<-chan *proto.AuthDataUpdate, error) {
 	return d.updatesCh, nil
 }
 
-/* ---------- Data Update Funcs ---------- */
+/* ---------- Data Update Listener Funcs ---------- */
 
 const portalApplicationChangesChannel = "portal_application_changes"
 
@@ -129,6 +137,7 @@ func (h *PGXNotificationHandler) HandleNotification(ctx context.Context, n *pgco
 }
 
 // newPGXPoolListener creates a new pgxlisten.Listener with a connection from the provided pool and output channel.
+// It listens for updates from the Postgres database, using the function and triggers defined in “./postgres/sqlc/schema.sql#L56-162“
 func newPGXPoolListener(pool *pgxpool.Pool, logger polylog.Logger) *pgxlisten.Listener {
 	connectFunc := func(ctx context.Context) (*pgx.Conn, error) {
 		conn, err := pool.Acquire(ctx)
@@ -216,79 +225,4 @@ func (d *postgresDataSource) processPortalApplicationChanges(ctx context.Context
 	}
 
 	return nil
-}
-
-/* ---------- Struct Conversion Funcs ---------- */
-
-type PortalApplicationRow struct {
-	EndpointID        string   `json:"endpoint_id"`
-	AccountID         string   `json:"account_id"`
-	SecretKeyRequired bool     `json:"secret_key_required"`
-	Plan              string   `json:"plan"`
-	CapacityLimit     int32    `json:"capacity_limit"`
-	ThroughputLimit   int32    `json:"throughput_limit"`
-	AuthorizedUsers   []string `json:"authorized_users"`
-}
-
-func convertSelectPortalApplicationsRow(r sqlc.SelectPortalApplicationsRow) *PortalApplicationRow {
-	return &PortalApplicationRow{
-		EndpointID:        r.EndpointID,
-		AccountID:         r.AccountID.String,
-		SecretKeyRequired: r.SecretKeyRequired.Bool,
-		Plan:              r.Plan.String,
-		CapacityLimit:     r.CapacityLimit.Int32,
-		ThroughputLimit:   r.ThroughputLimit.Int32,
-		AuthorizedUsers:   r.AuthorizedUsers,
-	}
-}
-
-func convertSelectPortalApplicationRow(r sqlc.SelectPortalApplicationRow) *PortalApplicationRow {
-	return &PortalApplicationRow{
-		EndpointID:        r.EndpointID,
-		AccountID:         r.AccountID.String,
-		SecretKeyRequired: r.SecretKeyRequired.Bool,
-		Plan:              r.Plan.String,
-		CapacityLimit:     r.CapacityLimit.Int32,
-		ThroughputLimit:   r.ThroughputLimit.Int32,
-		AuthorizedUsers:   r.AuthorizedUsers,
-	}
-}
-
-func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
-	return &proto.GatewayEndpoint{
-		EndpointId: r.EndpointID,
-		UserAccount: &proto.UserAccount{
-			AccountId: r.AccountID,
-			PlanType:  r.Plan,
-		},
-		RateLimiting: &proto.RateLimiting{
-			ThroughputLimit: int32(r.ThroughputLimit),
-			CapacityLimit:   int32(r.CapacityLimit),
-			// The current Portal DB only supports monthly capacity limit periods
-			CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
-		},
-		Auth: &proto.Auth{
-			// TODO_IMPROVE(@commoddity): Add a dedicated field for requiring auth for backwards compatibility
-			RequireAuth:     r.SecretKeyRequired,
-			AuthorizedUsers: convertToProtoAuthorizedUsers(r.AuthorizedUsers),
-		},
-	}
-}
-
-func convertToProtoAuthorizedUsers(users []string) map[string]*proto.Empty {
-	authUsers := make(map[string]*proto.Empty, len(users))
-	for _, user := range users {
-		authUsers[user] = &proto.Empty{}
-	}
-	return authUsers
-}
-
-func convertPortalApplicationsRows(rows []sqlc.SelectPortalApplicationsRow) *proto.AuthDataResponse {
-	endpointsProto := make(map[string]*proto.GatewayEndpoint, len(rows))
-	for _, row := range rows {
-		portalAppRow := convertSelectPortalApplicationsRow(row)
-		endpointsProto[portalAppRow.EndpointID] = portalAppRow.convertToProto()
-	}
-
-	return &proto.AuthDataResponse{Endpoints: endpointsProto}
 }
