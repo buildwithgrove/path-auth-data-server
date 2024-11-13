@@ -32,7 +32,7 @@ type yamlDataSource struct {
 // NewYAMLDataSource creates a new yamlDataSource for the specified filename.
 func NewYAMLDataSource(filename string) (*yamlDataSource, error) {
 
-	y := &yamlDataSource{
+	dataSource := &yamlDataSource{
 		filename:          filename,
 		authDataUpdatesCh: make(chan *proto.AuthDataUpdate, 100_000),
 	}
@@ -93,7 +93,9 @@ func (y *yamlDataSource) watchFile() {
 	for {
 		select {
 		case event := <-watcher.Events:
-			if event.Op&fsnotify.Write == fsnotify.Write {
+			// Check if the write operation flag is set in the event
+			isWriteEvent := event.Op & fsnotify.Write
+			if isWriteEvent == fsnotify.Write {
 				newData, err := y.loadGatewayEndpointsFromYAML()
 				if err != nil {
 					log.Printf("Error loading new data: %v", err)
@@ -115,12 +117,13 @@ func (y *yamlDataSource) handleUpdates(newEndpoints map[string]*proto.GatewayEnd
 
 	// Save old set of gateway endpoints in order to
 	// compare with the new set to handle deletions.
-	gatewayEndpoints := y.gatewayEndpoints
+	oldGatewayEndpoints := y.gatewayEndpoints
 
 	// Assign new set of gateway endpoints.
 	y.gatewayEndpoints = newEndpoints
 
-	// Send updates for new or modified endpoints
+	// Send updates for new or modified endpoints.
+	// The onus of determining if an endpoint is new is on the receiver.
 	for id, newEndpoint := range newEndpoints {
 		update := &proto.AuthDataUpdate{
 			EndpointId:      id,
