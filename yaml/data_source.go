@@ -104,7 +104,9 @@ func (y *yamlDataSource) watchFile() {
 	for {
 		select {
 		case event := <-watcher.Events:
-			if event.Op&fsnotify.Write == fsnotify.Write {
+			// Check if the write operation flag is set in the event
+			isWriteEvent := event.Op & fsnotify.Write
+			if isWriteEvent == fsnotify.Write {
 				newData, err := y.loadGatewayEndpointsFromYAML()
 				if err != nil {
 					log.Printf("Error loading new data: %v", err)
@@ -126,12 +128,13 @@ func (y *yamlDataSource) handleUpdates(newEndpoints map[string]*proto.GatewayEnd
 
 	// Save old set of gateway endpoints in order to
 	// compare with the new set to handle deletions.
-	gatewayEndpoints := y.gatewayEndpoints
+	oldGatewayEndpoints := y.gatewayEndpoints
 
 	// Assign new set of gateway endpoints.
 	y.gatewayEndpoints = newEndpoints
 
-	// Send updates for new or modified endpoints
+	// Send updates for new or modified endpoints.
+	// The onus of determining if an endpoint is new is on the receiver.
 	for id, newEndpoint := range newEndpoints {
 		update := &proto.AuthDataUpdate{
 			EndpointId:      id,
@@ -141,7 +144,7 @@ func (y *yamlDataSource) handleUpdates(newEndpoints map[string]*proto.GatewayEnd
 	}
 
 	// Send delete updates for removed endpoints
-	for id := range gatewayEndpoints {
+	for id := range oldGatewayEndpoints {
 		if _, exists := newEndpoints[id]; !exists {
 			update := &proto.AuthDataUpdate{
 				EndpointId: id,
