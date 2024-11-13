@@ -92,7 +92,7 @@ func main() {
 
 	// Create a new HTTP handler that serves both gRPC and HTTP
 	grpcAndHTTPHandler := h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if isRequestGRPC(r) {
+		if grpc_server.IsRequestGRPC(r) {
 			grpcServer.ServeHTTP(w, r)
 		} else {
 			mux.ServeHTTP(w, r)
@@ -107,9 +107,4 @@ func main() {
 	if err := httpServer.Serve(ln); err != nil {
 		panic(fmt.Sprintf("failed to serve: %v", err))
 	}
-}
-
-// isRequestGRPC checks the true if the request is a gRPC request by checking the protocol and content type.
-func isRequestGRPC(req *http.Request) bool {
-	return req.ProtoMajor == 2 && req.Header.Get("Content-Type") == "application/grpc"
 }

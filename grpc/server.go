@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"net/http"
 	"sync"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
@@ -105,4 +106,10 @@ func (s *grpcServer) handleDataSourceUpdates(authDataUpdatesCh <-chan *proto.Aut
 		// Send the update to any clients streaming updates.
 		s.authDataUpdateCh <- authDataUpdate
 	}
+}
+
+/* -------------------- Helpers -------------------- */
+// IsRequestGRPC checks the true if the request is a gRPC request by checking the protocol and content type.
+func IsRequestGRPC(req *http.Request) bool {
+	return req.ProtoMajor == 2 && req.Header.Get("Content-Type") == "application/grpc"
 }

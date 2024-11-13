@@ -1,3 +1,13 @@
+/*
+Package yaml provides an implementation of the AuthDataSource interface for YAML files.
+
+It loads YAML data from a file which must match the format defined in gateway-endpoints.schema.yaml.
+
+An example `gateway-endpoints.example.yaml` is provided in the testdata directory.
+
+This package also uses a file watcher to detect changes to the YAML file and sends updates
+to the authDataUpdatesCh channel if any changes are detected.
+*/
 package yaml
 
 import (
@@ -12,7 +22,8 @@ import (
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
-var _ grpc_server.AuthDataSource = &yamlDataSource{} // yamlDataSource implements the AuthDataSource interface
+// yamlDataSource implements the AuthDataSource interface
+var _ grpc_server.AuthDataSource = &yamlDataSource{}
 
 /* --------------------------- yamlDataSource Struct ---------------------------- */
 
@@ -32,22 +43,22 @@ type yamlDataSource struct {
 // NewYAMLDataSource creates a new yamlDataSource for the specified filename.
 func NewYAMLDataSource(filename string) (*yamlDataSource, error) {
 
-	y := &yamlDataSource{
+	dataSource := &yamlDataSource{
 		filename:          filename,
 		authDataUpdatesCh: make(chan *proto.AuthDataUpdate, 100_000),
 	}
 
 	// Warm up the data store with the full set of GatewayEndpoints from the YAML file.
-	gatewayEndpoints, err := y.loadGatewayEndpointsFromYAML()
+	gatewayEndpoints, err := dataSource.loadGatewayEndpointsFromYAML()
 	if err != nil {
 		return nil, err
 	}
-	y.gatewayEndpoints = gatewayEndpoints.Endpoints
+	dataSource.gatewayEndpoints = gatewayEndpoints.Endpoints
 
 	// Watch the YAML file for changes.
-	go y.watchFile()
+	go dataSource.watchFile()
 
-	return y, nil
+	return dataSource, nil
 }
 
 // FetchAuthDataSync loads the full set of GatewayEndpoints from the YAML file.
