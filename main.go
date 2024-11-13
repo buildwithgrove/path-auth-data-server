@@ -11,7 +11,6 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 	"github.com/buildwithgrove/path-auth-data-server/yaml"
@@ -75,11 +74,6 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	proto.RegisterGatewayEndpointsServer(grpcServer, server)
-
-	// Enable gRPC reflection
-	// TODO_NEXT(@commoddity): Investigate if reflection is needed for production;
-	// if not needed put behind an env flag for local development only.
-	reflection.Register(grpcServer)
 
 	// Create a new HTTP server mux to allow health checks
 	mux := http.NewServeMux()
