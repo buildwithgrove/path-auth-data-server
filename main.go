@@ -15,14 +15,16 @@ import (
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
-const portEnv = "PORT"
-
-const defaultPort = "50051"
+const (
+	portEnv     = "PORT"
+	defaultPort = "50051"
+)
 
 type envVars struct {
 	port string
 }
 
+// gatherEnvVars retrieves environment variables and sets defaults if not present.
 func gatherEnvVars() envVars {
 	port := os.Getenv(portEnv)
 	if port == "" {
