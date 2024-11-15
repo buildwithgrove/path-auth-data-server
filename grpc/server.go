@@ -32,9 +32,11 @@ func NewGRPCServer(authDataSource AuthDataSource, logger polylog.Logger) (*grpcS
 
 	server := &grpcServer{
 		authDataSource:   authDataSource,
-		gatewayEndpoints: make(map[string]*proto.GatewayEndpoint),
 		authDataUpdateCh: make(chan *proto.AuthDataUpdate, 1_000),
-		logger:           logger,
+
+		gatewayEndpoints: make(map[string]*proto.GatewayEndpoint),
+
+		logger: logger,
 	}
 
 	// Warm up the data store with the full set of GatewayEndpoints from the data source.
