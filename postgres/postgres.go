@@ -47,7 +47,7 @@ type (
 /* ---------- Postgres Connection Funcs ---------- */
 
 // Regular expression to match a valid PostgreSQL connection string
-var postgresConnectionStringRegex = regexp.MustCompile(`^postgres://[^:]+:[^@]+@[^:]+:\d+/.+$`)
+var postgresConnectionStringRegex = regexp.MustCompile(`^postgres(?:ql)?:\/\/[^:]+:[^@]+@[^:]+:\d+\/[^?]+(?:\?.+)?$`)
 
 /*
 NewPostgresDataSource
