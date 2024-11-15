@@ -18,35 +18,6 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-const (
-	yamlFilePathEnv = "YAML_FILEPATH"
-	portEnv         = "PORT"
-
-	defaultPort = "50051"
-)
-
-type envVars struct {
-	yamlFilepath string
-	port         string
-}
-
-func gatherEnvVars() (envVars, error) {
-	yamlFilepath := os.Getenv(yamlFilePathEnv)
-	if yamlFilepath == "" {
-		return envVars{}, fmt.Errorf("YAML_FILEPATH environment variable is not set")
-	}
-
-	port := os.Getenv(portEnv)
-	if port == "" {
-		port = defaultPort
-	}
-
-	return envVars{
-		yamlFilepath: yamlFilepath,
-		port:         port,
-	}, nil
-}
-
 func main() {
 	// Initialize new polylog logger
 	logger := polyzero.NewLogger()
@@ -56,12 +27,14 @@ func main() {
 		panic(fmt.Errorf("failed to gather environment variables: %v", err))
 	}
 
+	// 1. Load the YAML data source
 	// TODO_UPNEXT(@commoddity): Add implementation for concrete data sources: Postgres(#3)
 	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath)
 	if err != nil {
 		panic(fmt.Errorf("failed to create YAML data source: %v", err))
 	}
 
+	// 2. Initialize the gRPC server that will serve the Gateway Endpoints
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", env.port))
 	if err != nil {
 		panic(fmt.Sprintf("failed to listen: %v", err))
@@ -75,7 +48,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 	proto.RegisterGatewayEndpointsServer(grpcServer, server)
 
-	// Create a new HTTP server mux to allow health checks
+	// create a new HTTP server mux for health check on `/healthz`
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -84,7 +57,7 @@ func main() {
 		}
 	})
 
-	// Create a new HTTP handler that serves both gRPC and HTTP
+	// create a new HTTP handler that serves both gRPC (for Gateway Endpoints) and HTTP (for health check)
 	grpcAndHTTPHandler := h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if grpc_server.IsRequestGRPC(r) {
 			grpcServer.ServeHTTP(w, r)
@@ -93,12 +66,44 @@ func main() {
 		}
 	}), &http2.Server{})
 
-	// Create a new HTTP server that uses the gRPC and HTTP handler
+	logger.Info().Str(portEnv, env.port).Msg("PATH Auth Data Server listening.")
+
 	httpServer := &http.Server{Handler: grpcAndHTTPHandler}
-
-	logger.Info().Str("port", env.port).Msg("PATH Auth Data Server listening.")
-
 	if err := httpServer.Serve(ln); err != nil {
 		panic(fmt.Sprintf("failed to serve: %v", err))
 	}
+}
+
+/* ---------------------- Environment Variables ---------------------- */
+
+const (
+	yamlFilePathEnv = "YAML_FILEPATH"
+
+	portEnv     = "PORT"
+	defaultPort = "50051"
+)
+
+type envVars struct {
+	yamlFilepath string
+	port         string
+}
+
+func gatherEnvVars() (envVars, error) {
+	env := envVars{
+		yamlFilepath: os.Getenv(yamlFilePathEnv),
+		port:         os.Getenv(portEnv),
+	}
+	return env, env.validateAndHydrate()
+}
+
+// validateAndHydrate validates the required environment variables are set
+// and hydrates defaults for any optional values that are not set.
+func (env *envVars) validateAndHydrate() error {
+	if env.yamlFilepath == "" {
+		return fmt.Errorf("%s is not set", yamlFilePathEnv)
+	}
+	if env.port == "" {
+		env.port = defaultPort
+	}
+	return nil
 }
