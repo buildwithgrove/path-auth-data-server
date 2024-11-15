@@ -15,8 +15,8 @@ help: ## Prints all the targets in all the Makefiles
 ### Test Targets ###
 ####################
 
-.PHONY: test
-test: ## Runs all tests
+.PHONY: test_all
+test_all: ## Runs all unit tests
 	go test ./... -count=1
 
 .PHONY: test_unit
@@ -27,6 +27,7 @@ test_unit: ## Runs unit tests
 ### Mock Targets ###
 ####################
 
+# TODO_IMPROVE(@commoddity): Update to use go:generate pattern for generating mocks from interfaces
 .PHONY: gen_mocks
 gen_mocks: ## Generates mocks for testing
 	mockgen -source=./grpc/data_source.go -destination=./grpc/data_source_mock_test.go -package=grpc

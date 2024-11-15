@@ -1,0 +1,50 @@
+type: object
+properties:
+  endpoints:
+    type: object
+    additionalProperties:
+      type: object
+      properties:
+        endpoint_id:
+          type: string
+          description: "The unique identifier for a user account's endpoint."
+        auth:
+          type: object
+          properties:
+            require_auth:
+              type: boolean
+              description: "Indicates whether the GatewayEndpoint requires authentication."
+            authorized_users:
+              type: object
+              additionalProperties:
+                type: object
+                description: "A map of ProviderUserIDs authorized to access this UserAccount's GatewayEndpoints."
+        user_account:
+          type: object
+          properties:
+            account_id:
+              type: string
+              description: "The unique identifier for a UserAccount."
+            plan_type:
+              type: string
+              description: "The plan type for a UserAccount, which identifies the pricing plan for the Account."
+        rate_limiting:
+          type: object
+          properties:
+            throughput_limit:
+              type: integer
+              description: "ThroughputLimit refers to rate limiting per-second (TPS)."
+            capacity_limit:
+              type: integer
+              description: "CapacityLimit refers to rate limiting over longer periods."
+            capacity_limit_period:
+              type: string
+              description: "The period over which the CapacityLimit is enforced."
+      required:
+        - endpoint_id
+        - auth
+        - user_account
+    required:
+      - endpoint_id
+      - auth
+      - user_account

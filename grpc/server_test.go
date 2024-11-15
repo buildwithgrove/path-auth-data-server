@@ -234,7 +234,7 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 
 			server.handleDataSourceUpdates(updateCh)
 
-			c.Equal(test.expectedDataAfterUpdates, server.gatewayEndpoints)
+			c.EqualValues(test.expectedDataAfterUpdates, server.gatewayEndpoints)
 		})
 	}
 }

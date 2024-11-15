@@ -1,13 +1,13 @@
 endpoints:
   endpoint_1:
-    endpoint_id: "endpoint_1"
+    endpoint_id: "endpoint_1"  # The unique identifier for a user account's endpoint.
     auth:
-      require_auth: true
+      require_auth: true  # Indicates whether the GatewayEndpoint requires authentication.
       authorized_users:
-        "auth0|user_1": {}
+        "auth0|user_1": {}  # A map of ProviderUserIDs authorized to access this UserAccount's GatewayEndpoints.
     user_account:
-      account_id: "account_1"
-      plan_type: "PLAN_UNLIMITED"
+      account_id: "account_1"  # The unique identifier for a UserAccount.
+      plan_type: "PLAN_UNLIMITED"  # The plan type for a UserAccount, which identifies the pricing plan for the Account.
 
   endpoint_2:
     endpoint_id: "endpoint_2"
@@ -17,6 +17,6 @@ endpoints:
       account_id: "account_2"
       plan_type: "PLAN_FREE"
     rate_limiting:
-      throughput_limit: 30
-      capacity_limit: 100000
-      capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY"
+      throughput_limit: 30  # ThroughputLimit refers to rate limiting per-second (TPS).
+      capacity_limit: 100000  # CapacityLimit refers to rate limiting over longer periods.
+      capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY"  # The period over which the CapacityLimit is enforced.

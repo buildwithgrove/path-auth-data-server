@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"net/http"
 	"sync"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
@@ -17,12 +18,11 @@ import (
 type grpcServer struct {
 	proto.UnimplementedGatewayEndpointsServer
 
-	authDataSource AuthDataSource
+	authDataSource   AuthDataSource
+	authDataUpdateCh chan *proto.AuthDataUpdate
 
 	gatewayEndpoints   map[string]*proto.GatewayEndpoint
 	gatewayEndpointsMu sync.RWMutex
-
-	authDataUpdateCh chan *proto.AuthDataUpdate
 
 	logger polylog.Logger
 }
@@ -32,9 +32,11 @@ func NewGRPCServer(authDataSource AuthDataSource, logger polylog.Logger) (*grpcS
 
 	server := &grpcServer{
 		authDataSource:   authDataSource,
-		gatewayEndpoints: make(map[string]*proto.GatewayEndpoint),
 		authDataUpdateCh: make(chan *proto.AuthDataUpdate, 1_000),
-		logger:           logger,
+
+		gatewayEndpoints: make(map[string]*proto.GatewayEndpoint),
+
+		logger: logger,
 	}
 
 	// Warm up the data store with the full set of GatewayEndpoints from the data source.
@@ -62,13 +64,14 @@ func (s *grpcServer) FetchAuthDataSync(ctx context.Context, req *proto.AuthDataR
 	return &proto.AuthDataResponse{Endpoints: s.gatewayEndpoints}, nil
 }
 
-// StreamAuthDataUpdates streams GatewayEndpoint updates to PATH's Go External Authorization Server
-// whenever the data source changes. It uses gRPC streaming to send updates to PATH's Go External Authorization Server.
+// StreamAuthDataUpdates streams GatewayEndpoint updates to PATH's
+// Go External Authorization Server whenever the data source changes.
+// It uses gRPC streaming to send updates to PATH's External Authorization Server.
 func (s *grpcServer) StreamAuthDataUpdates(req *proto.AuthDataUpdatesRequest, stream proto.GatewayEndpoints_StreamAuthDataUpdatesServer) error {
 	for update := range s.authDataUpdateCh {
 
 		if err := stream.Send(update); err != nil {
-			s.logger.Error().Err(err).Msg("failed to send auth data update to client")
+			s.logger.Error().Err(err).Msg("failed to stream auth data update to client")
 			return err
 		}
 
@@ -77,23 +80,25 @@ func (s *grpcServer) StreamAuthDataUpdates(req *proto.AuthDataUpdatesRequest, st
 }
 
 // handleDataSourceUpdates listens for updates from the DataSource's authDataUpdatesCh and
-// updates the server's data store accordingly. Update may be one of: create, update, or delete.
+// updates the server's data store accordingly.
+// Update may be one of: create, update, or delete.
 func (s *grpcServer) handleDataSourceUpdates(authDataUpdatesCh <-chan *proto.AuthDataUpdate) {
 
 	for authDataUpdate := range authDataUpdatesCh {
+		logger := s.logger.With("endpoint_id", authDataUpdate.EndpointId)
 
 		s.gatewayEndpointsMu.Lock()
 		if authDataUpdate.Delete {
 
-			s.logger.Info().Str("endpoint_id", authDataUpdate.EndpointId).Msg("deleted gateway endpoint")
+			logger.Info().Msg("deleted gateway endpoint")
 
 			delete(s.gatewayEndpoints, authDataUpdate.EndpointId)
 		} else {
 
 			if _, ok := s.gatewayEndpoints[authDataUpdate.EndpointId]; !ok {
-				s.logger.Info().Str("endpoint_id", authDataUpdate.EndpointId).Msg("created gateway endpoint")
+				logger.Info().Msg("created gateway endpoint")
 			} else {
-				s.logger.Info().Str("endpoint_id", authDataUpdate.EndpointId).Msg("updated gateway endpoint")
+				logger.Info().Msg("updated gateway endpoint")
 			}
 
 			s.gatewayEndpoints[authDataUpdate.EndpointId] = authDataUpdate.GatewayEndpoint
@@ -103,4 +108,10 @@ func (s *grpcServer) handleDataSourceUpdates(authDataUpdatesCh <-chan *proto.Aut
 		// Send the update to any clients streaming updates.
 		s.authDataUpdateCh <- authDataUpdate
 	}
+}
+
+/* -------------------- Helpers -------------------- */
+// IsRequestGRPC checks the true if the request is a gRPC request by checking the protocol and content type.
+func IsRequestGRPC(req *http.Request) bool {
+	return req.ProtoMajor == 2 && req.Header.Get("Content-Type") == "application/grpc"
 }
