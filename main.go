@@ -21,6 +21,61 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
+func main() {
+	logger := polyzero.NewLogger()
+
+	env, err := gatherEnvVars()
+	if err != nil {
+		panic(fmt.Errorf("failed to gather environment variables: %v", err))
+	}
+
+	// 1. Load the data source
+	authDataSource, cleanup, err := getAuthDataSource(env, logger)
+	if err != nil {
+		panic(err)
+	}
+	defer cleanup()
+
+	// 2. Initialize the gRPC server that will serve the Gateway Endpoints
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", env.port))
+	if err != nil {
+		panic(fmt.Sprintf("failed to listen: %v", err))
+	}
+
+	server, err := grpc_server.NewGRPCServer(authDataSource, logger)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create server: %v", err))
+	}
+
+	grpcServer := grpc.NewServer()
+	proto.RegisterGatewayEndpointsServer(grpcServer, server)
+
+	// create a new HTTP server mux for health check on `/healthz`
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte("OK")); err != nil {
+			logger.Error().Err(err).Msg("failed to write health check response")
+		}
+	})
+
+	// create a new HTTP handler that serves both gRPC (for Gateway Endpoints) and HTTP (for health check)
+	grpcAndHTTPHandler := h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if grpc_server.IsRequestGRPC(r) {
+			grpcServer.ServeHTTP(w, r)
+		} else {
+			mux.ServeHTTP(w, r)
+		}
+	}), &http2.Server{})
+
+	logger.Info().Str(portEnv, env.port).Msg("PATH Auth Data Server listening.")
+
+	httpServer := &http.Server{Handler: grpcAndHTTPHandler}
+	if err := httpServer.Serve(ln); err != nil {
+		panic(fmt.Sprintf("failed to serve: %v", err))
+	}
+}
+
 /* ---------------------- Environment Variables ---------------------- */
 
 const (
@@ -61,73 +116,16 @@ func (env *envVars) validateAndHydrate() error {
 	return nil
 }
 
-/* ------------------------------- Main ------------------------------- */
-
-func main() {
-	logger := polyzero.NewLogger()
-
-	env, err := gatherEnvVars()
-	if err != nil {
-		panic(fmt.Errorf("failed to gather environment variables: %v", err))
-	}
-
-	// 1. Load the data source
-	authDataSource, cleanup, err := getAuthDataSource(env, logger)
-	if err != nil {
-		panic(err)
-	}
-	defer cleanup()
-
-	// 2. Initialize the gRPC server that will serve the Gateway Endpoints
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", env.port))
-	if err != nil {
-		panic(fmt.Sprintf("failed to listen: %v", err))
-	}
-
-	server, err := grpc_server.NewGRPCServer(authDataSource, logger)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create server: %v", err))
-	}
-
-	grpcServer := grpc.NewServer()
-	proto.RegisterGatewayEndpointsServer(grpcServer, server)
-
-	// create a new HTTP server mux to allow health checks
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("OK")); err != nil {
-			logger.Error().Err(err).Msg("failed to write health check response")
-		}
-	})
-
-	// create a new HTTP handler that serves both gRPC (for Gateway Endpoints) and HTTP (for health check)
-	grpcAndHTTPHandler := h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if grpc_server.IsRequestGRPC(r) {
-			grpcServer.ServeHTTP(w, r)
-		} else {
-			mux.ServeHTTP(w, r)
-		}
-	}), &http2.Server{})
-
-	logger.Info().Str(portEnv, env.port).Msg("PATH Auth Data Server listening.")
-
-	httpServer := &http.Server{Handler: grpcAndHTTPHandler}
-	if err := httpServer.Serve(ln); err != nil {
-		panic(fmt.Sprintf("failed to serve: %v", err))
-	}
-}
-
 /* ------------------------------- Get Auth Data Source ------------------------------- */
 
 // getAuthDataSource returns an AuthDataSource and a cleanup function.
 // The cleanup function should be deferred to ensure resources are released.
 func getAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
 
-	// Validation of environment variables is done in gatherEnvVars, so we
-	// know only one variable checked in the switch statement will be set.
+	// Environment variables are validated in gatherEnvVars, so
+	// only one variable checked for in the switch will be set.
 
-	// The specific data source loaded depends on which environment variable is set:
+	// The auth data source used depends on which environment variable is set.
 	switch {
 
 	// POSTGRES_CONNECTION_STRING - use a Postgres database as the data source
@@ -147,7 +145,7 @@ func getAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthData
 // getPostgresAuthDataSource initializes a Postgres data source and returns it along with a cleanup function.
 func getPostgresAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
 
-	logger.Info().Str(postgresConnectionStringEnv, env.postgresConnectionString).Msg("Using Postgres data source")
+	logger.Info().Msg("Using Postgres data source")
 
 	authDataSource, cleanup, err := postgres.NewPostgresDataSource(
 		context.Background(),
@@ -164,7 +162,7 @@ func getPostgresAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.
 // getYAMLAuthDataSource initializes a YAML data source and returns it.
 func getYAMLAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
 
-	logger.Info().Str(yamlFilePathEnv, env.yamlFilepath).Msg("Using YAML data source")
+	logger.Info().Msg("Using YAML data source")
 
 	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath)
 	if err != nil {
