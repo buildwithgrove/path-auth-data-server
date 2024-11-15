@@ -81,8 +81,8 @@ func main() {
 const (
 	postgresConnectionStringEnv = "POSTGRES_CONNECTION_STRING"
 	yamlFilePathEnv             = "YAML_FILEPATH"
-	portEnv                     = "PORT"
 
+	portEnv     = "PORT"
 	defaultPort = "50051"
 )
 
@@ -101,8 +101,9 @@ func gatherEnvVars() (envVars, error) {
 	return env, env.validateAndHydrate()
 }
 
-// validateAndHydrate ensures one only auth data source will
-// be used based on which environment variable is set.
+// validateAndHydrate validates the required environment variables are set,
+// confirms that only one data source will be used,
+// and hydrates defaults for any optional values that are not set.
 func (env *envVars) validateAndHydrate() error {
 	if env.postgresConnectionString == "" && env.yamlFilepath == "" {
 		return fmt.Errorf("neither %s nor %s is set", postgresConnectionStringEnv, yamlFilePathEnv)
