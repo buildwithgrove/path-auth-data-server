@@ -1,22 +1,33 @@
 endpoints:
+
+  # 1. API Key Authentication
   endpoint_1:
     endpoint_id: "endpoint_1"  # The unique identifier for a user account's endpoint.
     auth:
-      require_auth: true  # Indicates whether the GatewayEndpoint requires authentication.
-      authorized_users:
-        "auth0|user_1": {}  # A map of ProviderUserIDs authorized to access this UserAccount's GatewayEndpoints.
-    user_account:
+      auth_type: "API_KEY_AUTH"  # The type of authentication being used.
+      api_key: "api_key_1"  # The API key string.
+    metadata:
+      plan_type: "PLAN_UNLIMITED"  # The plan type for a UserAccount, which identifies the pricing plan for the Account.
       account_id: "account_1"  # The unique identifier for a UserAccount.
+
+  # 2. JWT Authentication
+  endpoint_2:
+    endpoint_id: "endpoint_2"  # The unique identifier for a user account's endpoint.
+    auth:
+      auth_type: "JWT_AUTH"  # The type of authentication being used.
+      jwt_authorized_users:
+        "auth0|user_2": {}  # A map of ProviderUserIDs authorized to access this UserAccount's GatewayEndpoints.
+    metadata:
+      account_id: "account_2"  # The unique identifier for a UserAccount.
       plan_type: "PLAN_UNLIMITED"  # The plan type for a UserAccount, which identifies the pricing plan for the Account.
 
-  endpoint_2:
-    endpoint_id: "endpoint_2"
-    auth:
-      require_auth: false
-    user_account:
-      account_id: "account_2"
-      plan_type: "PLAN_FREE"
+  # 3. No Authentication
+  endpoint_3:
+    endpoint_id: "endpoint_3"  # The unique identifier for a user account's endpoint.
     rate_limiting:
-      throughput_limit: 30  # ThroughputLimit refers to rate limiting per-second (TPS).
-      capacity_limit: 100000  # CapacityLimit refers to rate limiting over longer periods.
+      throughput_limit: 50  # ThroughputLimit refers to rate limiting per-second (TPS).
+      capacity_limit: 200  # CapacityLimit refers to rate limiting over longer periods.
       capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY"  # The period over which the CapacityLimit is enforced.
+    metadata:
+      account_id: "account_3"  # The unique identifier for a UserAccount.
+      plan_type: "PLAN_UNLIMITED"  # The plan type for a UserAccount, which identifies the pricing plan for the Account.

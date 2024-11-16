@@ -57,10 +57,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
-							RequireAuth: false,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"provider_user_1": {},
-							},
+							AuthType:        proto.Auth_NO_AUTH,
+							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 					},
 					"endpoint_2": {
@@ -75,9 +73,11 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"provider_user_2": {},
+							AuthType: proto.Auth_API_KEY_AUTH,
+							AuthTypeDetails: &proto.Auth_ApiKey{
+								ApiKey: &proto.APIKey{
+									ApiKey: "secret_key_2",
+								},
 							},
 						},
 					},
@@ -93,9 +93,11 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"provider_user_3": {},
+							AuthType: proto.Auth_API_KEY_AUTH,
+							AuthTypeDetails: &proto.Auth_ApiKey{
+								ApiKey: &proto.APIKey{
+									ApiKey: "secret_key_3",
+								},
 							},
 						},
 					},
@@ -111,10 +113,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
-							RequireAuth: false,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"provider_user_1": {},
-							},
+							AuthType:        proto.Auth_NO_AUTH,
+							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 					},
 					"endpoint_5": {
@@ -129,9 +129,11 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"provider_user_2": {},
+							AuthType: proto.Auth_API_KEY_AUTH,
+							AuthTypeDetails: &proto.Auth_ApiKey{
+								ApiKey: &proto.APIKey{
+									ApiKey: "secret_key_2",
+								},
 							},
 						},
 					},

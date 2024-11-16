@@ -24,9 +24,11 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"auth0|user_1": {},
+							AuthType: proto.Auth_API_KEY_AUTH,
+							AuthTypeDetails: &proto.Auth_ApiKey{
+								ApiKey: &proto.APIKey{
+									ApiKey: "secret_key_1",
+								},
 							},
 						},
 						UserAccount: &proto.UserAccount{
@@ -38,8 +40,8 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 					"endpoint_2": {
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							RequireAuth:     false,
-							AuthorizedUsers: map[string]*proto.Empty{},
+							AuthType:        proto.Auth_NO_AUTH,
+							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						UserAccount: &proto.UserAccount{
 							AccountId: "account_2",
@@ -134,8 +136,8 @@ endpoints:
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							RequireAuth:     false,
-							AuthorizedUsers: map[string]*proto.Empty{},
+							AuthType:        proto.Auth_NO_AUTH,
+							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						UserAccount: &proto.UserAccount{
 							AccountId: "account_1",
@@ -149,8 +151,8 @@ endpoints:
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							RequireAuth:     false,
-							AuthorizedUsers: map[string]*proto.Empty{},
+							AuthType:        proto.Auth_NO_AUTH,
+							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						UserAccount: &proto.UserAccount{
 							AccountId: "account_2",
@@ -213,9 +215,11 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
-						RequireAuth: true,
-						AuthorizedUsers: map[string]*proto.Empty{
-							"auth0|user_1": {},
+						AuthType: proto.Auth_API_KEY_AUTH,
+						AuthTypeDetails: &proto.Auth_ApiKey{
+							ApiKey: &proto.APIKey{
+								ApiKey: "secret_key_1",
+							},
 						},
 					},
 					UserAccount: &proto.UserAccount{
@@ -228,7 +232,8 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
-						RequireAuth: false,
+						AuthType:        proto.Auth_NO_AUTH,
+						AuthTypeDetails: &proto.Auth_NoAuth{},
 					},
 					UserAccount: &proto.UserAccount{
 						AccountId: "account_1",
@@ -238,7 +243,8 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_2": {
 					EndpointId: "endpoint_2",
 					Auth: &proto.Auth{
-						RequireAuth: false,
+						AuthType:        proto.Auth_NO_AUTH,
+						AuthTypeDetails: &proto.Auth_NoAuth{},
 					},
 					UserAccount: &proto.UserAccount{
 						AccountId: "account_2",
@@ -252,7 +258,8 @@ func Test_handleUpdates(t *testing.T) {
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							RequireAuth: false,
+							AuthType:        proto.Auth_NO_AUTH,
+							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						UserAccount: &proto.UserAccount{
 							AccountId: "account_1",
@@ -265,7 +272,8 @@ func Test_handleUpdates(t *testing.T) {
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							RequireAuth: false,
+							AuthType:        proto.Auth_NO_AUTH,
+							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						UserAccount: &proto.UserAccount{
 							AccountId: "account_2",
@@ -281,7 +289,12 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
-						RequireAuth: true,
+						AuthType: proto.Auth_API_KEY_AUTH,
+						AuthTypeDetails: &proto.Auth_ApiKey{
+							ApiKey: &proto.APIKey{
+								ApiKey: "secret_key_1",
+							},
+						},
 					},
 					UserAccount: &proto.UserAccount{
 						AccountId: "account_1",

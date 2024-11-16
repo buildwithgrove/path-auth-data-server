@@ -25,9 +25,11 @@ func Test_FetchAuthDataSync(t *testing.T) {
 					"endpoint1": {
 						EndpointId: "endpoint1",
 						Auth: &proto.Auth{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"user1": {},
+							AuthType: proto.Auth_API_KEY_AUTH,
+							AuthTypeDetails: &proto.Auth_ApiKey{
+								ApiKey: &proto.APIKey{
+									ApiKey: "secret_key_1",
+								},
 							},
 						},
 						UserAccount: &proto.UserAccount{

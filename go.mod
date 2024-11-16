@@ -2,6 +2,8 @@ module github.com/buildwithgrove/path-auth-data-server
 
 go 1.23.1
 
+replace github.com/buildwithgrove/path/envoy/auth_server => ../path/envoy/auth_server
+
 require (
 	// TODO_NEXT(@commoddity): Update to a release version of the PATH auth_server package
 	// once the `envoy-grpc-auth-service` branch is merged into `main`

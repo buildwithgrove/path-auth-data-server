@@ -20,8 +20,8 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 					"endpoint_1": {
 						EndpointID: "endpoint_1",
 						Auth: authYAML{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]struct{}{
+							AuthType: "JWT_AUTH",
+							JWTAuthorizedUsers: &map[string]struct{}{
 								"auth0|user_1": {},
 							},
 						},
@@ -42,9 +42,13 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"auth0|user_1": {},
+							AuthType: proto.Auth_JWT_AUTH,
+							AuthTypeDetails: &proto.Auth_Jwt{
+								Jwt: &proto.JWT{
+									AuthorizedUsers: map[string]*proto.Empty{
+										"auth0|user_1": {},
+									},
+								},
 							},
 						},
 						UserAccount: &proto.UserAccount{

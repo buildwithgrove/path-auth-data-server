@@ -32,7 +32,6 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 						Int32: 1000,
 						Valid: true,
 					},
-					AuthorizedUsers: []string{"provider_user_1"},
 				},
 			},
 			expected: &proto.AuthDataResponse{
@@ -49,8 +48,11 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Auth: &proto.Auth{
-							AuthorizedUsers: map[string]*proto.Empty{
-								"provider_user_1": {},
+							AuthType: proto.Auth_API_KEY_AUTH,
+							AuthTypeDetails: &proto.Auth_ApiKey{
+								ApiKey: &proto.APIKey{
+									ApiKey: "secret_key_1",
+								},
 							},
 						},
 					},

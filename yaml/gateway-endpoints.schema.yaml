@@ -11,14 +11,20 @@ properties:
         auth:
           type: object
           properties:
-            require_auth:
-              type: boolean
-              description: "Indicates whether the GatewayEndpoint requires authentication."
-            authorized_users:
+            auth_type:
+              type: string
+              enum: ["API_KEY_AUTH", "JWT_AUTH"]
+              description: "The type of authentication being used."
+            api_key:
+              type: string
+              description: "The API key string."
+            jwt_authorized_users:
               type: object
               additionalProperties:
-                type: object
-                description: "A map of ProviderUserIDs authorized to access this UserAccount's GatewayEndpoints."
+                type: string
+              description: "A map of ProviderUserIDs authorized to access this UserAccount's GatewayEndpoints."
+          required:
+            - auth_type
         user_account:
           type: object
           properties:
@@ -39,6 +45,7 @@ properties:
               description: "CapacityLimit refers to rate limiting over longer periods."
             capacity_limit_period:
               type: string
+              enum: ["daily", "weekly", "monthly"]
               description: "The period over which the CapacityLimit is enforced."
       required:
         - endpoint_id

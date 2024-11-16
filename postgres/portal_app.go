@@ -10,24 +10,24 @@ import (
 // in the existing Grove Portal Database. It is necessary to convert the existing `portal_applications`
 // table schema to the new `GatewayEndpoint` struct expected by the PATH Go External Authorization Server.
 type PortalApplicationRow struct {
-	EndpointID        string   `json:"endpoint_id"`
-	AccountID         string   `json:"account_id"`
-	SecretKeyRequired bool     `json:"secret_key_required"`
-	Plan              string   `json:"plan"`
-	CapacityLimit     int32    `json:"capacity_limit"`
-	ThroughputLimit   int32    `json:"throughput_limit"`
-	AuthorizedUsers   []string `json:"authorized_users"`
+	EndpointID        string `json:"endpoint_id"`
+	AccountID         string `json:"account_id"`
+	SecretKey         string `json:"secret_key"`
+	SecretKeyRequired bool   `json:"secret_key_required"`
+	Plan              string `json:"plan"`
+	CapacityLimit     int32  `json:"capacity_limit"`
+	ThroughputLimit   int32  `json:"throughput_limit"`
 }
 
 func convertSelectPortalApplicationsRow(r sqlc.SelectPortalApplicationsRow) *PortalApplicationRow {
 	return &PortalApplicationRow{
 		EndpointID:        r.EndpointID,
 		AccountID:         r.AccountID.String,
+		SecretKey:         r.SecretKey.String,
 		SecretKeyRequired: r.SecretKeyRequired.Bool,
 		Plan:              r.Plan.String,
 		CapacityLimit:     r.CapacityLimit.Int32,
 		ThroughputLimit:   r.ThroughputLimit.Int32,
-		AuthorizedUsers:   r.AuthorizedUsers,
 	}
 }
 
@@ -35,15 +35,16 @@ func convertSelectPortalApplicationRow(r sqlc.SelectPortalApplicationRow) *Porta
 	return &PortalApplicationRow{
 		EndpointID:        r.EndpointID,
 		AccountID:         r.AccountID.String,
+		SecretKey:         r.SecretKey.String,
 		SecretKeyRequired: r.SecretKeyRequired.Bool,
 		Plan:              r.Plan.String,
 		CapacityLimit:     r.CapacityLimit.Int32,
 		ThroughputLimit:   r.ThroughputLimit.Int32,
-		AuthorizedUsers:   r.AuthorizedUsers,
 	}
 }
 
 func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
+
 	return &proto.GatewayEndpoint{
 		EndpointId: r.EndpointID,
 		UserAccount: &proto.UserAccount{
@@ -56,11 +57,25 @@ func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
 			// The current Portal DB only supports monthly capacity limit periods
 			CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 		},
-		Auth: &proto.Auth{
-			// TODO_IMPROVE(@commoddity): Add a dedicated field for requiring auth for backwards compatibility
-			RequireAuth:     r.SecretKeyRequired,
-			AuthorizedUsers: convertToProtoAuthorizedUsers(r.AuthorizedUsers),
-		},
+		Auth: r.getAuthDetails(),
+	}
+}
+
+func (r *PortalApplicationRow) getAuthDetails() *proto.Auth {
+	if r.SecretKeyRequired {
+		return &proto.Auth{
+			AuthType: proto.Auth_API_KEY_AUTH,
+			AuthTypeDetails: &proto.Auth_ApiKey{
+				ApiKey: &proto.APIKey{
+					ApiKey: r.SecretKey,
+				},
+			},
+		}
+	} else {
+		return &proto.Auth{
+			AuthType:        proto.Auth_NO_AUTH,
+			AuthTypeDetails: &proto.Auth_NoAuth{},
+		}
 	}
 }
 

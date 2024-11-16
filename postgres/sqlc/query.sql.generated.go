@@ -57,15 +57,12 @@ func (q *Queries) GetPortalApplicationChanges(ctx context.Context) ([]GetPortalA
 const selectPortalApplication = `-- name: SelectPortalApplication :one
 SELECT 
     pa.id AS endpoint_id,
+    pas.secret_key,
     pas.secret_key_required,
     pa.account_id,
     a.plan_type AS plan,
     p.throughput_limit AS capacity_limit,
-    p.monthly_relay_limit AS throughput_limit,
-    COALESCE(
-        ARRAY_AGG(DISTINCT uap.provider_user_id) FILTER (WHERE uap.provider_user_id IS NOT NULL),
-        ARRAY[]::VARCHAR[]
-    )::VARCHAR[] AS authorized_users
+    p.monthly_relay_limit AS throughput_limit
 FROM portal_applications pa
 LEFT JOIN portal_application_settings pas
     ON pa.id = pas.application_id
@@ -73,27 +70,24 @@ LEFT JOIN accounts a
     ON pa.account_id = a.id
 LEFT JOIN pay_plans p 
     ON a.plan_type = p.plan_type
-LEFT JOIN account_users au
-    ON a.id = au.account_id
-LEFT JOIN user_auth_providers uap
-    ON au.user_id = uap.user_id
 WHERE pa.id = $1
 GROUP BY 
     pa.id,
+    pas.secret_key,
+    pas.secret_key_required,
     a.plan_type,
     p.throughput_limit,
-    p.monthly_relay_limit,
-    pas.secret_key_required
+    p.monthly_relay_limit
 `
 
 type SelectPortalApplicationRow struct {
 	EndpointID        string      `json:"endpoint_id"`
+	SecretKey         pgtype.Text `json:"secret_key"`
 	SecretKeyRequired pgtype.Bool `json:"secret_key_required"`
 	AccountID         pgtype.Text `json:"account_id"`
 	Plan              pgtype.Text `json:"plan"`
 	CapacityLimit     pgtype.Int4 `json:"capacity_limit"`
 	ThroughputLimit   pgtype.Int4 `json:"throughput_limit"`
-	AuthorizedUsers   []string    `json:"authorized_users"`
 }
 
 func (q *Queries) SelectPortalApplication(ctx context.Context, id string) (SelectPortalApplicationRow, error) {
@@ -101,12 +95,12 @@ func (q *Queries) SelectPortalApplication(ctx context.Context, id string) (Selec
 	var i SelectPortalApplicationRow
 	err := row.Scan(
 		&i.EndpointID,
+		&i.SecretKey,
 		&i.SecretKeyRequired,
 		&i.AccountID,
 		&i.Plan,
 		&i.CapacityLimit,
 		&i.ThroughputLimit,
-		&i.AuthorizedUsers,
 	)
 	return i, err
 }
@@ -115,15 +109,12 @@ const selectPortalApplications = `-- name: SelectPortalApplications :many
 
 SELECT 
     pa.id AS endpoint_id,
+    pas.secret_key,
     pas.secret_key_required,
     pa.account_id,
     a.plan_type AS plan,
     p.throughput_limit AS capacity_limit,
-    p.monthly_relay_limit AS throughput_limit,
-    COALESCE(
-        ARRAY_AGG(DISTINCT uap.provider_user_id) FILTER (WHERE uap.provider_user_id IS NOT NULL),
-        ARRAY[]::VARCHAR[]
-    )::VARCHAR[] AS authorized_users
+    p.monthly_relay_limit AS throughput_limit
 FROM portal_applications pa
 LEFT JOIN portal_application_settings pas
     ON pa.id = pas.application_id
@@ -131,12 +122,9 @@ LEFT JOIN accounts a
     ON pa.account_id = a.id
 LEFT JOIN pay_plans p 
     ON a.plan_type = p.plan_type
-LEFT JOIN account_users au
-    ON a.id = au.account_id
-LEFT JOIN user_auth_providers uap
-    ON au.user_id = uap.user_id
 GROUP BY 
     pa.id,
+    pas.secret_key,
     pas.secret_key_required,
     a.plan_type,
     p.throughput_limit,
@@ -145,12 +133,12 @@ GROUP BY
 
 type SelectPortalApplicationsRow struct {
 	EndpointID        string      `json:"endpoint_id"`
+	SecretKey         pgtype.Text `json:"secret_key"`
 	SecretKeyRequired pgtype.Bool `json:"secret_key_required"`
 	AccountID         pgtype.Text `json:"account_id"`
 	Plan              pgtype.Text `json:"plan"`
 	CapacityLimit     pgtype.Int4 `json:"capacity_limit"`
 	ThroughputLimit   pgtype.Int4 `json:"throughput_limit"`
-	AuthorizedUsers   []string    `json:"authorized_users"`
 }
 
 // This file is used by SQLC to autogenerate the Go code needed by the database driver.
@@ -167,12 +155,12 @@ func (q *Queries) SelectPortalApplications(ctx context.Context) ([]SelectPortalA
 		var i SelectPortalApplicationsRow
 		if err := rows.Scan(
 			&i.EndpointID,
+			&i.SecretKey,
 			&i.SecretKeyRequired,
 			&i.AccountID,
 			&i.Plan,
 			&i.CapacityLimit,
 			&i.ThroughputLimit,
-			&i.AuthorizedUsers,
 		); err != nil {
 			return nil, err
 		}

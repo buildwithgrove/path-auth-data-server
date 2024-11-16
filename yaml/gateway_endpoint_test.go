@@ -18,8 +18,8 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 			input: gatewayEndpointYAML{
 				EndpointID: "endpoint_1",
 				Auth: authYAML{
-					RequireAuth: true,
-					AuthorizedUsers: map[string]struct{}{
+					AuthType: "JWT_AUTH",
+					JWTAuthorizedUsers: &map[string]struct{}{
 						"auth0|user_1": {},
 					},
 				},
@@ -36,9 +36,13 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 			expected: &proto.GatewayEndpoint{
 				EndpointId: "endpoint_1",
 				Auth: &proto.Auth{
-					RequireAuth: true,
-					AuthorizedUsers: map[string]*proto.Empty{
-						"auth0|user_1": {},
+					AuthType: proto.Auth_JWT_AUTH,
+					AuthTypeDetails: &proto.Auth_Jwt{
+						Jwt: &proto.JWT{
+							AuthorizedUsers: map[string]*proto.Empty{
+								"auth0|user_1": {},
+							},
+						},
 					},
 				},
 				UserAccount: &proto.UserAccount{
@@ -73,29 +77,31 @@ func Test_authYAML_convertToProto(t *testing.T) {
 		{
 			name: "should convert authYAML to proto format correctly",
 			input: authYAML{
-				RequireAuth: true,
-				AuthorizedUsers: map[string]struct{}{
+				AuthType: "JWT_AUTH",
+				JWTAuthorizedUsers: &map[string]struct{}{
 					"auth0|user_1": {},
 					"auth0|user_2": {},
 				},
 			},
 			expected: &proto.Auth{
-				RequireAuth: true,
-				AuthorizedUsers: map[string]*proto.Empty{
-					"auth0|user_1": {},
-					"auth0|user_2": {},
+				AuthType: proto.Auth_JWT_AUTH,
+				AuthTypeDetails: &proto.Auth_Jwt{
+					Jwt: &proto.JWT{
+						AuthorizedUsers: map[string]*proto.Empty{
+							"auth0|user_1": {},
+							"auth0|user_2": {},
+						},
+					},
 				},
 			},
 		},
 		{
 			name: "should handle empty authorized users",
 			input: authYAML{
-				RequireAuth:     false,
-				AuthorizedUsers: map[string]struct{}{},
+				AuthType: "NO_AUTH",
 			},
 			expected: &proto.Auth{
-				RequireAuth:     false,
-				AuthorizedUsers: map[string]*proto.Empty{},
+				AuthType: proto.Auth_NO_AUTH,
 			},
 		},
 	}
