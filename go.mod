@@ -2,6 +2,7 @@ module github.com/buildwithgrove/path-auth-data-server
 
 go 1.23.1
 
+// TODO_NEXT(@commoddity): Remove this once the Envoy enable API key changes are in a branch
 replace github.com/buildwithgrove/path/envoy/auth_server => ../path/envoy/auth_server
 
 require (

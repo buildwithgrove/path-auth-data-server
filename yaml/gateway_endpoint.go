@@ -1,6 +1,8 @@
 package yaml
 
 import (
+	"fmt"
+
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 )
 
@@ -89,4 +91,42 @@ func (a *authYAML) convertToProto() *proto.Auth {
 	}
 
 	return authProto
+}
+
+func (e *gatewayEndpointYAML) validate() error {
+	if e.EndpointID == "" {
+		return fmt.Errorf("endpoint_id is required")
+	}
+	if err := e.Auth.validate(); err != nil {
+		return err
+	}
+	if e.RateLimiting.CapacityLimit != 0 {
+		if e.RateLimiting.CapacityLimitPeriod != proto.CapacityLimitPeriod_name[1] &&
+			e.RateLimiting.CapacityLimitPeriod != proto.CapacityLimitPeriod_name[2] &&
+			e.RateLimiting.CapacityLimitPeriod != proto.CapacityLimitPeriod_name[3] {
+			return fmt.Errorf("capacity_limit_period must be one of %s, %s, or %s",
+				proto.CapacityLimitPeriod_name[1],
+				proto.CapacityLimitPeriod_name[2],
+				proto.CapacityLimitPeriod_name[3],
+			)
+		}
+	}
+
+	return nil
+}
+
+func (a *authYAML) validate() error {
+	switch a.AuthType {
+	case yamlAuthTypeAPIKey:
+		if a.APIKey == nil || *a.APIKey == "" {
+			return fmt.Errorf("api_key is required for API_KEY_AUTH")
+		}
+	case yamlAuthTypeJWT:
+		if a.JWTAuthorizedUsers == nil || len(*a.JWTAuthorizedUsers) == 0 {
+			return fmt.Errorf("jwt_authorized_users is required for JWT_AUTH")
+		}
+	default:
+		return nil
+	}
+	return nil
 }

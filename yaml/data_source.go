@@ -83,6 +83,10 @@ func (y *yamlDataSource) loadGatewayEndpointsFromYAML() (*proto.AuthDataResponse
 		return nil, err
 	}
 
+	if err := endpointsYAML.validate(); err != nil {
+		return nil, err
+	}
+
 	return endpointsYAML.convertToProto(), nil
 }
 

@@ -23,6 +23,19 @@ properties:
               additionalProperties:
                 type: string
               description: "A map of ProviderUserIDs authorized to access this UserAccount's GatewayEndpoints."
+          oneOf:
+            - properties:
+                auth_type:
+                  enum: ["API_KEY_AUTH"]
+                api_key:
+                  type: string
+              required: ["api_key"]
+            - properties:
+                auth_type:
+                  enum: ["JWT_AUTH"]
+                jwt_authorized_users:
+                  type: object
+              required: ["jwt_authorized_users"]
           required:
             - auth_type
         user_account:

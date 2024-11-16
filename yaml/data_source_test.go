@@ -11,10 +11,11 @@ import (
 
 func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 	tests := []struct {
-		name     string
-		filePath string
-		want     *proto.AuthDataResponse
-		wantErr  bool
+		name         string
+		filePath     string
+		fileContents string
+		want         *proto.AuthDataResponse
+		wantErr      bool
 	}{
 		{
 			name:     "should load valid gateway endpoints without error",
@@ -27,30 +28,48 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 							AuthType: proto.Auth_API_KEY_AUTH,
 							AuthTypeDetails: &proto.Auth_ApiKey{
 								ApiKey: &proto.APIKey{
-									ApiKey: "secret_key_1",
+									ApiKey: "api_key_1",
 								},
 							},
 						},
-						UserAccount: &proto.UserAccount{
-							AccountId: "account_1",
-							PlanType:  "PLAN_UNLIMITED",
-						},
 						RateLimiting: &proto.RateLimiting{},
+						Metadata: map[string]string{
+							"account_id": "account_1",
+							"plan_type":  "PLAN_UNLIMITED",
+						},
 					},
 					"endpoint_2": {
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
+							AuthType: proto.Auth_JWT_AUTH,
+							AuthTypeDetails: &proto.Auth_Jwt{
+								Jwt: &proto.JWT{
+									AuthorizedUsers: map[string]*proto.Empty{
+										"auth0|user_2": {},
+									},
+								},
+							},
+						},
+						RateLimiting: &proto.RateLimiting{},
+						Metadata: map[string]string{
+							"account_id": "account_2",
+							"plan_type":  "PLAN_UNLIMITED",
+						},
+					},
+					"endpoint_3": {
+						EndpointId: "endpoint_3",
+						Auth: &proto.Auth{
 							AuthType:        proto.Auth_NO_AUTH,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
-						UserAccount: &proto.UserAccount{
-							AccountId: "account_2",
-							PlanType:  "PLAN_FREE",
-						},
 						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     30,
-							CapacityLimit:       100000,
+							ThroughputLimit:     50,
+							CapacityLimit:       200,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
+						},
+						Metadata: map[string]string{
+							"account_id": "account_3",
+							"plan_type":  "PLAN_UNLIMITED",
 						},
 					},
 				},
@@ -63,9 +82,45 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 			wantErr:  true,
 		},
 		{
-			name:     "should return error for invalid YAML",
-			filePath: "./testdata/invalid.yaml",
-			wantErr:  true,
+			name:         "should return error for invalid YAML",
+			filePath:     "./testdata/invalid.yaml",
+			fileContents: "invalid_yaml: [",
+			wantErr:      true,
+		},
+		{
+			name:     "should return error for missing endpoint_id",
+			filePath: "./testdata/missing_endpoint_id.yaml",
+			fileContents: `
+endpoints:
+  endpoint_1:
+    auth:
+      auth_type: "API_KEY_AUTH"
+      api_key: "api_key_1"
+    metadata:
+      account_id: "account_1"
+      plan_type: "PLAN_UNLIMITED"
+`,
+			wantErr: true,
+		},
+		{
+			name:     "should return error for invalid capacity_limit_period",
+			filePath: "./testdata/invalid_capacity_limit_period.yaml",
+			fileContents: `
+endpoints:
+  endpoint_1:
+    endpoint_id: "endpoint_1"
+    auth:
+      auth_type: "JWT_AUTH"
+      jwt_authorized_users:
+        "auth0|user_1": {}
+    rate_limiting:
+      capacity_limit: 100
+      capacity_limit_period: "yearly"
+    metadata:
+      account_id: "account_1"
+      plan_type: "PLAN_UNLIMITED"
+`,
+			wantErr: true,
 		},
 	}
 
@@ -73,8 +128,8 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			c := require.New(t)
 
-			if test.name == "should return error for invalid YAML" {
-				err := os.WriteFile(test.filePath, []byte("invalid_yaml: ["), 0644)
+			if test.fileContents != "" {
+				err := os.WriteFile(test.filePath, []byte(test.fileContents), 0644)
 				defer os.Remove(test.filePath)
 				c.NoError(err)
 			}
@@ -86,7 +141,7 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 				c.NoError(err)
 				got, err := yamlDataSource.FetchAuthDataSync()
 				c.NoError(err)
-				c.Equal(test.want, got)
+				c.EqualValues(test.want, got)
 			}
 		})
 	}
@@ -106,11 +161,19 @@ endpoints:
   endpoint_1:
     endpoint_id: "endpoint_1"
     auth:
-      require_auth: true
-      authorized_users:
-        "auth0|user_1": {}
-    user_account:
+      auth_type: "API_KEY_AUTH"
+      api_key: "api_key_1"
+    metadata:
       account_id: "account_1"
+      plan_type: "PLAN_UNLIMITED"
+  endpoint_2:
+    endpoint_id: "endpoint_2"
+    auth:
+      auth_type: "JWT_AUTH"
+      jwt_authorized_users:
+        "auth0|user_2": {}
+    metadata:
+      account_id: "account_2"
       plan_type: "PLAN_UNLIMITED"
 `,
 			updatedData: `
@@ -118,17 +181,26 @@ endpoints:
   endpoint_1:
     endpoint_id: "endpoint_1"
     auth:
-      require_auth: false
-    user_account:
+      auth_type: "NO_AUTH"
+    metadata:
       account_id: "account_1"
       plan_type: "PLAN_UNLIMITED"
   endpoint_2:
     endpoint_id: "endpoint_2"
     auth:
-      require_auth: false
-    user_account:
+      auth_type: "NO_AUTH"
+    metadata:
       account_id: "account_2"
       plan_type: "PLAN_FREE"
+  endpoint_3:
+    endpoint_id: "endpoint_3"
+    rate_limiting:
+      throughput_limit: 50
+      capacity_limit: 200
+      capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY"
+    metadata:
+      account_id: "account_3"
+      plan_type: "PLAN_UNLIMITED"
 `,
 			expectedUpdates: []*proto.AuthDataUpdate{
 				{
@@ -139,11 +211,11 @@ endpoints:
 							AuthType:        proto.Auth_NO_AUTH,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
-						UserAccount: &proto.UserAccount{
-							AccountId: "account_1",
-							PlanType:  "PLAN_UNLIMITED",
-						},
 						RateLimiting: &proto.RateLimiting{},
+						Metadata: map[string]string{
+							"account_id": "account_1",
+							"plan_type":  "PLAN_UNLIMITED",
+						},
 					},
 				},
 				{
@@ -154,11 +226,30 @@ endpoints:
 							AuthType:        proto.Auth_NO_AUTH,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
-						UserAccount: &proto.UserAccount{
-							AccountId: "account_2",
-							PlanType:  "PLAN_FREE",
-						},
 						RateLimiting: &proto.RateLimiting{},
+						Metadata: map[string]string{
+							"account_id": "account_2",
+							"plan_type":  "PLAN_FREE",
+						},
+					},
+				},
+				{
+					EndpointId: "endpoint_3",
+					GatewayEndpoint: &proto.GatewayEndpoint{
+						EndpointId: "endpoint_3",
+						Auth: &proto.Auth{
+							AuthType:        proto.Auth_NO_AUTH,
+							AuthTypeDetails: &proto.Auth_NoAuth{},
+						},
+						RateLimiting: &proto.RateLimiting{
+							ThroughputLimit:     50,
+							CapacityLimit:       200,
+							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
+						},
+						Metadata: map[string]string{
+							"account_id": "account_3",
+							"plan_type":  "PLAN_UNLIMITED",
+						},
 					},
 				},
 			},
@@ -180,7 +271,7 @@ endpoints:
 			go yamlDataSource.watchFile()
 
 			// small delay to ensure the file system processes the write
-			<-time.After(100 * time.Millisecond)
+			<-time.After(500 * time.Millisecond)
 
 			err = os.WriteFile(filePath, []byte(test.updatedData), 0644)
 			c.NoError(err)
@@ -197,7 +288,16 @@ endpoints:
 				}
 			}
 
-			c.ElementsMatch(test.expectedUpdates, receivedUpdates)
+			expectedUpdatesMap := make(map[string]*proto.AuthDataUpdate)
+			for _, expectedUpdate := range test.expectedUpdates {
+				expectedUpdatesMap[expectedUpdate.EndpointId] = expectedUpdate
+			}
+			receivedUpdatesMap := make(map[string]*proto.AuthDataUpdate)
+			for _, receivedUpdate := range receivedUpdates {
+				receivedUpdatesMap[receivedUpdate.EndpointId] = receivedUpdate
+			}
+
+			c.EqualValues(expectedUpdatesMap, receivedUpdatesMap)
 		})
 	}
 }
@@ -222,9 +322,9 @@ func Test_handleUpdates(t *testing.T) {
 							},
 						},
 					},
-					UserAccount: &proto.UserAccount{
-						AccountId: "account_1",
-						PlanType:  "PLAN_UNLIMITED",
+					Metadata: map[string]string{
+						"account_id": "account_1",
+						"plan_type":  "PLAN_UNLIMITED",
 					},
 				},
 			},
@@ -235,9 +335,9 @@ func Test_handleUpdates(t *testing.T) {
 						AuthType:        proto.Auth_NO_AUTH,
 						AuthTypeDetails: &proto.Auth_NoAuth{},
 					},
-					UserAccount: &proto.UserAccount{
-						AccountId: "account_1",
-						PlanType:  "PLAN_UNLIMITED",
+					Metadata: map[string]string{
+						"account_id": "account_1",
+						"plan_type":  "PLAN_UNLIMITED",
 					},
 				},
 				"endpoint_2": {
@@ -246,9 +346,9 @@ func Test_handleUpdates(t *testing.T) {
 						AuthType:        proto.Auth_NO_AUTH,
 						AuthTypeDetails: &proto.Auth_NoAuth{},
 					},
-					UserAccount: &proto.UserAccount{
-						AccountId: "account_2",
-						PlanType:  "PLAN_FREE",
+					Metadata: map[string]string{
+						"account_id": "account_2",
+						"plan_type":  "PLAN_FREE",
 					},
 				},
 			},
@@ -261,9 +361,9 @@ func Test_handleUpdates(t *testing.T) {
 							AuthType:        proto.Auth_NO_AUTH,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
-						UserAccount: &proto.UserAccount{
-							AccountId: "account_1",
-							PlanType:  "PLAN_UNLIMITED",
+						Metadata: map[string]string{
+							"account_id": "account_1",
+							"plan_type":  "PLAN_UNLIMITED",
 						},
 					},
 				},
@@ -275,9 +375,9 @@ func Test_handleUpdates(t *testing.T) {
 							AuthType:        proto.Auth_NO_AUTH,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
-						UserAccount: &proto.UserAccount{
-							AccountId: "account_2",
-							PlanType:  "PLAN_FREE",
+						Metadata: map[string]string{
+							"account_id": "account_2",
+							"plan_type":  "PLAN_FREE",
 						},
 					},
 				},
@@ -296,9 +396,9 @@ func Test_handleUpdates(t *testing.T) {
 							},
 						},
 					},
-					UserAccount: &proto.UserAccount{
-						AccountId: "account_1",
-						PlanType:  "PLAN_UNLIMITED",
+					Metadata: map[string]string{
+						"account_id": "account_1",
+						"plan_type":  "PLAN_UNLIMITED",
 					},
 				},
 			},
@@ -326,7 +426,7 @@ func Test_handleUpdates(t *testing.T) {
 			for _, expectedUpdate := range test.expectedUpdates {
 				select {
 				case update := <-yamlDataSource.authDataUpdatesCh:
-					c.Equal(expectedUpdate, update)
+					c.EqualValues(expectedUpdate, update)
 				default:
 					t.Fatal("expected update not received")
 				}

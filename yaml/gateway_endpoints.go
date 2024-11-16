@@ -1,6 +1,10 @@
 package yaml
 
-import "github.com/buildwithgrove/path/envoy/auth_server/proto"
+import (
+	"fmt"
+
+	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+)
 
 /* ----------------------------- GatewayEndpoints YAML Struct ----------------------------- */
 
@@ -15,4 +19,13 @@ func (g *gatewayEndpointsYAML) convertToProto() *proto.AuthDataResponse {
 		endpointsProto[endpointYAML.EndpointID] = endpointYAML.convertToProto()
 	}
 	return &proto.AuthDataResponse{Endpoints: endpointsProto}
+}
+
+func (g *gatewayEndpointsYAML) validate() error {
+	for id, endpoint := range g.Endpoints {
+		if err := endpoint.validate(); err != nil {
+			return fmt.Errorf("validation failed for endpoint %s: %w", id, err)
+		}
+	}
+	return nil
 }

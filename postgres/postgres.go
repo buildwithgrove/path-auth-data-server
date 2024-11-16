@@ -163,7 +163,7 @@ func (d *postgresDataSource) listenForUpdates(ctx context.Context) {
 
 	go func() {
 		if err := d.listener.Listen(ctx); err != nil {
-			d.logger.Error().Err(err).Msg("listener error")
+			d.logger.Error().Err(err).Msg("error ini")
 		}
 	}()
 

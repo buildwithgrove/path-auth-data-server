@@ -44,20 +44,23 @@ func convertSelectPortalApplicationRow(r sqlc.SelectPortalApplicationRow) *Porta
 }
 
 func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
+	rateLimiting := &proto.RateLimiting{
+		ThroughputLimit: int32(r.ThroughputLimit),
+		CapacityLimit:   int32(r.CapacityLimit),
+	}
+	// The current Portal DB only supports monthly capacity limit periods
+	if r.CapacityLimit > 0 {
+		rateLimiting.CapacityLimitPeriod = proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY
+	}
 
 	return &proto.GatewayEndpoint{
-		EndpointId: r.EndpointID,
-		UserAccount: &proto.UserAccount{
-			AccountId: r.AccountID,
-			PlanType:  r.Plan,
+		EndpointId:   r.EndpointID,
+		Auth:         r.getAuthDetails(),
+		RateLimiting: rateLimiting,
+		Metadata: map[string]string{
+			"account_id": r.AccountID,
+			"plan_type":  r.Plan,
 		},
-		RateLimiting: &proto.RateLimiting{
-			ThroughputLimit: int32(r.ThroughputLimit),
-			CapacityLimit:   int32(r.CapacityLimit),
-			// The current Portal DB only supports monthly capacity limit periods
-			CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
-		},
-		Auth: r.getAuthDetails(),
 	}
 }
 
@@ -79,13 +82,14 @@ func (r *PortalApplicationRow) getAuthDetails() *proto.Auth {
 	}
 }
 
-func convertToProtoAuthorizedUsers(users []string) map[string]*proto.Empty {
-	authUsers := make(map[string]*proto.Empty, len(users))
-	for _, user := range users {
-		authUsers[user] = &proto.Empty{}
-	}
-	return authUsers
-}
+// TODO - use this method when we have JWT auth
+// func convertToProtoAuthorizedUsers(users []string) map[string]*proto.Empty {
+// 	authUsers := make(map[string]*proto.Empty, len(users))
+// 	for _, user := range users {
+// 		authUsers[user] = &proto.Empty{}
+// 	}
+// 	return authUsers
+// }
 
 func convertPortalApplicationsRows(rows []sqlc.SelectPortalApplicationsRow) *proto.AuthDataResponse {
 	endpointsProto := make(map[string]*proto.GatewayEndpoint, len(rows))
