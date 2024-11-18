@@ -11,12 +11,12 @@ to the authDataUpdatesCh channel if any changes are detected.
 package yaml
 
 import (
-	"log"
 	"os"
 	"sync"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 	"github.com/fsnotify/fsnotify"
+	"github.com/pokt-network/poktroll/pkg/polylog"
 	"gopkg.in/yaml.v3"
 
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
@@ -38,14 +38,17 @@ type yamlDataSource struct {
 	gatewayEndpointsMu sync.Mutex
 
 	authDataUpdatesCh chan *proto.AuthDataUpdate
+
+	logger polylog.Logger
 }
 
 // NewYAMLDataSource creates a new yamlDataSource for the specified filename.
-func NewYAMLDataSource(filename string) (*yamlDataSource, error) {
+func NewYAMLDataSource(filename string, logger polylog.Logger) (*yamlDataSource, error) {
 
 	dataSource := &yamlDataSource{
 		filename:          filename,
 		authDataUpdatesCh: make(chan *proto.AuthDataUpdate, 100_000),
+		logger:            logger,
 	}
 
 	// Warm up the data store with the full set of GatewayEndpoints from the YAML file.
@@ -83,6 +86,10 @@ func (y *yamlDataSource) loadGatewayEndpointsFromYAML() (*proto.AuthDataResponse
 		return nil, err
 	}
 
+	if err := endpointsYAML.validate(); err != nil {
+		return nil, err
+	}
+
 	return endpointsYAML.convertToProto(), nil
 }
 
@@ -90,14 +97,14 @@ func (y *yamlDataSource) loadGatewayEndpointsFromYAML() (*proto.AuthDataResponse
 func (y *yamlDataSource) watchFile() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Printf("Failed to create file watcher: %v", err)
+		y.logger.Error().Err(err).Msg("failed to create file watcher")
 		return
 	}
 	defer watcher.Close()
 
 	err = watcher.Add(y.filename)
 	if err != nil {
-		log.Printf("Failed to add file to watcher: %v", err)
+		y.logger.Error().Err(err).Msg("failed to add file to watcher")
 		return
 	}
 
@@ -109,14 +116,14 @@ func (y *yamlDataSource) watchFile() {
 			if isWriteEvent == fsnotify.Write {
 				newData, err := y.loadGatewayEndpointsFromYAML()
 				if err != nil {
-					log.Printf("Error loading new data: %v", err)
+					y.logger.Error().Err(err).Msg("error loading new data from updated YAML file")
 					continue
 				}
 				y.handleUpdates(newData.Endpoints)
 			}
 
 		case err := <-watcher.Errors:
-			log.Printf("Watcher error: %v", err)
+			y.logger.Error().Err(err).Msg("watcher error")
 		}
 	}
 }

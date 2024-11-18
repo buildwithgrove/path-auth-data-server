@@ -22,22 +22,24 @@ func Test_FetchAuthDataSync(t *testing.T) {
 			name: "should return Gateway Endpoints successfully",
 			expectedResponse: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
-					"endpoint1": {
-						EndpointId: "endpoint1",
+					"endpoint_1": {
+						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"user1": {},
+							AuthType: proto.Auth_API_KEY_AUTH,
+							AuthTypeDetails: &proto.Auth_ApiKey{
+								ApiKey: &proto.APIKey{
+									ApiKey: "secret_key_1",
+								},
 							},
-						},
-						UserAccount: &proto.UserAccount{
-							AccountId: "account1",
-							PlanType:  "basic",
 						},
 						RateLimiting: &proto.RateLimiting{
 							ThroughputLimit:     100,
 							CapacityLimit:       1000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_DAILY,
+						},
+						Metadata: map[string]string{
+							"account_id": "account_1",
+							"plan_type":  "PLAN_FREE",
 						},
 					},
 				},
@@ -94,14 +96,14 @@ func Test_StreamUpdates(t *testing.T) {
 			name: "should stream updates successfully",
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint1",
+					EndpointId: "endpoint_1",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint1",
+						EndpointId: "endpoint_1",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint2",
+					EndpointId: "endpoint_2",
 					Delete:     true,
 				},
 			},
@@ -165,47 +167,47 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 		{
 			name: "should update server state with new updates",
 			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
-				"endpoint1": {
-					EndpointId: "endpoint1",
+				"endpoint_1": {
+					EndpointId: "endpoint_1",
 				},
 			},
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint1",
+					EndpointId: "endpoint_1",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint1",
+						EndpointId: "endpoint_1",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint2",
+					EndpointId: "endpoint_2",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint2",
+						EndpointId: "endpoint_2",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint1",
+					EndpointId: "endpoint_1",
 					Delete:     true,
 				},
 			},
 			expectedDataAfterUpdates: map[string]*proto.GatewayEndpoint{
-				"endpoint2": {
-					EndpointId: "endpoint2",
+				"endpoint_2": {
+					EndpointId: "endpoint_2",
 				},
 			},
 		},
 		{
 			name: "should handle no updates",
 			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
-				"endpoint1": {
-					EndpointId: "endpoint1",
+				"endpoint_1": {
+					EndpointId: "endpoint_1",
 				},
 			},
 			updates: []*proto.AuthDataUpdate{},
 			expectedDataAfterUpdates: map[string]*proto.GatewayEndpoint{
-				"endpoint1": {
-					EndpointId: "endpoint1",
+				"endpoint_1": {
+					EndpointId: "endpoint_1",
 				},
 			},
 		},

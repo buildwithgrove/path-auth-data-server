@@ -165,7 +165,7 @@ func getYAMLAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.Auth
 
 	logger.Info().Msg("Using YAML data source")
 
-	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath)
+	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath, logger)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create YAML data source: %v", err)
 	}

@@ -2,49 +2,64 @@ type: object
 properties:
   endpoints:
     type: object
+    description: "The key for each gateway endpoint is its unique ID and must not be empty."
     additionalProperties:
       type: object
       properties:
-        endpoint_id:
-          type: string
-          description: "The unique identifier for a user account's endpoint."
         auth:
           type: object
           properties:
-            require_auth:
-              type: boolean
-              description: "Indicates whether the GatewayEndpoint requires authentication."
-            authorized_users:
-              type: object
-              additionalProperties:
-                type: object
-                description: "A map of ProviderUserIDs authorized to access this UserAccount's GatewayEndpoints."
-        user_account:
-          type: object
-          properties:
-            account_id:
+            auth_type:
               type: string
-              description: "The unique identifier for a UserAccount."
-            plan_type:
+              enum: ["API_KEY_AUTH", "JWT_AUTH"]
+              description: "The type of authorization being used."
+            api_key:
               type: string
-              description: "The plan type for a UserAccount, which identifies the pricing plan for the Account."
+              description: "The API key string. (Required for API Key Authorization.)"
+            jwt_authorized_users:
+              type: array
+              items:
+                type: string
+              description: "An array of user IDs authorized to access this account's gateway endpoints. (Required for JWT Authorization.)"
+          oneOf:
+            - properties:
+                auth_type:
+                  enum: ["API_KEY_AUTH"]
+                api_key:
+                  type: string
+              required: ["api_key"]
+            - properties:
+                auth_type:
+                  enum: ["JWT_AUTH"]
+                jwt_authorized_users:
+                  type: array
+                  items:
+                    type: string
+              required: ["jwt_authorized_users"]
+          required:
+            - auth_type
         rate_limiting:
           type: object
           properties:
             throughput_limit:
               type: integer
-              description: "ThroughputLimit refers to rate limiting per-second (TPS)."
+              description: "Throughput limit defines the endpoint's per-second (TPS) rate limit."
             capacity_limit:
               type: integer
-              description: "CapacityLimit refers to rate limiting over longer periods."
+              description: "Capacity limit defines the endpoint's rate limit over longer periods."
             capacity_limit_period:
               type: string
-              description: "The period over which the CapacityLimit is enforced."
-      required:
-        - endpoint_id
-        - auth
-        - user_account
-    required:
-      - endpoint_id
-      - auth
-      - user_account
+              enum: [
+                "DAILY",
+                "WEEKLY",
+                "MONTHLY"
+              ]
+              description: "The period over which the capacity limit is enforced."
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+            description: "A map of string key-value pairs for metadata."
+  required:
+    - endpoints
+
