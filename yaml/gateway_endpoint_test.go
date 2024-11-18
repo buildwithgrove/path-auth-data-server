@@ -26,8 +26,8 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 				},
 				RateLimiting: rateLimitingYAML{
 					ThroughputLimit:     30,
-					CapacityLimit:       100000,
-					CapacityLimitPeriod: "CAPACITY_LIMIT_PERIOD_MONTHLY",
+					CapacityLimit:       100_000,
+					CapacityLimitPeriod: yamlCapacityLimitPeriodMonthly,
 				},
 				Metadata: map[string]string{
 					"account_id": "account_1",
@@ -48,7 +48,7 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 				},
 				RateLimiting: &proto.RateLimiting{
 					ThroughputLimit:     30,
-					CapacityLimit:       100000,
+					CapacityLimit:       100_000,
 					CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 				},
 				Metadata: map[string]string{
@@ -138,7 +138,7 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 				RateLimiting: rateLimitingYAML{
 					ThroughputLimit:     30,
 					CapacityLimit:       100_000,
-					CapacityLimitPeriod: "CAPACITY_LIMIT_PERIOD_MONTHLY",
+					CapacityLimitPeriod: yamlCapacityLimitPeriodMonthly,
 				},
 			},
 			wantErr: false,

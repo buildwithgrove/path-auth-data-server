@@ -50,9 +50,9 @@ properties:
             capacity_limit_period:
               type: string
               enum: [
-                "CAPACITY_LIMIT_PERIOD_DAILY",
-                "CAPACITY_LIMIT_PERIOD_WEEKLY",
-                "CAPACITY_LIMIT_PERIOD_MONTHLY"
+                "DAILY",
+                "WEEKLY",
+                "MONTHLY"
               ]
               description: "The period over which the capacity limit is enforced."
         metadata:

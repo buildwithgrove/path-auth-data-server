@@ -68,8 +68,8 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     50,
-							CapacityLimit:       200,
+							ThroughputLimit:     30,
+							CapacityLimit:       100_000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Metadata: map[string]string{
@@ -203,7 +203,7 @@ endpoints:
     rate_limiting:
       throughput_limit: 50
       capacity_limit: 200
-      capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY"
+      capacity_limit_period: "MONTHLY"
     metadata:
       account_id: "account_3"
       plan_type: "PLAN_UNLIMITED"
