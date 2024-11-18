@@ -15,16 +15,16 @@ type gatewayEndpointsYAML struct {
 
 func (g *gatewayEndpointsYAML) convertToProto() *proto.AuthDataResponse {
 	endpointsProto := make(map[string]*proto.GatewayEndpoint)
-	for _, endpointYAML := range g.Endpoints {
-		endpointsProto[endpointYAML.EndpointID] = endpointYAML.convertToProto()
+	for endpointID, endpointYAML := range g.Endpoints {
+		endpointsProto[endpointID] = endpointYAML.convertToProto(endpointID)
 	}
 	return &proto.AuthDataResponse{Endpoints: endpointsProto}
 }
 
 func (g *gatewayEndpointsYAML) validate() error {
-	for id, endpoint := range g.Endpoints {
-		if err := endpoint.validate(); err != nil {
-			return fmt.Errorf("validation failed for endpoint %s: %w", id, err)
+	for endpointID, endpoint := range g.Endpoints {
+		if err := endpoint.validate(endpointID); err != nil {
+			return fmt.Errorf("validation failed for endpoint %s: %w", endpointID, err)
 		}
 	}
 	return nil

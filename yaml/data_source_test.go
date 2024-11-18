@@ -36,8 +36,9 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 						},
 						RateLimiting: &proto.RateLimiting{},
 						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_UNLIMITED",
+							"account_id":  "account_1",
+							"plan_type":   "PLAN_UNLIMITED",
+							"owner_email": "amos.burton@opa.belt",
 						},
 					},
 					"endpoint_2": {
@@ -47,6 +48,7 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 							AuthTypeDetails: &proto.Auth_Jwt{
 								Jwt: &proto.JWT{
 									AuthorizedUsers: map[string]*proto.Empty{
+										"auth0|user_1": {},
 										"auth0|user_2": {},
 									},
 								},
@@ -54,8 +56,9 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 						},
 						RateLimiting: &proto.RateLimiting{},
 						Metadata: map[string]string{
-							"account_id": "account_2",
-							"plan_type":  "PLAN_UNLIMITED",
+							"account_id":  "account_2",
+							"plan_type":   "PLAN_UNLIMITED",
+							"owner_email": "paul.atreides@arrakis.com",
 						},
 					},
 					"endpoint_3": {
@@ -70,8 +73,9 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Metadata: map[string]string{
-							"account_id": "account_3",
-							"plan_type":  "PLAN_FREE",
+							"account_id":  "account_2",
+							"plan_type":   "PLAN_FREE",
+							"owner_email": "frodo.baggins@shire.io",
 						},
 					},
 				},
@@ -94,7 +98,7 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 			filePath: "./testdata/missing_endpoint_id.yaml",
 			fileContents: `
 endpoints:
-  endpoint_1:
+  "":
     auth:
       auth_type: "API_KEY_AUTH"
       api_key: "api_key_1"

@@ -9,14 +9,15 @@ import (
 
 func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    gatewayEndpointYAML
-		expected *proto.GatewayEndpoint
+		name       string
+		endpointID string
+		input      gatewayEndpointYAML
+		expected   *proto.GatewayEndpoint
 	}{
 		{
-			name: "should convert gatewayEndpointYAML to proto format correctly",
+			name:       "should convert gatewayEndpointYAML to proto format correctly",
+			endpointID: "endpoint_1",
 			input: gatewayEndpointYAML{
-				EndpointID: "endpoint_1",
 				Auth: authYAML{
 					AuthType: "JWT_AUTH",
 					JWTAuthorizedUsers: []string{
@@ -62,7 +63,7 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			c := require.New(t)
 
-			result := test.input.convertToProto()
+			result := test.input.convertToProto(test.endpointID)
 			c.Equal(test.expected, result)
 		})
 	}
@@ -119,14 +120,15 @@ func Test_authYAML_convertToProto(t *testing.T) {
 
 func Test_gatewayEndpointYAML_validate(t *testing.T) {
 	tests := []struct {
-		name    string
-		input   gatewayEndpointYAML
-		wantErr bool
+		name       string
+		endpointID string
+		input      gatewayEndpointYAML
+		wantErr    bool
 	}{
 		{
-			name: "valid endpoint with JWT_AUTH",
+			name:       "valid endpoint with JWT_AUTH",
+			endpointID: "endpoint_1",
 			input: gatewayEndpointYAML{
-				EndpointID: "endpoint_1",
 				Auth: authYAML{
 					AuthType: "JWT_AUTH",
 					JWTAuthorizedUsers: []string{
@@ -142,7 +144,8 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "missing endpoint_id",
+			name:       "missing endpoint_id",
+			endpointID: "",
 			input: gatewayEndpointYAML{
 				Auth: authYAML{
 					AuthType: "API_KEY_AUTH",
@@ -152,9 +155,9 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "invalid capacity_limit_period",
+			name:       "invalid capacity_limit_period",
+			endpointID: "endpoint_2",
 			input: gatewayEndpointYAML{
-				EndpointID: "endpoint_2",
 				Auth: authYAML{
 					AuthType: "API_KEY_AUTH",
 					APIKey:   stringPtr("some_api_key"),
@@ -172,7 +175,7 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			c := require.New(t)
 
-			err := test.input.validate()
+			err := test.input.validate(test.endpointID)
 			if test.wantErr {
 				c.Error(err)
 			} else {

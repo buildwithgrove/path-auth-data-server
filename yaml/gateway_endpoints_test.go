@@ -18,7 +18,6 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1": {
-						EndpointID: "endpoint_1",
 						Auth: authYAML{
 							AuthType: "JWT_AUTH",
 							JWTAuthorizedUsers: []string{
@@ -87,7 +86,6 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1": {
-						EndpointID: "endpoint_1",
 						Auth: authYAML{
 							AuthType: "JWT_AUTH",
 							JWTAuthorizedUsers: []string{
@@ -101,7 +99,6 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 						},
 					},
 					"endpoint_2": {
-						EndpointID: "endpoint_2",
 						Auth: authYAML{
 							AuthType: "API_KEY_AUTH",
 							APIKey:   stringPtr("some_api_key"),
@@ -120,7 +117,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 			name: "invalid endpoint with missing endpoint_id",
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
-					"endpoint_1": {
+					"": {
 						Auth: authYAML{
 							AuthType: "API_KEY_AUTH",
 							APIKey:   stringPtr("some_api_key"),
@@ -135,7 +132,6 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1": {
-						EndpointID: "endpoint_1",
 						Auth: authYAML{
 							AuthType: "JWT_AUTH",
 							JWTAuthorizedUsers: []string{

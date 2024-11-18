@@ -18,7 +18,6 @@ const (
 type (
 	// gatewayEndpointYAML represents the structure of a single GatewayEndpoint in the YAML file.
 	gatewayEndpointYAML struct {
-		EndpointID   string            `yaml:"endpoint_id"`
 		Auth         authYAML          `yaml:"auth"`
 		RateLimiting rateLimitingYAML  `yaml:"rate_limiting"`
 		Metadata     map[string]string `yaml:"metadata"`
@@ -37,7 +36,7 @@ type (
 	}
 )
 
-func (e *gatewayEndpointYAML) convertToProto() *proto.GatewayEndpoint {
+func (e *gatewayEndpointYAML) convertToProto(endpointID string) *proto.GatewayEndpoint {
 
 	metadata := map[string]string{}
 	for key, value := range e.Metadata {
@@ -45,7 +44,7 @@ func (e *gatewayEndpointYAML) convertToProto() *proto.GatewayEndpoint {
 	}
 
 	return &proto.GatewayEndpoint{
-		EndpointId: e.EndpointID,
+		EndpointId: endpointID,
 		Auth:       e.Auth.convertToProto(),
 		RateLimiting: &proto.RateLimiting{
 			ThroughputLimit:     int32(e.RateLimiting.ThroughputLimit),
@@ -92,8 +91,8 @@ func (a *authYAML) convertToProto() *proto.Auth {
 }
 
 // gatewayEndpoint.validate ensures all fields set for the gateway endpoint are valid.
-func (e *gatewayEndpointYAML) validate() error {
-	if e.EndpointID == "" {
+func (e *gatewayEndpointYAML) validate(endpointID string) error {
+	if endpointID == "" {
 		return fmt.Errorf("endpoint_id is required")
 	}
 	if err := e.Auth.validate(); err != nil {
