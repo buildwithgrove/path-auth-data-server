@@ -53,6 +53,7 @@ CREATE TABLE portal_applications (
 CREATE TABLE portal_application_settings (
     id SERIAL PRIMARY KEY,
     application_id VARCHAR(24) NOT NULL UNIQUE REFERENCES portal_applications(id) ON DELETE CASCADE,
+    secret_key VARCHAR(64),
     secret_key_required BOOLEAN
 );
 

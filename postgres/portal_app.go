@@ -10,24 +10,24 @@ import (
 // in the existing Grove Portal Database. It is necessary to convert the existing `portal_applications`
 // table schema to the new `GatewayEndpoint` struct expected by the PATH Go External Authorization Server.
 type PortalApplicationRow struct {
-	EndpointID        string   `json:"endpoint_id"`
-	AccountID         string   `json:"account_id"`
-	SecretKeyRequired bool     `json:"secret_key_required"`
-	Plan              string   `json:"plan"`
-	CapacityLimit     int32    `json:"capacity_limit"`
-	ThroughputLimit   int32    `json:"throughput_limit"`
-	AuthorizedUsers   []string `json:"authorized_users"`
+	EndpointID        string `json:"endpoint_id"`
+	AccountID         string `json:"account_id"`
+	SecretKey         string `json:"secret_key"`
+	SecretKeyRequired bool   `json:"secret_key_required"`
+	Plan              string `json:"plan"`
+	CapacityLimit     int32  `json:"capacity_limit"`
+	ThroughputLimit   int32  `json:"throughput_limit"`
 }
 
 func convertSelectPortalApplicationsRow(r sqlc.SelectPortalApplicationsRow) *PortalApplicationRow {
 	return &PortalApplicationRow{
 		EndpointID:        r.EndpointID,
 		AccountID:         r.AccountID.String,
+		SecretKey:         r.SecretKey.String,
 		SecretKeyRequired: r.SecretKeyRequired.Bool,
 		Plan:              r.Plan.String,
 		CapacityLimit:     r.CapacityLimit.Int32,
 		ThroughputLimit:   r.ThroughputLimit.Int32,
-		AuthorizedUsers:   r.AuthorizedUsers,
 	}
 }
 
@@ -35,42 +35,61 @@ func convertSelectPortalApplicationRow(r sqlc.SelectPortalApplicationRow) *Porta
 	return &PortalApplicationRow{
 		EndpointID:        r.EndpointID,
 		AccountID:         r.AccountID.String,
+		SecretKey:         r.SecretKey.String,
 		SecretKeyRequired: r.SecretKeyRequired.Bool,
 		Plan:              r.Plan.String,
 		CapacityLimit:     r.CapacityLimit.Int32,
 		ThroughputLimit:   r.ThroughputLimit.Int32,
-		AuthorizedUsers:   r.AuthorizedUsers,
 	}
 }
 
 func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
+	rateLimiting := &proto.RateLimiting{
+		ThroughputLimit: int32(r.ThroughputLimit),
+		CapacityLimit:   int32(r.CapacityLimit),
+	}
+	// The current Portal DB only supports monthly capacity limit periods
+	if r.CapacityLimit > 0 {
+		rateLimiting.CapacityLimitPeriod = proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY
+	}
+
 	return &proto.GatewayEndpoint{
-		EndpointId: r.EndpointID,
-		UserAccount: &proto.UserAccount{
-			AccountId: r.AccountID,
-			PlanType:  r.Plan,
-		},
-		RateLimiting: &proto.RateLimiting{
-			ThroughputLimit: int32(r.ThroughputLimit),
-			CapacityLimit:   int32(r.CapacityLimit),
-			// The current Portal DB only supports monthly capacity limit periods
-			CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
-		},
-		Auth: &proto.Auth{
-			// TODO_IMPROVE(@commoddity): Add a dedicated field for requiring auth for backwards compatibility
-			RequireAuth:     r.SecretKeyRequired,
-			AuthorizedUsers: convertToProtoAuthorizedUsers(r.AuthorizedUsers),
+		EndpointId:   r.EndpointID,
+		Auth:         r.getAuthDetails(),
+		RateLimiting: rateLimiting,
+		Metadata: map[string]string{
+			"account_id": r.AccountID,
+			"plan_type":  r.Plan,
 		},
 	}
 }
 
-func convertToProtoAuthorizedUsers(users []string) map[string]*proto.Empty {
-	authUsers := make(map[string]*proto.Empty, len(users))
-	for _, user := range users {
-		authUsers[user] = &proto.Empty{}
+func (r *PortalApplicationRow) getAuthDetails() *proto.Auth {
+	if r.SecretKeyRequired {
+		return &proto.Auth{
+			AuthType: proto.Auth_API_KEY_AUTH,
+			AuthTypeDetails: &proto.Auth_ApiKey{
+				ApiKey: &proto.APIKey{
+					ApiKey: r.SecretKey,
+				},
+			},
+		}
+	} else {
+		return &proto.Auth{
+			AuthType:        proto.Auth_NO_AUTH,
+			AuthTypeDetails: &proto.Auth_NoAuth{},
+		}
 	}
-	return authUsers
 }
+
+// TODO - use this method when we have JWT auth
+// func convertToProtoAuthorizedUsers(users []string) map[string]*proto.Empty {
+// 	authUsers := make(map[string]*proto.Empty, len(users))
+// 	for _, user := range users {
+// 		authUsers[user] = &proto.Empty{}
+// 	}
+// 	return authUsers
+// }
 
 func convertPortalApplicationsRows(rows []sqlc.SelectPortalApplicationsRow) *proto.AuthDataResponse {
 	endpointsProto := make(map[string]*proto.GatewayEndpoint, len(rows))
