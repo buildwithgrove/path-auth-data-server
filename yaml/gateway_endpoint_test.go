@@ -18,37 +18,41 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 			input: gatewayEndpointYAML{
 				EndpointID: "endpoint_1",
 				Auth: authYAML{
-					RequireAuth: true,
-					AuthorizedUsers: map[string]struct{}{
-						"auth0|user_1": {},
+					AuthType: "JWT_AUTH",
+					JWTAuthorizedUsers: []string{
+						"auth0|user_1",
 					},
-				},
-				UserAccount: userAccountYAML{
-					AccountID: "account_1",
-					PlanType:  "PLAN_UNLIMITED",
 				},
 				RateLimiting: rateLimitingYAML{
 					ThroughputLimit:     30,
 					CapacityLimit:       100000,
 					CapacityLimitPeriod: "CAPACITY_LIMIT_PERIOD_MONTHLY",
 				},
+				Metadata: map[string]string{
+					"account_id": "account_1",
+					"plan_type":  "PLAN_UNLIMITED",
+				},
 			},
 			expected: &proto.GatewayEndpoint{
 				EndpointId: "endpoint_1",
 				Auth: &proto.Auth{
-					RequireAuth: true,
-					AuthorizedUsers: map[string]*proto.Empty{
-						"auth0|user_1": {},
+					AuthType: proto.Auth_JWT_AUTH,
+					AuthTypeDetails: &proto.Auth_Jwt{
+						Jwt: &proto.JWT{
+							AuthorizedUsers: map[string]*proto.Empty{
+								"auth0|user_1": {},
+							},
+						},
 					},
-				},
-				UserAccount: &proto.UserAccount{
-					AccountId: "account_1",
-					PlanType:  "PLAN_UNLIMITED",
 				},
 				RateLimiting: &proto.RateLimiting{
 					ThroughputLimit:     30,
 					CapacityLimit:       100000,
 					CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
+				},
+				Metadata: map[string]string{
+					"account_id": "account_1",
+					"plan_type":  "PLAN_UNLIMITED",
 				},
 			},
 		},
@@ -73,29 +77,32 @@ func Test_authYAML_convertToProto(t *testing.T) {
 		{
 			name: "should convert authYAML to proto format correctly",
 			input: authYAML{
-				RequireAuth: true,
-				AuthorizedUsers: map[string]struct{}{
-					"auth0|user_1": {},
-					"auth0|user_2": {},
+				AuthType: "JWT_AUTH",
+				JWTAuthorizedUsers: []string{
+					"auth0|user_1",
+					"auth0|user_2",
 				},
 			},
 			expected: &proto.Auth{
-				RequireAuth: true,
-				AuthorizedUsers: map[string]*proto.Empty{
-					"auth0|user_1": {},
-					"auth0|user_2": {},
+				AuthType: proto.Auth_JWT_AUTH,
+				AuthTypeDetails: &proto.Auth_Jwt{
+					Jwt: &proto.JWT{
+						AuthorizedUsers: map[string]*proto.Empty{
+							"auth0|user_1": {},
+							"auth0|user_2": {},
+						},
+					},
 				},
 			},
 		},
 		{
 			name: "should handle empty authorized users",
 			input: authYAML{
-				RequireAuth:     false,
-				AuthorizedUsers: map[string]struct{}{},
+				AuthType: "NO_AUTH",
 			},
 			expected: &proto.Auth{
-				RequireAuth:     false,
-				AuthorizedUsers: map[string]*proto.Empty{},
+				AuthType:        proto.Auth_NO_AUTH,
+				AuthTypeDetails: &proto.Auth_NoAuth{},
 			},
 		},
 	}
@@ -108,4 +115,127 @@ func Test_authYAML_convertToProto(t *testing.T) {
 			c.Equal(test.expected, result)
 		})
 	}
+}
+
+func Test_gatewayEndpointYAML_validate(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   gatewayEndpointYAML
+		wantErr bool
+	}{
+		{
+			name: "valid endpoint with JWT_AUTH",
+			input: gatewayEndpointYAML{
+				EndpointID: "endpoint_1",
+				Auth: authYAML{
+					AuthType: "JWT_AUTH",
+					JWTAuthorizedUsers: []string{
+						"auth0|user_1",
+					},
+				},
+				RateLimiting: rateLimitingYAML{
+					ThroughputLimit:     30,
+					CapacityLimit:       100_000,
+					CapacityLimitPeriod: "CAPACITY_LIMIT_PERIOD_MONTHLY",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing endpoint_id",
+			input: gatewayEndpointYAML{
+				Auth: authYAML{
+					AuthType: "API_KEY_AUTH",
+					APIKey:   stringPtr("some_api_key"),
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid capacity_limit_period",
+			input: gatewayEndpointYAML{
+				EndpointID: "endpoint_2",
+				Auth: authYAML{
+					AuthType: "API_KEY_AUTH",
+					APIKey:   stringPtr("some_api_key"),
+				},
+				RateLimiting: rateLimitingYAML{
+					CapacityLimit:       100_000,
+					CapacityLimitPeriod: "CAPACITY_LIMIT_PERIOD_YEARLY",
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			c := require.New(t)
+
+			err := test.input.validate()
+			if test.wantErr {
+				c.Error(err)
+			} else {
+				c.NoError(err)
+			}
+		})
+	}
+}
+
+func Test_authYAML_validate(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   authYAML
+		wantErr bool
+	}{
+		{
+			name: "valid API_KEY_AUTH",
+			input: authYAML{
+				AuthType: "API_KEY_AUTH",
+				APIKey:   stringPtr("some_api_key"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing api_key for API_KEY_AUTH",
+			input: authYAML{
+				AuthType: "API_KEY_AUTH",
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid JWT_AUTH",
+			input: authYAML{
+				AuthType: "JWT_AUTH",
+				JWTAuthorizedUsers: []string{
+					"user_1",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing jwt_authorized_users for JWT_AUTH",
+			input: authYAML{
+				AuthType: "JWT_AUTH",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			c := require.New(t)
+
+			err := test.input.validate()
+			if test.wantErr {
+				c.Error(err)
+			} else {
+				c.NoError(err)
+			}
+		})
+	}
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

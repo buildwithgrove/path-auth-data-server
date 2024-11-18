@@ -29,7 +29,7 @@ func main() {
 
 	// 1. Load the YAML data source
 	// TODO_UPNEXT(@commoddity): Add implementation for concrete data sources: Postgres(#3)
-	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath)
+	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath, logger)
 	if err != nil {
 		panic(fmt.Errorf("failed to create YAML data source: %v", err))
 	}
