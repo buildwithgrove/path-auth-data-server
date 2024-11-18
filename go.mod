@@ -2,13 +2,10 @@ module github.com/buildwithgrove/path-auth-data-server
 
 go 1.23.1
 
-// TODO_NEXT(@commoddity): Remove this once the Envoy enable API key changes are in a branch
-replace github.com/buildwithgrove/path/envoy/auth_server => ../path/envoy/auth_server
-
 require (
 	// TODO_NEXT(@commoddity): Update to a release version of the PATH auth_server package
-	// once the `envoy-grpc-auth-service` branch is merged into `main`
-	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241113085325-36c02a256a51
+	// once the relevant PATH Envoy Auth branch is merged into `main`
+	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241117094821-8e5b1f576a66
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/jackc/pgxlisten v0.0.0-20241106001234-1d6f6656415c
