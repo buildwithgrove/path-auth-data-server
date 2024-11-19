@@ -2,3 +2,4 @@
 gateway-endpoints.yaml
 .env
 .DS_Store
+docker-compose.yml
