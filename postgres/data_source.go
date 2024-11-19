@@ -118,7 +118,7 @@ func (d *postgresDataSource) AuthDataUpdatesChan() (<-chan *proto.AuthDataUpdate
 
 /* ---------- Data Update Listener Funcs ---------- */
 
-const portalApplicationChangesChannel = "portal_application_changes"
+const portalApplicationChangesChannel = "gateway_endpoint_changes"
 
 type Notification struct {
 	Payload string

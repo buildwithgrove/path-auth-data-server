@@ -12,7 +12,7 @@
 - [3. Data Sources](#3-data-sources)
   - [3.1. YAML](#31-yaml)
   - [3.2. Postgres](#32-postgres)
-    - [3.2.1. Grove Portal DB Compatibility](#321-grove-portal-db-compatibility)
+    - [3.2.1. Postgres Database Schema](#321-postgres-database-schema)
     - [3.2.2. SQLC Autogeneration](#322-sqlc-autogeneration)
 - [4. gRPC Proto File](#4-grpc-proto-file)
 
@@ -111,15 +111,62 @@ endpoints:
 
 If the `POSTGRES_CONNECTION_STRING` environment variable is set, PADS will connect to the specified Postgres database.
 
-#### 3.2.1. Grove Portal DB Compatibility
+#### 3.2.1. Postgres Database Schema
 
-The [Postgres Driver schema file](postgres/sqlc/schema.sql) uses tables from the existing Grove Portal database schema, allowing PATH to source its authorization data from the existing Grove Portal DB. 
+<div align="center">
 
-It converts the data stored in the `portal_applications` table and its associated tables into the `proto.GatewayEndpoint` format expected by PATH's Go External Authorization Server.
+```mermaid
+erDiagram
+    %% Table: plans
+    plans {
+        string name PK
+        int throughput_limit
+        int capacity_limit
+        string capacity_limit_period
+        timestamp created_at
+        timestamp updated_at
+    }
 
-It also listens for updates to the Grove Portal DB and streams updates to the `Go External Authorization Server` in real time as changes are made to the connected Postgres database.
+    %% Table: gateway_endpoints
+    gateway_endpoints {
+        string id PK
+        string plan_name FK
+        string auth_type
+        string api_key
+        timestamp created_at
+        timestamp updated_at
+    }
 
-[For the full Grove Portal DB schema, refer to the database schema defined in the Portal HTTP DB (PHD) repository](https://github.com/pokt-foundation/portal-http-**db**/blob/master/postgres-driver/sqlc/schema.sql).
+    %% Table: users
+    users {
+        int id PK
+        string auth_provider_user_id UK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Table: gateway_endpoint_users
+    gateway_endpoint_users {
+        string gateway_endpoint_id FK
+        string auth_provider_user_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Relationships
+    gateway_endpoints }o--|| plans : "plan_name"
+    gateway_endpoint_users }o--|| gateway_endpoints : "gateway_endpoint_id"
+    gateway_endpoint_users }o--|| users : "auth_provider_user_id"
+```
+</div>
+
+The [Postgres Driver schema file](postgres/sqlc/schema.sql) provides a simple example of a Postgres schema that a Gateway Operator can use to store their Gateway Endpoints.
+
+It converts the data stored in the `gateway_endpoints` table into the `proto.GatewayEndpoint` format expected by PATH's Go External Authorization Server.
+
+It also listens for updates to the Postgres database and streams updates to the `Go External Authorization Server` in real time as changes are made to the connected Postgres database.
+
+**This schema is provided as a starting point. However, if you wish to modify the schema to better fit your needs, please fork the repo and modify the schema to fit your implementation.**
 
 #### 3.2.2. SQLC Autogeneration
 
