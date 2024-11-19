@@ -203,7 +203,7 @@ endpoints:
     rate_limiting:
       throughput_limit: 50
       capacity_limit: 200
-      capacity_limit_period: "MONTHLY"
+      capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY"
     metadata:
       account_id: "account_3"
       plan_type: "PLAN_UNLIMITED"

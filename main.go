@@ -30,11 +30,10 @@ func main() {
 	}
 
 	// 1. Load the data source
-	authDataSource, cleanup, err := getAuthDataSource(env, logger)
+	authDataSource, err := getAuthDataSource(env, logger)
 	if err != nil {
 		panic(err)
 	}
-	defer cleanup()
 
 	// 2. Initialize the gRPC server that will serve the Gateway Endpoints
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", env.port))
@@ -121,7 +120,7 @@ func (env *envVars) validateAndHydrate() error {
 
 // getAuthDataSource returns an AuthDataSource and a cleanup function.
 // The cleanup function should be deferred to ensure resources are released.
-func getAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
+func getAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, error) {
 
 	// Environment variables are validated in gatherEnvVars, so
 	// only one variable checked for in the switch will be set.
@@ -139,38 +138,36 @@ func getAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthData
 
 	// This should never happen.
 	default:
-		return nil, nil, fmt.Errorf("neither POSTGRES_CONNECTION_STRING nor YAML_FILEPATH is set")
+		return nil, fmt.Errorf("neither POSTGRES_CONNECTION_STRING nor YAML_FILEPATH is set")
 	}
 }
 
 // getPostgresAuthDataSource initializes a Postgres data source and returns it along with a cleanup function.
-func getPostgresAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
+func getPostgresAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, error) {
 
 	logger.Info().Msg("Using Postgres data source")
 
-	authDataSource, cleanup, err := postgres.NewPostgresDataSource(
+	authDataSource, err := postgres.NewPostgresDataSource(
 		context.Background(),
 		env.postgresConnectionString,
 		logger,
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Postgres data source: %v", err)
+		return nil, fmt.Errorf("failed to create Postgres data source: %v", err)
 	}
 
-	return authDataSource, cleanup, nil
+	return authDataSource, nil
 }
 
 // getYAMLAuthDataSource initializes a YAML data source and returns it.
-func getYAMLAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
+func getYAMLAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, error) {
 
 	logger.Info().Msg("Using YAML data source")
 
 	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath, logger)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create YAML data source: %v", err)
+		return nil, fmt.Errorf("failed to create YAML data source: %v", err)
 	}
 
-	cleanup := func() {} // cleanup is a no-op for YAML data source
-
-	return authDataSource, cleanup, nil
+	return authDataSource, nil
 }

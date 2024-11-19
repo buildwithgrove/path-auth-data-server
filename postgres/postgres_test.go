@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"testing"
 
@@ -23,6 +24,8 @@ func TestMain(m *testing.M) {
 	// Initialize the ephemeral postgres docker container
 	pool, resource, databaseURL := setupPostgresDocker()
 	connectionString = databaseURL
+
+	fmt.Println("connectionString", connectionString)
 
 	// Run DB integration test
 	exitCode := m.Run()
@@ -48,18 +51,18 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: proto.Auth_JWT_AUTH,
+							AuthTypeDetails: &proto.Auth_Jwt{
+								Jwt: &proto.JWT{
+									AuthorizedUsers: map[string]*proto.Empty{
+										"provider_user_1": {},
+										"provider_user_2": {},
+										"provider_user_3": {},
+									},
+								},
+							},
 						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     1000,
-							CapacityLimit:       30,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
-						},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_FREE",
-						},
+						RateLimiting: &proto.RateLimiting{},
 					},
 					"endpoint_2": {
 						EndpointId: "endpoint_2",
@@ -72,62 +75,42 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							},
 						},
 						RateLimiting: &proto.RateLimiting{},
-						Metadata: map[string]string{
-							"account_id": "account_2",
-							"plan_type":  "PLAN_UNLIMITED",
-						},
 					},
 					"endpoint_3": {
 						EndpointId: "endpoint_3",
-						Auth: &proto.Auth{
-							AuthType: proto.Auth_API_KEY_AUTH,
-							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: &proto.APIKey{
-									ApiKey: "secret_key_3",
-								},
-							},
-						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     1000,
-							CapacityLimit:       30,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
-						},
-						Metadata: map[string]string{
-							"account_id": "account_3",
-							"plan_type":  "PLAN_FREE",
-						},
-					},
-					"endpoint_4": {
-						EndpointId: "endpoint_4",
 						Auth: &proto.Auth{
 							AuthType:        proto.Auth_NO_AUTH,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     1000,
-							CapacityLimit:       30,
+							ThroughputLimit:     30,
+							CapacityLimit:       100_000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_FREE",
+					},
+					"endpoint_4": {
+						EndpointId: "endpoint_4",
+						Auth: &proto.Auth{
+							AuthType: proto.Auth_API_KEY_AUTH,
+							AuthTypeDetails: &proto.Auth_ApiKey{
+								ApiKey: &proto.APIKey{
+									ApiKey: "secret_key_4",
+								},
+							},
+						},
+						RateLimiting: &proto.RateLimiting{
+							ThroughputLimit:     30,
+							CapacityLimit:       100_000,
+							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 					},
 					"endpoint_5": {
 						EndpointId: "endpoint_5",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_API_KEY_AUTH,
-							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: &proto.APIKey{
-									ApiKey: "secret_key_5",
-								},
-							},
+							AuthType:        proto.Auth_NO_AUTH,
+							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{},
-						Metadata: map[string]string{
-							"account_id": "account_2",
-							"plan_type":  "PLAN_UNLIMITED",
-						},
 					},
 				},
 			},
@@ -138,7 +121,7 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			c := require.New(t)
 
-			dataSource, _, err := NewPostgresDataSource(context.Background(), connectionString, polyzero.NewLogger())
+			dataSource, err := NewPostgresDataSource(context.Background(), connectionString, polyzero.NewLogger())
 			c.NoError(err)
 
 			authData, err := dataSource.FetchAuthDataSync()

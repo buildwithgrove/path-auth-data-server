@@ -1,51 +1,38 @@
 -- This file updates the ephemeral Docker Postgres test database initialized in postgres/docker_test.go
 -- with just enough data to run the test of the database driver using an actual Postgres DB instance.
 
--- Insert into the 'pay_plans' table
-INSERT INTO pay_plans (
-    plan_type,
-    monthly_relay_limit,
-    throughput_limit
+-- Insert into the 'plans' table
+INSERT INTO plans (
+    name,
+    throughput_limit,
+    capacity_limit,
+    capacity_limit_period
 )
-VALUES ('PLAN_FREE', 1000, 30),
-    ('PLAN_UNLIMITED', 0, 0);
+VALUES 
+    ('PLAN_FREE', 30, 100000, 'CAPACITY_LIMIT_PERIOD_MONTHLY'),
+    ('PLAN_UNLIMITED', 0, 0, 'CAPACITY_LIMIT_PERIOD_UNSPECIFIED');
 
--- Insert into the 'accounts' table
-INSERT INTO accounts (id, plan_type)
-VALUES ('account_1', 'PLAN_FREE'),
-    ('account_2', 'PLAN_UNLIMITED'),
-    ('account_3', 'PLAN_FREE');
+-- Insert into the 'gateway_endpoints' table
+INSERT INTO gateway_endpoints (id, plan_name, auth_type, api_key)
+VALUES 
+    ('endpoint_1', 'PLAN_UNLIMITED', 'JWT_AUTH', NULL),
+    ('endpoint_2', 'PLAN_UNLIMITED', 'API_KEY_AUTH', 'secret_key_2'),
+    ('endpoint_3', 'PLAN_FREE', 'NO_AUTH', NULL),
+    ('endpoint_4', 'PLAN_FREE', 'API_KEY_AUTH', 'secret_key_4'),
+    ('endpoint_5', 'PLAN_UNLIMITED', 'NO_AUTH', NULL);
 
 -- Insert into the 'users' table
-INSERT INTO users (id)
-VALUES ('user_1'),
-    ('user_2'),
-    ('user_3');
+INSERT INTO users (auth_provider_user_id)
+VALUES 
+    ('provider_user_1'),
+    ('provider_user_2'),
+    ('provider_user_3');
 
--- Insert into the 'user_auth_providers' table
-INSERT INTO user_auth_providers (user_id, type, provider_user_id)
-VALUES ('user_1', 'auth0_username', 'provider_user_1'),
-    ('user_2', 'auth0_username', 'provider_user_2'),
-    ('user_3', 'auth0_username', 'provider_user_3');
-
--- Insert into the 'account_users' table
-INSERT INTO account_users (user_id, account_id)
-VALUES ('user_1', 'account_1'),
-    ('user_2', 'account_2'),
-    ('user_3', 'account_3');
-
--- Insert into the 'portal_applications' table
-INSERT INTO portal_applications (id, account_id)
-VALUES ('endpoint_1', 'account_1'),
-    ('endpoint_2', 'account_2'),
-    ('endpoint_3', 'account_3'),
-    ('endpoint_4', 'account_1'),
-    ('endpoint_5', 'account_2');
-
--- Insert into the 'portal_application_settings' table
-INSERT INTO portal_application_settings (application_id, secret_key_required, secret_key)
-VALUES ('endpoint_1', FALSE, NULL),
-    ('endpoint_2', TRUE, 'secret_key_2'),
-    ('endpoint_3', TRUE, 'secret_key_3'),
-    ('endpoint_4', FALSE, NULL),
-    ('endpoint_5', TRUE, 'secret_key_5');
+-- Insert into the 'gateway_endpoint_users' table
+INSERT INTO gateway_endpoint_users (gateway_endpoint_id, auth_provider_user_id)
+VALUES 
+    ('endpoint_1', 'provider_user_1'),
+    ('endpoint_2', 'provider_user_2'),
+    ('endpoint_3', 'provider_user_3'),
+    ('endpoint_1', 'provider_user_2'),
+    ('endpoint_1', 'provider_user_3');
