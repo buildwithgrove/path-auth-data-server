@@ -82,27 +82,33 @@ The YAML file must be formatted as follows:
 
 ```yaml
 endpoints:
-  endpoint_1:
-    endpoint_id: "endpoint_1"
+  # 1. Example of a gateway endpoint using API Key Authorization
+  # This endpoint has no rate limits defined (the rate_limiting field is omitted entirely in this case).
+  endpoint_1:                                                # The unique identifier for a gateway endpoint.
     auth:
-      require_auth: true
-      authorized_users:
-        "auth0|user_1": {}
-    user_account:
-      account_id: "account_1"
-      plan_type: "PLAN_UNLIMITED"
+      auth_type: "API_KEY_AUTH"                              # This endpoint uses API Key Authorization.
+      api_key: "api_key_1"                                   # For API Key Authorization, the API key string is required.
 
+    metadata:                                                # Metadata fields may be any key-value pairs and are optional.
+      plan_type: "PLAN_UNLIMITED"                            # Example of a key-value pair (in this case, a pricing plan).
+      account_id: "account_1"                                # Example of a key-value pair (in this case, an account ID).
+      owner_email: "amos.burton@opa.belt"                    # Example of a key-value pair (in this case, an owner email).
+
+  # 2. Example of a gateway endpoint using JWT Authorization
   endpoint_2:
-    endpoint_id: "endpoint_2"
     auth:
-      require_auth: false
-    user_account:
-      account_id: "account_2"
-      plan_type: "PLAN_FREE"
-    rate_limiting:
-      throughput_limit: 30
-      capacity_limit: 100000
-      capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY"
+      auth_type: "JWT_AUTH"                                  # This endpoint uses JWT Authorization.
+      jwt_authorized_users:                                  # For JWT Authorization, the jwt_authorized_users array is required.
+        - "auth0|user_1"                                     # The user ID of an authorized user (in this case, a user ID provided by Auth0).
+        - "auth0|user_2"
+
+  # 3. Example of a gateway endpoint with rate limiting enabled and no authorization required 
+  # (The auth field is omitted entirely in this case).
+  endpoint_3:
+    rate_limiting:                                           # This endpoint has a rate limit defined
+      throughput_limit: 50                                   # Throughput limit defines the endpoint's per-second (TPS) rate limit.
+      capacity_limit: 200                                    # Capacity limit defines the endpoint's rate limit over longer periods.
+      capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY" # Capacity limit period defines the period over which the capacity limit is enforced.
 ```
 
 ### 3.2. Postgres

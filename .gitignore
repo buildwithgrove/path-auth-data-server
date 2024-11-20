@@ -10,6 +10,7 @@
 # YAML
 *.yaml
 !gateway-endpoints.schema.yaml
+!gateway-endpoints.example.yaml
 
 # Docker
 docker-compose.yml
