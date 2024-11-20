@@ -69,9 +69,7 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 						Auth: &proto.Auth{
 							AuthType: proto.Auth_API_KEY_AUTH,
 							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: &proto.APIKey{
-									ApiKey: "secret_key_2",
-								},
+								ApiKey: "secret_key_2",
 							},
 						},
 						RateLimiting: &proto.RateLimiting{},
@@ -93,9 +91,7 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 						Auth: &proto.Auth{
 							AuthType: proto.Auth_API_KEY_AUTH,
 							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: &proto.APIKey{
-									ApiKey: "secret_key_4",
-								},
+								ApiKey: "secret_key_4",
 							},
 						},
 						RateLimiting: &proto.RateLimiting{
