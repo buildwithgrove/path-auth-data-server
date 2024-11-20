@@ -22,22 +22,26 @@ properties:
                 type: string
               description: "An array of user IDs authorized to access this account's gateway endpoints. (Required for JWT Authorization.)"
           oneOf:
-            - properties:
+            - type: object
+              properties:
                 auth_type:
                   enum: ["API_KEY_AUTH"]
                 api_key:
                   type: string
-              required: ["api_key"]
-            - properties:
+              required:
+                - auth_type
+                - api_key
+            - type: object
+              properties:
                 auth_type:
                   enum: ["JWT_AUTH"]
                 jwt_authorized_users:
                   type: array
                   items:
                     type: string
-              required: ["jwt_authorized_users"]
-          required:
-            - auth_type
+              required:
+                - auth_type
+                - jwt_authorized_users
         rate_limiting:
           type: object
           properties:
@@ -50,9 +54,9 @@ properties:
             capacity_limit_period:
               type: string
               enum: [
-                "DAILY",
-                "WEEKLY",
-                "MONTHLY"
+                "CAPACITY_LIMIT_PERIOD_DAILY",
+                "CAPACITY_LIMIT_PERIOD_WEEKLY",
+                "CAPACITY_LIMIT_PERIOD_MONTHLY"
               ]
               description: "The period over which the capacity limit is enforced."
         metadata:
@@ -60,6 +64,5 @@ properties:
           additionalProperties:
             type: string
             description: "A map of string key-value pairs for metadata."
-  required:
-    - endpoints
-
+required:
+  - endpoints

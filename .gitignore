@@ -1,5 +1,15 @@
+# Binary files
 /app
-gateway-endpoints.yaml
+
+# Environment
 .env
+
+# MacOS
 .DS_Store
+
+# YAML
+*.yaml
+!gateway-endpoints.schema.yaml
+
+# Docker
 docker-compose.yml
