@@ -69,9 +69,7 @@ func (r *PortalApplicationRow) getAuthDetails() *proto.Auth {
 		return &proto.Auth{
 			AuthType: proto.Auth_API_KEY_AUTH,
 			AuthTypeDetails: &proto.Auth_ApiKey{
-				ApiKey: &proto.APIKey{
-					ApiKey: r.SecretKey,
-				},
+				ApiKey: r.SecretKey,
 			},
 		}
 	} else {
