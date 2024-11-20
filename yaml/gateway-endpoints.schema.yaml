@@ -1,11 +1,9 @@
 type: object
-additionalProperties: false
 properties:
   endpoints:
     type: object
     description: "The key for each gateway endpoint is its unique ID and must not be empty."
-    additionalProperties: false
-    properties:
+    additionalProperties:
       type: object
       properties:
         auth:
@@ -66,5 +64,7 @@ properties:
           additionalProperties:
             type: string
             description: "A map of string key-value pairs for metadata."
+      additionalProperties: false
 required:
   - endpoints
+additionalProperties: false

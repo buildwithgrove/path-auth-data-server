@@ -10,7 +10,6 @@
 # For details on the expected proto format, see the definition in 
 # envoy/auth_server/proto/gateway_endpoint.proto
 endpoints:
-
   # 1. Example of a gateway endpoint using API Key Authorization
   # This endpoint has no rate limits defined (the rate_limiting field is omitted entirely in this case).
   endpoint_1:                                                # The unique identifier for a gateway endpoint.
