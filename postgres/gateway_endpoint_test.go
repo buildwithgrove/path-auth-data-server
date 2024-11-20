@@ -47,9 +47,7 @@ func Test_convertGatewayEndpointsRows(t *testing.T) {
 						Auth: &proto.Auth{
 							AuthType: proto.Auth_API_KEY_AUTH,
 							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: &proto.APIKey{
-									ApiKey: "secret_key_1",
-								},
+								ApiKey: "secret_key_1",
 							},
 						},
 						RateLimiting: &proto.RateLimiting{

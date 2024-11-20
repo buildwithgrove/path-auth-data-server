@@ -66,9 +66,7 @@ func (r *GatewayEndpointRow) getAuthDetails() *proto.Auth {
 	case grpc_server.AuthTypeAPIKey:
 		if r.ApiKey != "" {
 			authProto.AuthTypeDetails = &proto.Auth_ApiKey{
-				ApiKey: &proto.APIKey{
-					ApiKey: r.ApiKey,
-				},
+				ApiKey: r.ApiKey,
 			}
 		}
 

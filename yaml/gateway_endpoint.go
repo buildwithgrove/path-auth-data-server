@@ -59,9 +59,7 @@ func (a *authYAML) convertToProto() *proto.Auth {
 	case grpc_server.AuthTypeAPIKey:
 		if a.APIKey != nil {
 			authProto.AuthTypeDetails = &proto.Auth_ApiKey{
-				ApiKey: &proto.APIKey{
-					ApiKey: *a.APIKey,
-				},
+				ApiKey: *a.APIKey,
 			}
 		}
 
