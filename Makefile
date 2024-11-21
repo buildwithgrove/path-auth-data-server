@@ -1,9 +1,11 @@
 ########################
 ### Makefile Helpers ###
 ########################
+
 .PHONY: list
 list: ## List all make targets
 	@${MAKE} -pRrn : -f $(MAKEFILE_LIST) 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | sort
+
 .PHONY: help
 .DEFAULT_GOAL := help
 help: ## Prints all the targets in all the Makefiles
@@ -13,8 +15,8 @@ help: ## Prints all the targets in all the Makefiles
 ### Test Targets ###
 ####################
 
-.PHONY: test
-test: ## Runs all tests
+.PHONY: test_all
+test_all: ## Runs all unit tests
 	go test ./... -count=1
 
 .PHONY: test_unit
@@ -25,6 +27,15 @@ test_unit: ## Runs unit tests
 ### Mock Targets ###
 ####################
 
+# TODO_IMPROVE(@commoddity): Update to use go:generate pattern for generating mocks from interfaces
 .PHONY: gen_mocks
 gen_mocks: ## Generates mocks for testing
-	mockgen -source=./server/data_source.go -destination=./server/data_source_mock_test.go -package=server
+	mockgen -source=./grpc/data_source.go -destination=./grpc/data_source_mock_test.go -package=grpc
+
+#############################
+### SQL Generator Targets ###
+#############################
+
+.PHONY: gen_sqlc
+gen_sqlc: ## Generates the SQLC code
+	sqlc generate -f ./postgres/sqlc/sqlc.yaml

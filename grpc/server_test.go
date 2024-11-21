@@ -1,4 +1,4 @@
-package server
+package grpc
 
 import (
 	"context"
@@ -6,37 +6,38 @@ import (
 	"testing"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 )
 
-func Test_GetInitialData(t *testing.T) {
+func Test_FetchAuthDataSync(t *testing.T) {
 	tests := []struct {
 		name             string
-		expectedResponse *proto.InitialDataResponse
+		expectedResponse *proto.AuthDataResponse
 		expectedError    error
 	}{
 		{
-			name: "should return initial data successfully",
-			expectedResponse: &proto.InitialDataResponse{
+			name: "should return Gateway Endpoints successfully",
+			expectedResponse: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
-					"endpoint1": {
-						EndpointId: "endpoint1",
+					"endpoint_1": {
+						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"user1": {},
+							AuthType: proto.Auth_API_KEY_AUTH,
+							AuthTypeDetails: &proto.Auth_ApiKey{
+								ApiKey: "secret_key_1",
 							},
-						},
-						UserAccount: &proto.UserAccount{
-							AccountId: "account1",
-							PlanType:  "basic",
 						},
 						RateLimiting: &proto.RateLimiting{
 							ThroughputLimit:     100,
 							CapacityLimit:       1000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_DAILY,
+						},
+						Metadata: map[string]string{
+							"account_id": "account_1",
+							"plan_type":  "PLAN_FREE",
 						},
 					},
 				},
@@ -57,20 +58,20 @@ func Test_GetInitialData(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDataSource := NewMockDataSource(ctrl)
+			mockDataSource := NewMockAuthDataSource(ctrl)
 
-			mockDataSource.EXPECT().FetchInitialData().Return(test.expectedResponse, test.expectedError)
+			mockDataSource.EXPECT().FetchAuthDataSync().Return(test.expectedResponse, test.expectedError)
 			if test.expectedError == nil {
-				mockDataSource.EXPECT().SubscribeUpdates().Return(nil, nil)
+				mockDataSource.EXPECT().AuthDataUpdatesChan().Return(nil, nil)
 			}
 
-			server, err := NewServer(mockDataSource)
+			server, err := NewGRPCServer(mockDataSource, polyzero.NewLogger())
 			c.Equal(test.expectedError, err)
 
 			if test.expectedError == nil {
 				ctx := context.Background()
 
-				resp, err := server.GetInitialData(ctx, &proto.InitialDataRequest{})
+				resp, err := server.FetchAuthDataSync(ctx, &proto.AuthDataRequest{})
 				if test.expectedError == nil {
 					c.Equal(test.expectedResponse, resp)
 					c.NoError(err)
@@ -86,21 +87,21 @@ func Test_GetInitialData(t *testing.T) {
 func Test_StreamUpdates(t *testing.T) {
 	tests := []struct {
 		name          string
-		updates       []*proto.Update
+		updates       []*proto.AuthDataUpdate
 		expectedError error
 	}{
 		{
 			name: "should stream updates successfully",
-			updates: []*proto.Update{
+			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint1",
+					EndpointId: "endpoint_1",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint1",
+						EndpointId: "endpoint_1",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint2",
+					EndpointId: "endpoint_2",
 					Delete:     true,
 				},
 			},
@@ -108,7 +109,7 @@ func Test_StreamUpdates(t *testing.T) {
 		},
 		{
 			name:          "should handle no updates",
-			updates:       []*proto.Update{},
+			updates:       []*proto.AuthDataUpdate{},
 			expectedError: nil,
 		},
 	}
@@ -120,29 +121,29 @@ func Test_StreamUpdates(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDataSource := NewMockDataSource(ctrl)
-			updateCh := make(chan *proto.Update, len(test.updates))
+			mockDataSource := NewMockAuthDataSource(ctrl)
+			updateCh := make(chan *proto.AuthDataUpdate, len(test.updates))
 
 			for _, update := range test.updates {
 				updateCh <- update
 			}
 			close(updateCh)
 
-			mockDataSource.EXPECT().FetchInitialData().Return(&proto.InitialDataResponse{
+			mockDataSource.EXPECT().FetchAuthDataSync().Return(&proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{},
 			}, nil)
-			mockDataSource.EXPECT().SubscribeUpdates().Return(updateCh, nil)
+			mockDataSource.EXPECT().AuthDataUpdatesChan().Return(updateCh, nil)
 
-			server, err := NewServer(mockDataSource)
+			server, err := NewGRPCServer(mockDataSource, polyzero.NewLogger())
 			c.NoError(err)
 
 			mockStream := &mockStreamServer{
 				updates:         test.updates,
-				updatesReceived: make(chan *proto.Update, len(test.updates)),
+				updatesReceived: make(chan *proto.AuthDataUpdate, len(test.updates)),
 			}
 
 			go func() {
-				err = server.StreamUpdates(&proto.UpdatesRequest{}, mockStream)
+				err = server.StreamAuthDataUpdates(&proto.AuthDataUpdatesRequest{}, mockStream)
 				c.Equal(test.expectedError, err)
 			}()
 
@@ -157,54 +158,54 @@ func Test_StreamUpdates(t *testing.T) {
 func Test_handleDataSourceUpdates(t *testing.T) {
 	tests := []struct {
 		name                     string
-		initialData              map[string]*proto.GatewayEndpoint
-		updates                  []*proto.Update
+		gatewayEndpoints         map[string]*proto.GatewayEndpoint
+		updates                  []*proto.AuthDataUpdate
 		expectedDataAfterUpdates map[string]*proto.GatewayEndpoint
 	}{
 		{
 			name: "should update server state with new updates",
-			initialData: map[string]*proto.GatewayEndpoint{
-				"endpoint1": {
-					EndpointId: "endpoint1",
+			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
+				"endpoint_1": {
+					EndpointId: "endpoint_1",
 				},
 			},
-			updates: []*proto.Update{
+			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint1",
+					EndpointId: "endpoint_1",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint1",
+						EndpointId: "endpoint_1",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint2",
+					EndpointId: "endpoint_2",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint2",
+						EndpointId: "endpoint_2",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint1",
+					EndpointId: "endpoint_1",
 					Delete:     true,
 				},
 			},
 			expectedDataAfterUpdates: map[string]*proto.GatewayEndpoint{
-				"endpoint2": {
-					EndpointId: "endpoint2",
+				"endpoint_2": {
+					EndpointId: "endpoint_2",
 				},
 			},
 		},
 		{
 			name: "should handle no updates",
-			initialData: map[string]*proto.GatewayEndpoint{
-				"endpoint1": {
-					EndpointId: "endpoint1",
+			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
+				"endpoint_1": {
+					EndpointId: "endpoint_1",
 				},
 			},
-			updates: []*proto.Update{},
+			updates: []*proto.AuthDataUpdate{},
 			expectedDataAfterUpdates: map[string]*proto.GatewayEndpoint{
-				"endpoint1": {
-					EndpointId: "endpoint1",
+				"endpoint_1": {
+					EndpointId: "endpoint_1",
 				},
 			},
 		},
@@ -217,34 +218,34 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDataSource := NewMockDataSource(ctrl)
-			updateCh := make(chan *proto.Update, len(test.updates))
+			mockDataSource := NewMockAuthDataSource(ctrl)
+			updateCh := make(chan *proto.AuthDataUpdate, len(test.updates))
 
 			for _, update := range test.updates {
 				updateCh <- update
 			}
 			close(updateCh)
 
-			mockDataSource.EXPECT().FetchInitialData().Return(&proto.InitialDataResponse{Endpoints: test.initialData}, nil)
-			mockDataSource.EXPECT().SubscribeUpdates().Return(updateCh, nil)
+			mockDataSource.EXPECT().FetchAuthDataSync().Return(&proto.AuthDataResponse{Endpoints: test.gatewayEndpoints}, nil)
+			mockDataSource.EXPECT().AuthDataUpdatesChan().Return(updateCh, nil)
 
-			server, err := NewServer(mockDataSource)
+			server, err := NewGRPCServer(mockDataSource, polyzero.NewLogger())
 			c.NoError(err)
 
 			server.handleDataSourceUpdates(updateCh)
 
-			c.Equal(test.expectedDataAfterUpdates, server.GatewayEndpoints)
+			c.EqualValues(test.expectedDataAfterUpdates, server.gatewayEndpoints)
 		})
 	}
 }
 
 type mockStreamServer struct {
 	grpc.ServerStream
-	updates         []*proto.Update
-	updatesReceived chan *proto.Update
+	updates         []*proto.AuthDataUpdate
+	updatesReceived chan *proto.AuthDataUpdate
 }
 
-func (m *mockStreamServer) Send(update *proto.Update) error {
+func (m *mockStreamServer) Send(update *proto.AuthDataUpdate) error {
 	for _, u := range m.updates {
 		if u.EndpointId == update.EndpointId {
 			m.updatesReceived <- update

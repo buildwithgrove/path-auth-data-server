@@ -14,3 +14,8 @@ sql:
         output_db_file_name: db.generated.go
         output_models_file_name: models.generated.go
         output_files_suffix: .generated
+        overrides:
+          - db_type: "capacity_limit_period"
+            go_type: "github.com/buildwithgrove/path-auth-data-server/grpc.CapacityLimitPeriod"
+          - db_type: "auth_type"
+            go_type: "github.com/buildwithgrove/path-auth-data-server/grpc.AuthType"

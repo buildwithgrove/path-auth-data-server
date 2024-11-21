@@ -8,42 +8,43 @@ package sqlc
 import (
 	"context"
 
+	"github.com/buildwithgrove/path-auth-data-server/grpc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const deletePortalApplicationChanges = `-- name: DeletePortalApplicationChanges :exec
-DELETE FROM portal_application_changes
+const deleteGatewayEndpointChanges = `-- name: DeleteGatewayEndpointChanges :exec
+DELETE FROM gateway_endpoint_changes
 WHERE id = ANY($1::int [])
 `
 
-func (q *Queries) DeletePortalApplicationChanges(ctx context.Context, changeIds []int32) error {
-	_, err := q.db.Exec(ctx, deletePortalApplicationChanges, changeIds)
+func (q *Queries) DeleteGatewayEndpointChanges(ctx context.Context, dollar_1 []int32) error {
+	_, err := q.db.Exec(ctx, deleteGatewayEndpointChanges, dollar_1)
 	return err
 }
 
-const getPortalApplicationChanges = `-- name: GetPortalApplicationChanges :many
+const getGatewayEndpointChanges = `-- name: GetGatewayEndpointChanges :many
 SELECT id,
-    portal_app_id,
+    gateway_endpoint_id,
     is_delete
-FROM portal_application_changes
+FROM gateway_endpoint_changes
 `
 
-type GetPortalApplicationChangesRow struct {
-	ID          int32  `json:"id"`
-	PortalAppID string `json:"portal_app_id"`
-	IsDelete    bool   `json:"is_delete"`
+type GetGatewayEndpointChangesRow struct {
+	ID                int32  `json:"id"`
+	GatewayEndpointID string `json:"gateway_endpoint_id"`
+	IsDelete          bool   `json:"is_delete"`
 }
 
-func (q *Queries) GetPortalApplicationChanges(ctx context.Context) ([]GetPortalApplicationChangesRow, error) {
-	rows, err := q.db.Query(ctx, getPortalApplicationChanges)
+func (q *Queries) GetGatewayEndpointChanges(ctx context.Context) ([]GetGatewayEndpointChangesRow, error) {
+	rows, err := q.db.Query(ctx, getGatewayEndpointChanges)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetPortalApplicationChangesRow
+	var items []GetGatewayEndpointChangesRow
 	for rows.Next() {
-		var i GetPortalApplicationChangesRow
-		if err := rows.Scan(&i.ID, &i.PortalAppID, &i.IsDelete); err != nil {
+		var i GetGatewayEndpointChangesRow
+		if err := rows.Scan(&i.ID, &i.GatewayEndpointID, &i.IsDelete); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -54,124 +55,104 @@ func (q *Queries) GetPortalApplicationChanges(ctx context.Context) ([]GetPortalA
 	return items, nil
 }
 
-const selectPortalApplication = `-- name: SelectPortalApplication :one
-SELECT 
-    pa.id AS endpoint_id,
-    pas.secret_key_required,
-    pa.account_id,
-    a.plan_type AS plan,
-    p.throughput_limit AS capacity_limit,
-    p.monthly_relay_limit AS throughput_limit,
-    COALESCE(
-        ARRAY_AGG(DISTINCT uap.provider_user_id) FILTER (WHERE uap.provider_user_id IS NOT NULL),
-        ARRAY[]::VARCHAR[]
-    )::VARCHAR[] AS authorized_users
-FROM portal_applications pa
-LEFT JOIN portal_application_settings pas
-    ON pa.id = pas.application_id
-LEFT JOIN accounts a 
-    ON pa.account_id = a.id
-LEFT JOIN pay_plans p 
-    ON a.plan_type = p.plan_type
-LEFT JOIN account_users au
-    ON a.id = au.account_id
-LEFT JOIN user_auth_providers uap
-    ON au.user_id = uap.user_id
-WHERE pa.id = $1
-GROUP BY 
-    pa.id,
-    a.plan_type,
+const selectGatewayEndpoint = `-- name: SelectGatewayEndpoint :one
+SELECT ge.id AS endpoint_id,
+    ge.auth_type,
+    ge.api_key,
     p.throughput_limit,
-    p.monthly_relay_limit,
-    pas.secret_key_required
+    p.capacity_limit,
+    p.capacity_limit_period::capacity_limit_period AS capacity_limit_period,
+    ARRAY_AGG(geu.auth_provider_user_id) FILTER (
+        WHERE geu.auth_provider_user_id IS NOT NULL
+    )::varchar [] AS authorized_users
+FROM gateway_endpoints ge
+    LEFT JOIN plans p ON ge.plan_name = p.name
+    LEFT JOIN gateway_endpoint_users geu ON ge.id = geu.gateway_endpoint_id
+WHERE ge.id = $1
+GROUP BY ge.id,
+    ge.auth_type,
+    ge.api_key,
+    p.throughput_limit,
+    p.capacity_limit,
+    p.capacity_limit_period
 `
 
-type SelectPortalApplicationRow struct {
-	EndpointID        string      `json:"endpoint_id"`
-	SecretKeyRequired pgtype.Bool `json:"secret_key_required"`
-	AccountID         pgtype.Text `json:"account_id"`
-	Plan              pgtype.Text `json:"plan"`
-	CapacityLimit     pgtype.Int4 `json:"capacity_limit"`
-	ThroughputLimit   pgtype.Int4 `json:"throughput_limit"`
-	AuthorizedUsers   []string    `json:"authorized_users"`
+type SelectGatewayEndpointRow struct {
+	EndpointID          string                   `json:"endpoint_id"`
+	AuthType            grpc.AuthType            `json:"auth_type"`
+	ApiKey              pgtype.Text              `json:"api_key"`
+	ThroughputLimit     pgtype.Int4              `json:"throughput_limit"`
+	CapacityLimit       pgtype.Int4              `json:"capacity_limit"`
+	CapacityLimitPeriod grpc.CapacityLimitPeriod `json:"capacity_limit_period"`
+	AuthorizedUsers     []string                 `json:"authorized_users"`
 }
 
-func (q *Queries) SelectPortalApplication(ctx context.Context, id string) (SelectPortalApplicationRow, error) {
-	row := q.db.QueryRow(ctx, selectPortalApplication, id)
-	var i SelectPortalApplicationRow
+func (q *Queries) SelectGatewayEndpoint(ctx context.Context, id string) (SelectGatewayEndpointRow, error) {
+	row := q.db.QueryRow(ctx, selectGatewayEndpoint, id)
+	var i SelectGatewayEndpointRow
 	err := row.Scan(
 		&i.EndpointID,
-		&i.SecretKeyRequired,
-		&i.AccountID,
-		&i.Plan,
-		&i.CapacityLimit,
+		&i.AuthType,
+		&i.ApiKey,
 		&i.ThroughputLimit,
+		&i.CapacityLimit,
+		&i.CapacityLimitPeriod,
 		&i.AuthorizedUsers,
 	)
 	return i, err
 }
 
-const selectPortalApplications = `-- name: SelectPortalApplications :many
+const selectGatewayEndpoints = `-- name: SelectGatewayEndpoints :many
 
-SELECT 
-    pa.id AS endpoint_id,
-    pas.secret_key_required,
-    pa.account_id,
-    a.plan_type AS plan,
-    p.throughput_limit AS capacity_limit,
-    p.monthly_relay_limit AS throughput_limit,
-    COALESCE(
-        ARRAY_AGG(DISTINCT uap.provider_user_id) FILTER (WHERE uap.provider_user_id IS NOT NULL),
-        ARRAY[]::VARCHAR[]
-    )::VARCHAR[] AS authorized_users
-FROM portal_applications pa
-LEFT JOIN portal_application_settings pas
-    ON pa.id = pas.application_id
-LEFT JOIN accounts a 
-    ON pa.account_id = a.id
-LEFT JOIN pay_plans p 
-    ON a.plan_type = p.plan_type
-LEFT JOIN account_users au
-    ON a.id = au.account_id
-LEFT JOIN user_auth_providers uap
-    ON au.user_id = uap.user_id
-GROUP BY 
-    pa.id,
-    pas.secret_key_required,
-    a.plan_type,
+SELECT ge.id AS endpoint_id,
+    ge.auth_type,
+    ge.api_key,
     p.throughput_limit,
-    p.monthly_relay_limit
+    p.capacity_limit,
+    p.capacity_limit_period::capacity_limit_period AS capacity_limit_period,
+    ARRAY_AGG(geu.auth_provider_user_id) FILTER (
+        WHERE geu.auth_provider_user_id IS NOT NULL
+    )::varchar [] AS authorized_users
+FROM gateway_endpoints ge
+    LEFT JOIN plans p ON ge.plan_name = p.name
+    LEFT JOIN gateway_endpoint_users geu ON ge.id = geu.gateway_endpoint_id
+GROUP BY ge.id,
+    ge.auth_type,
+    ge.api_key,
+    p.throughput_limit,
+    p.capacity_limit,
+    p.capacity_limit_period
 `
 
-type SelectPortalApplicationsRow struct {
-	EndpointID        string      `json:"endpoint_id"`
-	SecretKeyRequired pgtype.Bool `json:"secret_key_required"`
-	AccountID         pgtype.Text `json:"account_id"`
-	Plan              pgtype.Text `json:"plan"`
-	CapacityLimit     pgtype.Int4 `json:"capacity_limit"`
-	ThroughputLimit   pgtype.Int4 `json:"throughput_limit"`
-	AuthorizedUsers   []string    `json:"authorized_users"`
+type SelectGatewayEndpointsRow struct {
+	EndpointID          string                   `json:"endpoint_id"`
+	AuthType            grpc.AuthType            `json:"auth_type"`
+	ApiKey              pgtype.Text              `json:"api_key"`
+	ThroughputLimit     pgtype.Int4              `json:"throughput_limit"`
+	CapacityLimit       pgtype.Int4              `json:"capacity_limit"`
+	CapacityLimitPeriod grpc.CapacityLimitPeriod `json:"capacity_limit_period"`
+	AuthorizedUsers     []string                 `json:"authorized_users"`
 }
 
 // This file is used by SQLC to autogenerate the Go code needed by the database driver.
 // It contains all queries used for fetching user data by the Gateway.
 // See: https://docs.sqlc.dev/en/latest/tutorials/getting-started-postgresql.html#schema-and-queries
-func (q *Queries) SelectPortalApplications(ctx context.Context) ([]SelectPortalApplicationsRow, error) {
-	rows, err := q.db.Query(ctx, selectPortalApplications)
+func (q *Queries) SelectGatewayEndpoints(ctx context.Context) ([]SelectGatewayEndpointsRow, error) {
+	rows, err := q.db.Query(ctx, selectGatewayEndpoints)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []SelectPortalApplicationsRow
+	var items []SelectGatewayEndpointsRow
 	for rows.Next() {
-		var i SelectPortalApplicationsRow
+		var i SelectGatewayEndpointsRow
 		if err := rows.Scan(
 			&i.EndpointID,
-			&i.SecretKeyRequired,
-			&i.AccountID,
-			&i.Plan,
-			&i.CapacityLimit,
+			&i.AuthType,
+			&i.ApiKey,
 			&i.ThroughputLimit,
+			&i.CapacityLimit,
+			&i.CapacityLimitPeriod,
 			&i.AuthorizedUsers,
 		); err != nil {
 			return nil, err
