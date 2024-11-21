@@ -6,7 +6,7 @@ import (
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 
-	"github.com/buildwithgrove/path-auth-data-server/grpc"
+	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
 /* ----------------------------- GatewayEndpoint YAML Struct ----------------------------- */
@@ -20,15 +20,15 @@ type (
 	}
 	// authYAML represents the Auth section of a single GatewayEndpoint in the YAML file.
 	authYAML struct {
-		AuthType           grpc.AuthType `yaml:"auth_type"`
-		APIKey             *string       `yaml:"api_key,omitempty"`
-		JWTAuthorizedUsers []string      `yaml:"jwt_authorized_users,omitempty"`
+		AuthType           grpc_server.AuthType `yaml:"auth_type"`
+		APIKey             *string              `yaml:"api_key,omitempty"`
+		JWTAuthorizedUsers []string             `yaml:"jwt_authorized_users,omitempty"`
 	}
 	// rateLimitingYAML represents the RateLimiting section of a single GatewayEndpoint in the YAML file.
 	rateLimitingYAML struct {
-		ThroughputLimit     int                      `yaml:"throughput_limit"`
-		CapacityLimit       int                      `yaml:"capacity_limit"`
-		CapacityLimitPeriod grpc.CapacityLimitPeriod `yaml:"capacity_limit_period"`
+		ThroughputLimit     int                             `yaml:"throughput_limit"`
+		CapacityLimit       int                             `yaml:"capacity_limit"`
+		CapacityLimitPeriod grpc_server.CapacityLimitPeriod `yaml:"capacity_limit_period"`
 	}
 )
 
@@ -45,7 +45,7 @@ func (e *gatewayEndpointYAML) convertToProto(endpointID string) *proto.GatewayEn
 		RateLimiting: &proto.RateLimiting{
 			ThroughputLimit:     int32(e.RateLimiting.ThroughputLimit),
 			CapacityLimit:       int32(e.RateLimiting.CapacityLimit),
-			CapacityLimitPeriod: grpc.CapacityLimitPeriods[e.RateLimiting.CapacityLimitPeriod],
+			CapacityLimitPeriod: grpc_server.CapacityLimitPeriods[e.RateLimiting.CapacityLimitPeriod],
 		},
 		Metadata: metadata,
 	}
@@ -58,14 +58,14 @@ func (a *authYAML) convertToProto() *proto.Auth {
 
 	switch a.AuthType {
 
-	case grpc.AuthTypeAPIKey:
+	case grpc_server.AuthTypeAPIKey:
 		if a.APIKey != nil {
 			authProto.AuthTypeDetails = &proto.Auth_ApiKey{
 				ApiKey: *a.APIKey,
 			}
 		}
 
-	case grpc.AuthTypeJWT:
+	case grpc_server.AuthTypeJWT:
 		if a.JWTAuthorizedUsers != nil {
 			jwtDetails := &proto.Auth_Jwt{
 				Jwt: &proto.JWT{AuthorizedUsers: make(map[string]*proto.Empty)},
@@ -114,7 +114,7 @@ func (a *authYAML) validate() error {
 	switch a.AuthType {
 
 	// API Key authorization requires an API key to be set for the endpoint.
-	case grpc.AuthTypeAPIKey:
+	case grpc_server.AuthTypeAPIKey:
 		if len(a.JWTAuthorizedUsers) > 0 {
 			return fmt.Errorf("jwt_authorized_users must not be set for auth_type: API_KEY_AUTH")
 		}
@@ -123,7 +123,7 @@ func (a *authYAML) validate() error {
 		}
 
 	// JWT authorization requires a list of authorized user IDs to be set for the endpoint.
-	case grpc.AuthTypeJWT:
+	case grpc_server.AuthTypeJWT:
 		if a.APIKey != nil && *a.APIKey != "" {
 			return fmt.Errorf("api_key must not be set for auth_type: JWT_AUTH")
 		}
@@ -162,9 +162,9 @@ func (r *rateLimitingYAML) validate() error {
 	if r.CapacityLimit > 0 {
 		if !r.CapacityLimitPeriod.IsValid() {
 			return fmt.Errorf("capacity_limit_period must be one of %s, %s, or %s",
-				grpc.CapacityLimitPeriodDaily,
-				grpc.CapacityLimitPeriodWeekly,
-				grpc.CapacityLimitPeriodMonthly,
+				grpc_server.CapacityLimitPeriodDaily,
+				grpc_server.CapacityLimitPeriodWeekly,
+				grpc_server.CapacityLimitPeriodMonthly,
 			)
 		}
 	}
