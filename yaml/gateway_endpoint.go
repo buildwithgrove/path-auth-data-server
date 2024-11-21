@@ -52,7 +52,7 @@ func (e *gatewayEndpointYAML) convertToProto(endpointID string) *proto.GatewayEn
 
 func (a *authYAML) convertToProto() *proto.Auth {
 	authProto := &proto.Auth{
-		AuthType: proto.Auth_AuthType(proto.Auth_AuthType_value[string(a.AuthType)]),
+		AuthType: grpc_server.AuthTypes[a.AuthType],
 	}
 
 	switch a.AuthType {
@@ -101,6 +101,15 @@ func (e *gatewayEndpointYAML) validate(endpointID string) error {
 // checking that the correct fields are set for the given auth type and are not set
 // for any other auth type.
 func (a *authYAML) validate() error {
+
+	if a != nil && a.AuthType != "" && !a.AuthType.IsValid() {
+		return fmt.Errorf("auth_type must be one of %s, %s, or %s",
+			grpc_server.AuthTypeNoAuth,
+			grpc_server.AuthTypeAPIKey,
+			grpc_server.AuthTypeJWT,
+		)
+	}
+
 	switch a.AuthType {
 
 	// API Key authorization requires an API key to be set for the endpoint.
