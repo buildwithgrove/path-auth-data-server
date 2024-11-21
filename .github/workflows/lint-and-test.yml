@@ -1,0 +1,59 @@
+name: Path Auth Data Server lint and test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  linter:
+    name: Run golangci-lint
+    runs-on: "ubuntu-22.04"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.1"
+
+      - name: Setup Git Authentication
+        run: |
+          git config --global url."https://${{ github.token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout 10m --verbose
+
+  unit-testing:
+    name: Run unit tests
+    runs-on: "ubuntu-22.04"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.1"
+
+      - name: Setup Git Authentication
+        run: |
+          git config --global url."https://${{ github.token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
+      - name: Run unit tests
+        run: make test_unit
+
+  test-docker-build:
+    name: Test build of Docker image
+    runs-on: "ubuntu-22.04"
+    steps:
+      - uses: docker/build-push-action@v6
+        with:
+          build-args: |
+            GITHUB_TOKEN=${{ github.token }}
+          push: false
+          load: true
+          tags: test-build
