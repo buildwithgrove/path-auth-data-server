@@ -106,10 +106,11 @@ endpoints:
   # (The auth field is omitted entirely in this case).
   endpoint_3:
     rate_limiting:                                           # This endpoint has a rate limit defined
-      throughput_limit: 50                                   # Throughput limit defines the endpoint's per-second (TPS) rate limit.
-      capacity_limit: 200                                    # Capacity limit defines the endpoint's rate limit over longer periods.
+      throughput_limit: 30                                   # Throughput limit defines the endpoint's per-second (TPS) rate limit.
+      capacity_limit: 100000                                 # Capacity limit defines the endpoint's rate limit over longer periods.
       capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY" # Capacity limit period defines the period over which the capacity limit is enforced.
 ```
+[Full Example Gateway Endpoints YAML File](./yaml/testdata/gateway-endpoints.example.yaml)
 
 ### 3.2. Postgres
 

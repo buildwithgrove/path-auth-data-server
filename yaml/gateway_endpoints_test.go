@@ -5,6 +5,8 @@ import (
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 	"github.com/stretchr/testify/require"
+
+	"github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
 func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
@@ -27,7 +29,7 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 						RateLimiting: rateLimitingYAML{
 							ThroughputLimit:     30,
 							CapacityLimit:       100_000,
-							CapacityLimitPeriod: yamlCapacityLimitPeriodMonthly,
+							CapacityLimitPeriod: grpc.CapacityLimitPeriodMonthly,
 						},
 						Metadata: map[string]string{
 							"account_id": "account_1",
@@ -95,7 +97,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 						RateLimiting: rateLimitingYAML{
 							ThroughputLimit:     30,
 							CapacityLimit:       100_000,
-							CapacityLimitPeriod: yamlCapacityLimitPeriodMonthly,
+							CapacityLimitPeriod: grpc.CapacityLimitPeriodMonthly,
 						},
 					},
 					"endpoint_2": {
@@ -106,7 +108,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 						RateLimiting: rateLimitingYAML{
 							ThroughputLimit:     50,
 							CapacityLimit:       200_000,
-							CapacityLimitPeriod: yamlCapacityLimitPeriodDaily,
+							CapacityLimitPeriod: grpc.CapacityLimitPeriodDaily,
 						},
 					},
 				},
