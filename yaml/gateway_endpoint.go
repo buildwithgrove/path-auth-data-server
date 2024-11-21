@@ -3,7 +3,6 @@ package yaml
 import (
 	"fmt"
 
-	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
