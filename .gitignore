@@ -1,5 +1,6 @@
 # Binary files
 /app
+path-auth-data-server
 
 # Environment
 .env
