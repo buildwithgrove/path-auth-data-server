@@ -1,4 +1,17 @@
+# Binary files
 /app
-gateway-endpoints.yaml
+path-auth-data-server
+
+# Environment
 .env
+
+# MacOS
 .DS_Store
+
+# YAML
+*.yaml
+!gateway-endpoints.schema.yaml
+!gateway-endpoints.example.yaml
+
+# Docker
+docker-compose.yml
