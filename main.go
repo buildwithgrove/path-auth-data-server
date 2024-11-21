@@ -1,25 +1,27 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/pokt-network/poktroll/pkg/polylog"
 	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
+	"github.com/buildwithgrove/path-auth-data-server/postgres"
 	"github.com/buildwithgrove/path-auth-data-server/yaml"
 
 	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
-	// Initialize new polylog logger
 	logger := polyzero.NewLogger()
 
 	env, err := gatherEnvVars()
@@ -27,12 +29,12 @@ func main() {
 		panic(fmt.Errorf("failed to gather environment variables: %v", err))
 	}
 
-	// 1. Load the YAML data source
-	// TODO_UPNEXT(@commoddity): Add implementation for concrete data sources: Postgres(#3)
-	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath, logger)
+	// 1. Load the data source
+	authDataSource, cleanup, err := getAuthDataSource(env, logger)
 	if err != nil {
-		panic(fmt.Errorf("failed to create YAML data source: %v", err))
+		panic(err)
 	}
+	defer cleanup()
 
 	// 2. Initialize the gRPC server that will serve the Gateway Endpoints
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", env.port))
@@ -77,33 +79,98 @@ func main() {
 /* ---------------------- Environment Variables ---------------------- */
 
 const (
-	yamlFilePathEnv = "YAML_FILEPATH"
+	postgresConnectionStringEnv = "POSTGRES_CONNECTION_STRING"
+	yamlFilePathEnv             = "YAML_FILEPATH"
 
 	portEnv     = "PORT"
 	defaultPort = "50051"
 )
 
 type envVars struct {
-	yamlFilepath string
-	port         string
+	postgresConnectionString string
+	yamlFilepath             string
+	port                     string
 }
 
 func gatherEnvVars() (envVars, error) {
 	env := envVars{
-		yamlFilepath: os.Getenv(yamlFilePathEnv),
-		port:         os.Getenv(portEnv),
+		postgresConnectionString: os.Getenv(postgresConnectionStringEnv),
+		yamlFilepath:             os.Getenv(yamlFilePathEnv),
+		port:                     os.Getenv(portEnv),
 	}
 	return env, env.validateAndHydrate()
 }
 
-// validateAndHydrate validates the required environment variables are set
+// validateAndHydrate validates the required environment variables are set,
+// confirms that only one data source will be used,
 // and hydrates defaults for any optional values that are not set.
 func (env *envVars) validateAndHydrate() error {
-	if env.yamlFilepath == "" {
-		return fmt.Errorf("%s is not set", yamlFilePathEnv)
+	if env.postgresConnectionString == "" && env.yamlFilepath == "" {
+		return fmt.Errorf("neither %s nor %s is set", postgresConnectionStringEnv, yamlFilePathEnv)
+	}
+	if env.postgresConnectionString != "" && env.yamlFilepath != "" {
+		return fmt.Errorf("only one of %s and %s can be set", postgresConnectionStringEnv, yamlFilePathEnv)
 	}
 	if env.port == "" {
 		env.port = defaultPort
 	}
 	return nil
+}
+
+/* ------------------------------- Get Auth Data Source ------------------------------- */
+
+// getAuthDataSource returns an AuthDataSource and a cleanup function.
+// The cleanup function should be deferred to ensure resources are released.
+func getAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
+
+	// Environment variables are validated in gatherEnvVars, so
+	// only one variable checked for in the switch will be set.
+
+	// The auth data source used depends on which environment variable is set.
+	switch {
+
+	// POSTGRES_CONNECTION_STRING - use a Postgres database as the data source
+	case env.postgresConnectionString != "":
+		return getPostgresAuthDataSource(env, logger)
+
+	// YAML_FILEPATH - use a local YAML file as the data source
+	case env.yamlFilepath != "":
+		return getYAMLAuthDataSource(env, logger)
+
+	// This should never happen.
+	default:
+		return nil, nil, fmt.Errorf("neither POSTGRES_CONNECTION_STRING nor YAML_FILEPATH is set")
+	}
+}
+
+// getPostgresAuthDataSource initializes a Postgres data source and returns it along with a cleanup function.
+func getPostgresAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
+
+	logger.Info().Msg("Using Postgres data source")
+
+	authDataSource, cleanup, err := postgres.NewPostgresDataSource(
+		context.Background(),
+		env.postgresConnectionString,
+		logger,
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create Postgres data source: %v", err)
+	}
+
+	return authDataSource, cleanup, nil
+}
+
+// getYAMLAuthDataSource initializes a YAML data source and returns it.
+func getYAMLAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
+
+	logger.Info().Msg("Using YAML data source")
+
+	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath, logger)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create YAML data source: %v", err)
+	}
+
+	cleanup := func() {} // cleanup is a no-op for YAML data source
+
+	return authDataSource, cleanup, nil
 }
