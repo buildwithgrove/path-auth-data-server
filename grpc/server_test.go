@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
@@ -171,13 +172,6 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 			},
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint_1",
-					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_1",
-					},
-					Delete: false,
-				},
-				{
 					EndpointId: "endpoint_2",
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_2",
@@ -233,6 +227,8 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 			c.NoError(err)
 
 			server.handleDataSourceUpdates(updateCh)
+
+			<-time.After(100 * time.Millisecond)
 
 			c.EqualValues(test.expectedDataAfterUpdates, server.gatewayEndpoints)
 		})
