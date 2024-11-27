@@ -13,26 +13,35 @@ import (
 type (
 	// gatewayEndpointYAML represents the structure of a single GatewayEndpoint in the YAML file.
 	gatewayEndpointYAML struct {
-		Auth         authYAML          `yaml:"auth"`
-		RateLimiting rateLimitingYAML  `yaml:"rate_limiting"`
-		Metadata     map[string]string `yaml:"metadata"`
+		// The authorization configuration for a gateway endpoint. If omitted, the endpoint will not require any authorization.
+		Auth authYAML `yaml:"auth"`
+		// The rate limiting configuration for a gateway endpoint. May be omitted for endpoints with no rate limiting.
+		RateLimiting rateLimitingYAML `yaml:"rate_limiting"`
+		// Metadata is an optional map of string keys to string values for additional information about the gateway endpoint.
+		Metadata map[string]string `yaml:"metadata"`
 	}
 	// authYAML represents the Auth section of a single GatewayEndpoint in the YAML file.
 	authYAML struct {
-		AuthType           grpc_server.AuthType `yaml:"auth_type"`
-		APIKey             *string              `yaml:"api_key,omitempty"`
-		JWTAuthorizedUsers []string             `yaml:"jwt_authorized_users,omitempty"`
+		// AuthType is the type of authentication being used for the GatewayEndpoint.
+		// One of: API_KEY_AUTH, JWT_AUTH or NO_AUTH (no auth specified in YAML).
+		AuthType grpc_server.AuthType `yaml:"auth_type"`
+		// APIKey is non-empty if the auth_type is API_KEY_AUTH.
+		APIKey *string `yaml:"api_key,omitempty"`
+		// JWTAuthorizedUsers is non-empty if the auth_type is JWT_AUTH.
+		JWTAuthorizedUsers []string `yaml:"jwt_authorized_users,omitempty"`
 	}
 	// rateLimitingYAML represents the RateLimiting section of a single GatewayEndpoint in the YAML file.
 	rateLimitingYAML struct {
-		ThroughputLimit     int                             `yaml:"throughput_limit"`
-		CapacityLimit       int                             `yaml:"capacity_limit"`
+		// ThroughputLimit defines the endpoint's per-second (TPS) rate limit.
+		ThroughputLimit int `yaml:"throughput_limit"`
+		// CapacityLimit defines the endpoint's rate limit over longer periods.
+		CapacityLimit int `yaml:"capacity_limit"`
+		// CapacityLimitPeriod defines the period over which the capacity limit is enforced.
 		CapacityLimitPeriod grpc_server.CapacityLimitPeriod `yaml:"capacity_limit_period"`
 	}
 )
 
 func (e *gatewayEndpointYAML) convertToProto(endpointID string) *proto.GatewayEndpoint {
-
 	metadata := map[string]string{}
 	for key, value := range e.Metadata {
 		metadata[key] = value
