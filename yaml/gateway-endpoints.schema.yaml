@@ -1,15 +1,15 @@
 type: object
-description: "The gateway endpoints YAML file defines the set of gateway endpoints available to a PATH deployment."
+description: "Defines the gateway endpoints available for a PATH deployment."
 properties:
   endpoints:
     type: object
-    description: "The key for each gateway endpoint is its unique ID and must not be empty."
+    description: "A map of gateway endpoints, where each key is a unique endpoint ID. Keys must not be empty."
     additionalProperties:
       type: object
       properties:
         auth:
           type: object
-          description: "The authorization configuration for a gateway endpoint. If omitted, the endpoint will not require any authorization."
+          description: "Authorization configuration for a gateway endpoint. If omitted, the endpoint does not require authorization."
           properties:
             auth_type:
               type: string
@@ -46,7 +46,7 @@ properties:
                 - jwt_authorized_users
         rate_limiting:
           type: object
-          description: "The rate limiting configuration for a gateway endpoint. May be omitted for endpoints with no rate limiting."
+          description: "Rate-limiting configuration for a gateway endpoint. If omitted, the endpoint has no rate-limiting constraints."
           properties:
             throughput_limit:
               type: integer
@@ -64,7 +64,7 @@ properties:
               description: "The period over which the capacity limit is enforced."
         metadata:
           type: object
-          description: "The optional metadata fields for a gateway endpoint. May be any key-value pairs."
+          description: "Optional metadata fields for a gateway endpoint. Can include any key-value pairs."
           additionalProperties:
             type: string
             description: "A map of string key-value pairs for metadata."

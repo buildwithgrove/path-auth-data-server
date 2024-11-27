@@ -102,8 +102,8 @@ endpoints:
         - "auth0|user_1"                                     # The user ID of an authorized user (in this case, a user ID provided by Auth0).
         - "auth0|user_2"
 
-  # 3. Example of a gateway endpoint with rate limiting enabled and no authorization required 
-  # (The auth field is omitted entirely in this case).
+  # 3. Example of a gateway endpoint with no authorization (the auth field is omitted entirely in this case).
+  # This endpoint has rate limits defined and explicitly specified.
   endpoint_3:
     rate_limiting:                                           # This endpoint has a rate limit defined
       throughput_limit: 30                                   # Throughput limit defines the endpoint's per-second (TPS) rate limit.

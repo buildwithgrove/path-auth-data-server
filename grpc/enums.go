@@ -2,7 +2,7 @@ package grpc
 
 import "github.com/buildwithgrove/path/envoy/auth_server/proto"
 
-// These enums exist to simplify the usage of converting from data source types to
+// DEV_NOTE: These enums exist to simplify the usage of converting from data source types to
 // the types expected by the proto package.
 
 // AuthType is a string type representing the authorization type for a gateway
