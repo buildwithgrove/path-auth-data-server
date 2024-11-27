@@ -171,13 +171,6 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 			},
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint_1",
-					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_1",
-					},
-					Delete: false,
-				},
-				{
 					EndpointId: "endpoint_2",
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_2",
