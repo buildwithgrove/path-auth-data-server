@@ -9,9 +9,9 @@ import (
 type AuthDataSource interface {
 
 	// FetchAuthDataSync fetches the full set of GatewayEndpoints from the data source.
-	// It is called from PADS and is used to initialize the data store from the data source.
+	// It is called from PADS and is used to warm up the data store from the data source.
 	//
-	// eg. PADS -- requests initial data --> Data Source -- responds with initial data --> PADS
+	// eg. PADS -- requests Gateway Endpoints data --> Data Source -- responds with Gateway Endpoints --> PADS
 	FetchAuthDataSync() (*proto.AuthDataResponse, error)
 
 	// AuthDataUpdatesChan returns a channel that emits updates to the GatewayEndpoints.
