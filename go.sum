@@ -1,7 +1,7 @@
-github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241117094821-8e5b1f576a66 h1:PMM3rfOd6HPMvhjOArs+s1iGtJiwjtGsXu7WneEdsyo=
-github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241117094821-8e5b1f576a66/go.mod h1:e7eQJraWpMYsGGDxozdydwZzAwR8S3kfBg//SKoKBx0=
-github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241120115509-9e5ad69d057a h1:3jv80LsAMN1rk5Sqg/JcEicRr3yEbXHfa44OT73rywo=
-github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241120115509-9e5ad69d057a/go.mod h1:e7eQJraWpMYsGGDxozdydwZzAwR8S3kfBg//SKoKBx0=
+github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241127164032-759d152e459a h1:22POAK2kG/MTixg756z5ci0sk5D7cFwwd9wkCe9n7t8=
+github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241127164032-759d152e459a/go.mod h1:e7eQJraWpMYsGGDxozdydwZzAwR8S3kfBg//SKoKBx0=
+github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241127165848-724a71b6c7e4 h1:IUkR5kKnE6as3suoaPFzcDFqhRfKcu7n8EH9sZRjvYI=
+github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241127165848-724a71b6c7e4/go.mod h1:e7eQJraWpMYsGGDxozdydwZzAwR8S3kfBg//SKoKBx0=
 github.com/cncf/xds/go v0.0.0-20240723142845-024c85f92f20 h1:N+3sFI5GUjRKBi+i0TxYVST9h4Ie192jJWpHvthBBgg=
 github.com/cncf/xds/go v0.0.0-20240723142845-024c85f92f20/go.mod h1:W+zGtBO5Y1IgJhy4+A9GOqVhqLpfZi+vwmdNXUehLA8=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=

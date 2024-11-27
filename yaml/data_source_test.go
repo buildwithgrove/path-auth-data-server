@@ -27,22 +27,24 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_API_KEY_AUTH,
-							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: "api_key_1",
+							AuthType: proto.Auth_AUTH_TYPE_API_KEY,
+							AuthTypeDetails: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "api_key_1",
+								},
 							},
 						},
 						RateLimiting: &proto.RateLimiting{},
-						Metadata: map[string]string{
-							"account_id":  "account_1",
-							"plan_type":   "PLAN_UNLIMITED",
-							"owner_email": "amos.burton@opa.belt",
+						Metadata: &proto.Metadata{
+							AccountId: "account_1",
+							PlanType:  "PLAN_UNLIMITED",
+							Email:     "amos.burton@opa.belt",
 						},
 					},
 					"endpoint_2": {
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_JWT_AUTH,
+							AuthType: proto.Auth_AUTH_TYPE_JWT,
 							AuthTypeDetails: &proto.Auth_Jwt{
 								Jwt: &proto.JWT{
 									AuthorizedUsers: map[string]*proto.Empty{
@@ -53,16 +55,16 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 							},
 						},
 						RateLimiting: &proto.RateLimiting{},
-						Metadata: map[string]string{
-							"account_id":  "account_2",
-							"plan_type":   "PLAN_UNLIMITED",
-							"owner_email": "paul.atreides@arrakis.com",
+						Metadata: &proto.Metadata{
+							AccountId: "account_2",
+							PlanType:  "PLAN_UNLIMITED",
+							Email:     "paul.atreides@arrakis.com",
 						},
 					},
 					"endpoint_3": {
 						EndpointId: "endpoint_3",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
+							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
@@ -70,10 +72,10 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 							CapacityLimit:       100_000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
-						Metadata: map[string]string{
-							"account_id":  "account_2",
-							"plan_type":   "PLAN_FREE",
-							"owner_email": "frodo.baggins@shire.io",
+						Metadata: &proto.Metadata{
+							AccountId: "account_2",
+							PlanType:  "PLAN_FREE",
+							Email:     "frodo.baggins@shire.io",
 						},
 					},
 				},
@@ -98,7 +100,7 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 endpoints:
   "":
     auth:
-      auth_type: "API_KEY_AUTH"
+      auth_type: "AUTH_TYPE_API_KEY"
       api_key: "api_key_1"
     metadata:
       account_id: "account_1"
@@ -114,7 +116,7 @@ endpoints:
   endpoint_1:
     endpoint_id: "endpoint_1"
     auth:
-      auth_type: "JWT_AUTH"
+      auth_type: "AUTH_TYPE_JWT"
       jwt_authorized_users:
         - "auth0|user_1"
     rate_limiting:
@@ -165,7 +167,7 @@ endpoints:
   endpoint_1:
     endpoint_id: "endpoint_1"
     auth:
-      auth_type: "API_KEY_AUTH"
+      auth_type: "AUTH_TYPE_API_KEY"
       api_key: "api_key_1"
     metadata:
       account_id: "account_1"
@@ -173,7 +175,7 @@ endpoints:
   endpoint_2:
     endpoint_id: "endpoint_2"
     auth:
-      auth_type: "JWT_AUTH"
+      auth_type: "AUTH_TYPE_JWT"
       jwt_authorized_users:
         - "auth0|user_2"
     metadata:
@@ -212,13 +214,13 @@ endpoints:
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
+							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_UNLIMITED",
+						Metadata: &proto.Metadata{
+							AccountId: "account_1",
+							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
 				},
@@ -227,13 +229,13 @@ endpoints:
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
+							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{},
-						Metadata: map[string]string{
-							"account_id": "account_2",
-							"plan_type":  "PLAN_FREE",
+						Metadata: &proto.Metadata{
+							AccountId: "account_2",
+							PlanType:  "PLAN_FREE",
 						},
 					},
 				},
@@ -242,7 +244,7 @@ endpoints:
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_3",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
+							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
@@ -250,9 +252,9 @@ endpoints:
 							CapacityLimit:       200,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_3",
-							"plan_type":  "PLAN_UNLIMITED",
+						Metadata: &proto.Metadata{
+							AccountId: "account_3",
+							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
 				},
@@ -319,14 +321,16 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
-						AuthType: proto.Auth_API_KEY_AUTH,
-						AuthTypeDetails: &proto.Auth_ApiKey{
-							ApiKey: "secret_key_1",
+						AuthType: proto.Auth_AUTH_TYPE_API_KEY,
+						AuthTypeDetails: &proto.Auth_StaticApiKey{
+							StaticApiKey: &proto.StaticAPIKey{
+								ApiKey: "secret_key_1",
+							},
 						},
 					},
-					Metadata: map[string]string{
-						"account_id": "account_1",
-						"plan_type":  "PLAN_UNLIMITED",
+					Metadata: &proto.Metadata{
+						AccountId: "account_1",
+						PlanType:  "PLAN_UNLIMITED",
 					},
 				},
 			},
@@ -334,23 +338,23 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
-						AuthType:        proto.Auth_NO_AUTH,
+						AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
 						AuthTypeDetails: &proto.Auth_NoAuth{},
 					},
-					Metadata: map[string]string{
-						"account_id": "account_1",
-						"plan_type":  "PLAN_UNLIMITED",
+					Metadata: &proto.Metadata{
+						AccountId: "account_1",
+						PlanType:  "PLAN_UNLIMITED",
 					},
 				},
 				"endpoint_2": {
 					EndpointId: "endpoint_2",
 					Auth: &proto.Auth{
-						AuthType:        proto.Auth_NO_AUTH,
+						AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
 						AuthTypeDetails: &proto.Auth_NoAuth{},
 					},
-					Metadata: map[string]string{
-						"account_id": "account_2",
-						"plan_type":  "PLAN_FREE",
+					Metadata: &proto.Metadata{
+						AccountId: "account_2",
+						PlanType:  "PLAN_FREE",
 					},
 				},
 			},
@@ -360,12 +364,12 @@ func Test_handleUpdates(t *testing.T) {
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
+							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_UNLIMITED",
+						Metadata: &proto.Metadata{
+							AccountId: "account_1",
+							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
 				},
@@ -374,12 +378,12 @@ func Test_handleUpdates(t *testing.T) {
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
+							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
 							AuthTypeDetails: &proto.Auth_NoAuth{},
 						},
-						Metadata: map[string]string{
-							"account_id": "account_2",
-							"plan_type":  "PLAN_FREE",
+						Metadata: &proto.Metadata{
+							AccountId: "account_2",
+							PlanType:  "PLAN_FREE",
 						},
 					},
 				},
@@ -391,14 +395,16 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
-						AuthType: proto.Auth_API_KEY_AUTH,
-						AuthTypeDetails: &proto.Auth_ApiKey{
-							ApiKey: "secret_key_1",
+						AuthType: proto.Auth_AUTH_TYPE_API_KEY,
+						AuthTypeDetails: &proto.Auth_StaticApiKey{
+							StaticApiKey: &proto.StaticAPIKey{
+								ApiKey: "secret_key_1",
+							},
 						},
 					},
-					Metadata: map[string]string{
-						"account_id": "account_1",
-						"plan_type":  "PLAN_UNLIMITED",
+					Metadata: &proto.Metadata{
+						AccountId: "account_1",
+						PlanType:  "PLAN_UNLIMITED",
 					},
 				},
 			},

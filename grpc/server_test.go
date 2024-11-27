@@ -26,9 +26,11 @@ func Test_FetchAuthDataSync(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_API_KEY_AUTH,
-							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: "secret_key_1",
+							AuthType: proto.Auth_AUTH_TYPE_API_KEY,
+							AuthTypeDetails: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "secret_key_1",
+								},
 							},
 						},
 						RateLimiting: &proto.RateLimiting{
@@ -36,9 +38,9 @@ func Test_FetchAuthDataSync(t *testing.T) {
 							CapacityLimit:       1000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_DAILY,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_FREE",
+						Metadata: &proto.Metadata{
+							AccountId: "account_1",
+							PlanType:  "PLAN_FREE",
 						},
 					},
 				},

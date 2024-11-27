@@ -10,15 +10,15 @@ import "github.com/buildwithgrove/path/envoy/auth_server/proto"
 type AuthType string
 
 const (
-	AuthTypeNoAuth AuthType = "NO_AUTH"
-	AuthTypeAPIKey AuthType = "API_KEY_AUTH"
-	AuthTypeJWT    AuthType = "JWT_AUTH"
+	AuthTypeNoAuth AuthType = "AUTH_TYPE_UNSPECIFIED"
+	AuthTypeAPIKey AuthType = "AUTH_TYPE_API_KEY"
+	AuthTypeJWT    AuthType = "AUTH_TYPE_JWT"
 )
 
 var AuthTypes = map[AuthType]proto.Auth_AuthType{
-	AuthTypeNoAuth: proto.Auth_NO_AUTH,
-	AuthTypeAPIKey: proto.Auth_API_KEY_AUTH,
-	AuthTypeJWT:    proto.Auth_JWT_AUTH,
+	AuthTypeNoAuth: proto.Auth_AUTH_TYPE_UNSPECIFIED,
+	AuthTypeAPIKey: proto.Auth_AUTH_TYPE_API_KEY,
+	AuthTypeJWT:    proto.Auth_AUTH_TYPE_JWT,
 }
 
 func (a AuthType) IsValid() bool {

@@ -21,7 +21,7 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1": {
 						Auth: authYAML{
-							AuthType: "JWT_AUTH",
+							AuthType: "AUTH_TYPE_JWT",
 							JWTAuthorizedUsers: []string{
 								"auth0|user_1",
 							},
@@ -31,9 +31,10 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 							CapacityLimit:       100_000,
 							CapacityLimitPeriod: grpc_server.CapacityLimitPeriodMonthly,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_UNLIMITED",
+						Metadata: metadataYAML{
+							Name:      "grove_city_test_endpoint",
+							AccountId: "account_1",
+							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
 				},
@@ -43,7 +44,7 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_JWT_AUTH,
+							AuthType: proto.Auth_AUTH_TYPE_JWT,
 							AuthTypeDetails: &proto.Auth_Jwt{
 								Jwt: &proto.JWT{
 									AuthorizedUsers: map[string]*proto.Empty{
@@ -57,9 +58,10 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 							CapacityLimit:       100_000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_UNLIMITED",
+						Metadata: &proto.Metadata{
+							Name:      "grove_city_test_endpoint",
+							AccountId: "account_1",
+							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
 				},
@@ -89,7 +91,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1": {
 						Auth: authYAML{
-							AuthType: "JWT_AUTH",
+							AuthType: "AUTH_TYPE_JWT",
 							JWTAuthorizedUsers: []string{
 								"auth0|user_1",
 							},
@@ -102,7 +104,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 					},
 					"endpoint_2": {
 						Auth: authYAML{
-							AuthType: "API_KEY_AUTH",
+							AuthType: "AUTH_TYPE_API_KEY",
 							APIKey:   stringPtr("some_api_key"),
 						},
 						RateLimiting: rateLimitingYAML{
@@ -121,7 +123,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 				Endpoints: map[string]gatewayEndpointYAML{
 					"": {
 						Auth: authYAML{
-							AuthType: "API_KEY_AUTH",
+							AuthType: "AUTH_TYPE_API_KEY",
 							APIKey:   stringPtr("some_api_key"),
 						},
 					},
@@ -135,7 +137,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1": {
 						Auth: authYAML{
-							AuthType: "JWT_AUTH",
+							AuthType: "AUTH_TYPE_JWT",
 							JWTAuthorizedUsers: []string{
 								"auth0|user_1",
 							},

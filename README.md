@@ -86,7 +86,7 @@ endpoints:
   # This endpoint has no rate limits defined (the rate_limiting field is omitted entirely in this case).
   endpoint_1:                                                # The unique identifier for a gateway endpoint.
     auth:
-      auth_type: "API_KEY_AUTH"                              # This endpoint uses API Key Authorization.
+      auth_type: "AUTH_TYPE_API_KEY"                              # This endpoint uses API Key Authorization.
       api_key: "api_key_1"                                   # For API Key Authorization, the API key string is required.
 
     metadata:                                                # Metadata fields may be any key-value pairs and are optional.
@@ -97,7 +97,7 @@ endpoints:
   # 2. Example of a gateway endpoint using JWT Authorization
   endpoint_2:
     auth:
-      auth_type: "JWT_AUTH"                                  # This endpoint uses JWT Authorization.
+      auth_type: "AUTH_TYPE_JWT"                                  # This endpoint uses JWT Authorization.
       jwt_authorized_users:                                  # For JWT Authorization, the jwt_authorized_users array is required.
         - "auth0|user_1"                                     # The user ID of an authorized user (in this case, a user ID provided by Auth0).
         - "auth0|user_2"

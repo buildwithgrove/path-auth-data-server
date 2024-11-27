@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	// TODO_NEXT(@commoddity): Update to a release version of the PATH auth_server package
 	// once the `envoy-grpc-auth-service` branch is merged into `main`
-	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241120115509-9e5ad69d057a
+	github.com/buildwithgrove/path/envoy/auth_server v0.0.0-20241127165848-724a71b6c7e4
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/joho/godotenv v1.5.1
 	github.com/pokt-network/poktroll v0.0.9
