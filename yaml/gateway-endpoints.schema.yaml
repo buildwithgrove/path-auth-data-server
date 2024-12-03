@@ -69,7 +69,7 @@ properties:
               description: "The user-defined name of the GatewayEndpoint."
               type: string
             account_id:
-              description: "Unique identifier for the GatewayEndpoint's account."
+              description: "Unique identifier for the account that the GatewayEndpoint is assigned to."
               type: string
             user_id:
               description: "Identifier for a specific user within the system."
