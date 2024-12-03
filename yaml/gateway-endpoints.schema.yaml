@@ -1,0 +1,85 @@
+description: "Defines the gateway endpoints available for a PATH deployment."
+type: object
+additionalProperties: false
+required:
+  - endpoints
+properties:
+  endpoints:
+    description: "A map of gateway endpoints, where each key is a unique endpoint ID. Keys must not be empty."
+    type: object
+    additionalProperties:
+      type: object
+      additionalProperties: false
+      properties:
+        auth:
+          description: "Authorization configuration for a gateway endpoint. If omitted, the endpoint does not require authorization."
+          type: object
+          additionalProperties: false
+          properties:
+            api_key:
+              description: "The API key string. (Required for API Key authorization.)"
+              type: string
+            jwt_authorized_users:
+              description: "An array of user IDs authorized to access this account's gateway endpoints. (Required for JWT authorization.)"
+              type: array
+              items:
+                type: string
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required:
+                - api_key
+              properties:
+                api_key:
+                  type: string
+            - type: object
+              additionalProperties: false
+              required:
+                - jwt_authorized_users
+              properties:
+                jwt_authorized_users:
+                  type: array
+                  items:
+                    type: string
+        rate_limiting:
+          description: "Rate-limiting configuration for a gateway endpoint. If omitted, the endpoint has no rate-limiting constraints."
+          type: object
+          additionalProperties: false
+          properties:
+            throughput_limit:
+              type: integer
+              description: "Throughput limit defines the endpoint's per-second (TPS) rate limit."
+            capacity_limit:
+              type: integer
+              description: "Capacity limit defines the endpoint's rate limit over longer periods."
+            capacity_limit_period:
+              type: string
+              enum: [
+                "CAPACITY_LIMIT_PERIOD_DAILY",
+                "CAPACITY_LIMIT_PERIOD_WEEKLY",
+                "CAPACITY_LIMIT_PERIOD_MONTHLY"
+              ]
+              description: "The period over which the capacity limit is enforced."
+        metadata:
+          description: "Optional metadata fields for a gateway endpoint. Can include any key-value pairs."
+          type: object
+          additionalProperties: false
+          properties:
+            name:
+              description: "The user-defined name of the GatewayEndpoint."
+              type: string
+            account_id:
+              description: "Unique identifier for the account that the GatewayEndpoint is assigned to."
+              type: string
+            user_id:
+              description: "Identifier for a specific user within the system."
+              type: string
+            plan_type:
+              description: "Subscription or account plan type (e.g., 'PLAN_FREE', 'PLAN_UNLIMITED')."
+              type: string
+            email:
+              description: "The email address associated with the GatewayEndpoint."
+              type: string
+            environment:
+              description: "The environment the GatewayEndpoint is in (e.g., 'development', 'staging', 'production')."
+              type: string
