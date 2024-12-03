@@ -26,8 +26,7 @@ func Test_FetchAuthDataSync(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_AUTH_TYPE_API_KEY,
-							AuthTypeDetails: &proto.Auth_StaticApiKey{
+							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{
 									ApiKey: "secret_key_1",
 								},

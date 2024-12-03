@@ -21,7 +21,6 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 			endpointID: "endpoint_1",
 			input: gatewayEndpointYAML{
 				Auth: authYAML{
-					AuthType: "AUTH_TYPE_JWT",
 					JWTAuthorizedUsers: []string{
 						"auth0|user_1",
 					},
@@ -40,8 +39,7 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 			expected: &proto.GatewayEndpoint{
 				EndpointId: "endpoint_1",
 				Auth: &proto.Auth{
-					AuthType: proto.Auth_AUTH_TYPE_JWT,
-					AuthTypeDetails: &proto.Auth_Jwt{
+					AuthType: &proto.Auth_Jwt{
 						Jwt: &proto.JWT{
 							AuthorizedUsers: map[string]*proto.Empty{
 								"auth0|user_1": {},
@@ -82,15 +80,13 @@ func Test_authYAML_convertToProto(t *testing.T) {
 		{
 			name: "should convert authYAML to proto format correctly",
 			input: authYAML{
-				AuthType: "AUTH_TYPE_JWT",
 				JWTAuthorizedUsers: []string{
 					"auth0|user_1",
 					"auth0|user_2",
 				},
 			},
 			expected: &proto.Auth{
-				AuthType: proto.Auth_AUTH_TYPE_JWT,
-				AuthTypeDetails: &proto.Auth_Jwt{
+				AuthType: &proto.Auth_Jwt{
 					Jwt: &proto.JWT{
 						AuthorizedUsers: map[string]*proto.Empty{
 							"auth0|user_1": {},
@@ -101,13 +97,10 @@ func Test_authYAML_convertToProto(t *testing.T) {
 			},
 		},
 		{
-			name: "should handle empty authorized users",
-			input: authYAML{
-				AuthType: "NO_AUTH",
-			},
+			name:  "should handle empty authorized users",
+			input: authYAML{},
 			expected: &proto.Auth{
-				AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
-				AuthTypeDetails: &proto.Auth_NoAuth{},
+				AuthType: &proto.Auth_NoAuth{},
 			},
 		},
 	}
@@ -130,11 +123,10 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name:       "valid endpoint with AUTH_TYPE_JWT",
+			name:       "valid endpoint with JWT auth",
 			endpointID: "endpoint_1",
 			input: gatewayEndpointYAML{
 				Auth: authYAML{
-					AuthType: "AUTH_TYPE_JWT",
 					JWTAuthorizedUsers: []string{
 						"auth0|user_1",
 					},
@@ -152,8 +144,7 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 			endpointID: "",
 			input: gatewayEndpointYAML{
 				Auth: authYAML{
-					AuthType: "AUTH_TYPE_API_KEY",
-					APIKey:   stringPtr("some_api_key"),
+					APIKey: stringPtr("some_api_key"),
 				},
 			},
 			wantErr: true,
@@ -163,8 +154,7 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 			endpointID: "endpoint_2",
 			input: gatewayEndpointYAML{
 				Auth: authYAML{
-					AuthType: "AUTH_TYPE_API_KEY",
-					APIKey:   stringPtr("some_api_key"),
+					APIKey: stringPtr("some_api_key"),
 				},
 				RateLimiting: rateLimitingYAML{
 					CapacityLimit:       100_000,
@@ -196,24 +186,22 @@ func Test_authYAML_validate(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "valid AUTH_TYPE_API_KEY",
+			name: "valid API key auth",
 			input: authYAML{
-				AuthType: "AUTH_TYPE_API_KEY",
-				APIKey:   stringPtr("some_api_key"),
+				APIKey: stringPtr("some_api_key"),
 			},
 			wantErr: false,
 		},
 		{
-			name: "missing api_key for AUTH_TYPE_API_KEY",
+			name: "missing api_key for API key auth",
 			input: authYAML{
-				AuthType: "AUTH_TYPE_API_KEY",
+				APIKey: stringPtr(""),
 			},
 			wantErr: true,
 		},
 		{
-			name: "valid AUTH_TYPE_JWT",
+			name: "valid JWT auth",
 			input: authYAML{
-				AuthType: "AUTH_TYPE_JWT",
 				JWTAuthorizedUsers: []string{
 					"user_1",
 				},
@@ -221,9 +209,9 @@ func Test_authYAML_validate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "missing jwt_authorized_users for AUTH_TYPE_JWT",
+			name: "missing jwt_authorized_users for JWT auth",
 			input: authYAML{
-				AuthType: "AUTH_TYPE_JWT",
+				JWTAuthorizedUsers: []string{},
 			},
 			wantErr: true,
 		},

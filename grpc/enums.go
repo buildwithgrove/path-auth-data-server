@@ -5,31 +5,6 @@ import "github.com/buildwithgrove/path/envoy/auth_server/proto"
 // DEV_NOTE: These enums exist to simplify the usage of converting from data source types to
 // the types expected by the proto package.
 
-// AuthType is a string type representing the authorization type for a gateway
-// endpoint, which matches the values in the AuthType enum in the proto package.
-type AuthType string
-
-const (
-	AuthTypeNoAuth AuthType = "AUTH_TYPE_UNSPECIFIED"
-	AuthTypeAPIKey AuthType = "AUTH_TYPE_API_KEY"
-	AuthTypeJWT    AuthType = "AUTH_TYPE_JWT"
-)
-
-var AuthTypes = map[AuthType]proto.Auth_AuthType{
-	AuthTypeNoAuth: proto.Auth_AUTH_TYPE_UNSPECIFIED,
-	AuthTypeAPIKey: proto.Auth_AUTH_TYPE_API_KEY,
-	AuthTypeJWT:    proto.Auth_AUTH_TYPE_JWT,
-}
-
-func (a AuthType) IsValid() bool {
-	switch a {
-	case AuthTypeNoAuth, AuthTypeAPIKey, AuthTypeJWT:
-		return true
-	default:
-		return false
-	}
-}
-
 // CapacityLimitPeriod is a string type representing the capacity limit period for
 // a gateway endpoint, which maps to the CapacityLimitPeriod enum in the proto package.
 type CapacityLimitPeriod string

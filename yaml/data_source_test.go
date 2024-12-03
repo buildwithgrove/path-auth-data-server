@@ -27,8 +27,7 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_AUTH_TYPE_API_KEY,
-							AuthTypeDetails: &proto.Auth_StaticApiKey{
+							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{
 									ApiKey: "api_key_1",
 								},
@@ -44,8 +43,7 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 					"endpoint_2": {
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_AUTH_TYPE_JWT,
-							AuthTypeDetails: &proto.Auth_Jwt{
+							AuthType: &proto.Auth_Jwt{
 								Jwt: &proto.JWT{
 									AuthorizedUsers: map[string]*proto.Empty{
 										"auth0|user_1": {},
@@ -64,8 +62,7 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 					"endpoint_3": {
 						EndpointId: "endpoint_3",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
 							ThroughputLimit:     30,
@@ -214,8 +211,7 @@ endpoints:
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{},
 						Metadata: &proto.Metadata{
@@ -229,8 +225,7 @@ endpoints:
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{},
 						Metadata: &proto.Metadata{
@@ -244,8 +239,7 @@ endpoints:
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_3",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
 							ThroughputLimit:     50,
@@ -321,8 +315,7 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
-						AuthType: proto.Auth_AUTH_TYPE_API_KEY,
-						AuthTypeDetails: &proto.Auth_StaticApiKey{
+						AuthType: &proto.Auth_StaticApiKey{
 							StaticApiKey: &proto.StaticAPIKey{
 								ApiKey: "secret_key_1",
 							},
@@ -338,8 +331,7 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
-						AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
-						AuthTypeDetails: &proto.Auth_NoAuth{},
+						AuthType: &proto.Auth_NoAuth{},
 					},
 					Metadata: &proto.Metadata{
 						AccountId: "account_1",
@@ -349,8 +341,7 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_2": {
 					EndpointId: "endpoint_2",
 					Auth: &proto.Auth{
-						AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
-						AuthTypeDetails: &proto.Auth_NoAuth{},
+						AuthType: &proto.Auth_NoAuth{},
 					},
 					Metadata: &proto.Metadata{
 						AccountId: "account_2",
@@ -364,8 +355,7 @@ func Test_handleUpdates(t *testing.T) {
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_NoAuth{},
 						},
 						Metadata: &proto.Metadata{
 							AccountId: "account_1",
@@ -378,8 +368,7 @@ func Test_handleUpdates(t *testing.T) {
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_AUTH_TYPE_UNSPECIFIED,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_NoAuth{},
 						},
 						Metadata: &proto.Metadata{
 							AccountId: "account_2",
@@ -395,8 +384,7 @@ func Test_handleUpdates(t *testing.T) {
 				"endpoint_1": {
 					EndpointId: "endpoint_1",
 					Auth: &proto.Auth{
-						AuthType: proto.Auth_AUTH_TYPE_API_KEY,
-						AuthTypeDetails: &proto.Auth_StaticApiKey{
+						AuthType: &proto.Auth_StaticApiKey{
 							StaticApiKey: &proto.StaticAPIKey{
 								ApiKey: "secret_key_1",
 							},

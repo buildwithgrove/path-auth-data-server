@@ -16,10 +16,6 @@ properties:
           type: object
           additionalProperties: false
           properties:
-            auth_type:
-              type: string
-              enum: ["AUTH_TYPE_API_KEY", "AUTH_TYPE_JWT"]
-              description: "The type of authorization being used."
             api_key:
               description: "The API key string. (Required for API Key authorization.)"
               type: string
@@ -32,21 +28,15 @@ properties:
             - type: object
               additionalProperties: false
               required:
-                - auth_type
                 - api_key
               properties:
-                auth_type:
-                  enum: ["AUTH_TYPE_API_KEY"]
                 api_key:
                   type: string
             - type: object
               additionalProperties: false
               required:
-                - auth_type
                 - jwt_authorized_users
               properties:
-                auth_type:
-                  enum: ["AUTH_TYPE_JWT"]
                 jwt_authorized_users:
                   type: array
                   items:

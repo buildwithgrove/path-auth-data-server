@@ -21,7 +21,6 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1": {
 						Auth: authYAML{
-							AuthType: "AUTH_TYPE_JWT",
 							JWTAuthorizedUsers: []string{
 								"auth0|user_1",
 							},
@@ -44,8 +43,7 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_AUTH_TYPE_JWT,
-							AuthTypeDetails: &proto.Auth_Jwt{
+							AuthType: &proto.Auth_Jwt{
 								Jwt: &proto.JWT{
 									AuthorizedUsers: map[string]*proto.Empty{
 										"auth0|user_1": {},
@@ -91,7 +89,6 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1": {
 						Auth: authYAML{
-							AuthType: "AUTH_TYPE_JWT",
 							JWTAuthorizedUsers: []string{
 								"auth0|user_1",
 							},
@@ -104,8 +101,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 					},
 					"endpoint_2": {
 						Auth: authYAML{
-							AuthType: "AUTH_TYPE_API_KEY",
-							APIKey:   stringPtr("some_api_key"),
+							APIKey: stringPtr("some_api_key"),
 						},
 						RateLimiting: rateLimitingYAML{
 							ThroughputLimit:     50,
@@ -123,8 +119,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 				Endpoints: map[string]gatewayEndpointYAML{
 					"": {
 						Auth: authYAML{
-							AuthType: "AUTH_TYPE_API_KEY",
-							APIKey:   stringPtr("some_api_key"),
+							APIKey: stringPtr("some_api_key"),
 						},
 					},
 				},
@@ -137,7 +132,6 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1": {
 						Auth: authYAML{
-							AuthType: "AUTH_TYPE_JWT",
 							JWTAuthorizedUsers: []string{
 								"auth0|user_1",
 							},

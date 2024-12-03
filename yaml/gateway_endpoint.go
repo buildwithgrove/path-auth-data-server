@@ -22,9 +22,6 @@ type (
 	}
 	// authYAML represents the Auth section of a single GatewayEndpoint in the YAML file.
 	authYAML struct {
-		// AuthType is the type of authentication being used for the GatewayEndpoint.
-		// One of: AUTH_TYPE_API_KEY, AUTH_TYPE_JWT or NO_AUTH (no auth specified in YAML).
-		AuthType grpc_server.AuthType `yaml:"auth_type"`
 		// APIKey is non-empty if the auth_type is AUTH_TYPE_API_KEY.
 		APIKey *string `yaml:"api_key,omitempty"`
 		// JWTAuthorizedUsers is non-empty if the auth_type is AUTH_TYPE_JWT.
@@ -70,39 +67,33 @@ func (e *gatewayEndpointYAML) convertToProto(endpointID string) *proto.GatewayEn
 }
 
 func (a *authYAML) convertToProto() *proto.Auth {
-	authProto := &proto.Auth{
-		AuthType: proto.Auth_AuthType(proto.Auth_AuthType_value[string(a.AuthType)]),
-	}
+	switch {
 
-	switch a.AuthType {
-
-	case grpc_server.AuthTypeAPIKey:
-		if a.APIKey != nil {
-			authProto.AuthTypeDetails = &proto.Auth_StaticApiKey{
+	case a.APIKey != nil:
+		return &proto.Auth{
+			AuthType: &proto.Auth_StaticApiKey{
 				StaticApiKey: &proto.StaticAPIKey{
 					ApiKey: *a.APIKey,
 				},
-			}
+			},
 		}
 
-	case grpc_server.AuthTypeJWT:
-		if a.JWTAuthorizedUsers != nil {
-			jwtDetails := &proto.Auth_Jwt{
-				Jwt: &proto.JWT{AuthorizedUsers: make(map[string]*proto.Empty)},
-			}
-			for _, user := range a.JWTAuthorizedUsers {
-				jwtDetails.Jwt.AuthorizedUsers[user] = &proto.Empty{}
-			}
-			authProto.AuthTypeDetails = jwtDetails
+	case a.JWTAuthorizedUsers != nil:
+		authTypeJWT := &proto.Auth_Jwt{
+			Jwt: &proto.JWT{AuthorizedUsers: make(map[string]*proto.Empty)},
+		}
+		for _, user := range a.JWTAuthorizedUsers {
+			authTypeJWT.Jwt.AuthorizedUsers[user] = &proto.Empty{}
+		}
+		return &proto.Auth{
+			AuthType: authTypeJWT,
 		}
 
 	default:
-		authProto.AuthType = proto.Auth_AUTH_TYPE_UNSPECIFIED
-		authProto.AuthTypeDetails = &proto.Auth_NoAuth{}
-
+		return &proto.Auth{
+			AuthType: &proto.Auth_NoAuth{},
+		}
 	}
-
-	return authProto
 }
 
 // gatewayEndpoint.validate ensures all fields set for the gateway endpoint are valid.
@@ -123,10 +114,10 @@ func (e *gatewayEndpointYAML) validate(endpointID string) error {
 // checking that the correct fields are set for the given auth type and are not set
 // for any other auth type.
 func (a *authYAML) validate() error {
-	switch a.AuthType {
+	switch {
 
 	// API Key authorization requires an API key to be set for the endpoint.
-	case grpc_server.AuthTypeAPIKey:
+	case a.APIKey != nil:
 		if len(a.JWTAuthorizedUsers) > 0 {
 			return fmt.Errorf("jwt_authorized_users must not be set for auth_type: AUTH_TYPE_API_KEY")
 		}
@@ -135,7 +126,7 @@ func (a *authYAML) validate() error {
 		}
 
 	// JWT authorization requires a list of authorized user IDs to be set for the endpoint.
-	case grpc_server.AuthTypeJWT:
+	case a.JWTAuthorizedUsers != nil:
 		if a.APIKey != nil && *a.APIKey != "" {
 			return fmt.Errorf("api_key must not be set for auth_type: AUTH_TYPE_JWT")
 		}
