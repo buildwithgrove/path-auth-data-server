@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
@@ -22,22 +23,23 @@ func Test_FetchAuthDataSync(t *testing.T) {
 			name: "should return Gateway Endpoints successfully",
 			expectedResponse: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
-					"endpoint1": {
-						EndpointId: "endpoint1",
+					"endpoint_1": {
+						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							RequireAuth: true,
-							AuthorizedUsers: map[string]*proto.Empty{
-								"user1": {},
+							AuthType: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "secret_key_1",
+								},
 							},
-						},
-						UserAccount: &proto.UserAccount{
-							AccountId: "account1",
-							PlanType:  "basic",
 						},
 						RateLimiting: &proto.RateLimiting{
 							ThroughputLimit:     100,
 							CapacityLimit:       1000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_DAILY,
+						},
+						Metadata: &proto.Metadata{
+							AccountId: "account_1",
+							PlanType:  "PLAN_FREE",
 						},
 					},
 				},
@@ -94,14 +96,14 @@ func Test_StreamUpdates(t *testing.T) {
 			name: "should stream updates successfully",
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint1",
+					EndpointId: "endpoint_1",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint1",
+						EndpointId: "endpoint_1",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint2",
+					EndpointId: "endpoint_2",
 					Delete:     true,
 				},
 			},
@@ -165,47 +167,40 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 		{
 			name: "should update server state with new updates",
 			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
-				"endpoint1": {
-					EndpointId: "endpoint1",
+				"endpoint_1": {
+					EndpointId: "endpoint_1",
 				},
 			},
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint1",
+					EndpointId: "endpoint_2",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint1",
+						EndpointId: "endpoint_2",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint2",
-					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint2",
-					},
-					Delete: false,
-				},
-				{
-					EndpointId: "endpoint1",
+					EndpointId: "endpoint_1",
 					Delete:     true,
 				},
 			},
 			expectedDataAfterUpdates: map[string]*proto.GatewayEndpoint{
-				"endpoint2": {
-					EndpointId: "endpoint2",
+				"endpoint_2": {
+					EndpointId: "endpoint_2",
 				},
 			},
 		},
 		{
 			name: "should handle no updates",
 			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
-				"endpoint1": {
-					EndpointId: "endpoint1",
+				"endpoint_1": {
+					EndpointId: "endpoint_1",
 				},
 			},
 			updates: []*proto.AuthDataUpdate{},
 			expectedDataAfterUpdates: map[string]*proto.GatewayEndpoint{
-				"endpoint1": {
-					EndpointId: "endpoint1",
+				"endpoint_1": {
+					EndpointId: "endpoint_1",
 				},
 			},
 		},
@@ -234,7 +229,9 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 
 			server.handleDataSourceUpdates(updateCh)
 
-			c.Equal(test.expectedDataAfterUpdates, server.gatewayEndpoints)
+			<-time.After(100 * time.Millisecond)
+
+			c.EqualValues(test.expectedDataAfterUpdates, server.gatewayEndpoints)
 		})
 	}
 }

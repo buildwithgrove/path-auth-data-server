@@ -15,6 +15,10 @@ help: ## Prints all the targets in all the Makefiles
 ### Test Targets ###
 ####################
 
+.PHONY: test_all
+test_all: ## Runs all unit tests
+	go test ./... -count=1
+
 .PHONY: test_unit
 test_unit: ## Runs unit tests
 	go test ./... -short -count=1
