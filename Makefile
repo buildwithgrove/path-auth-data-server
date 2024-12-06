@@ -31,3 +31,11 @@ test_unit: ## Runs unit tests
 .PHONY: gen_mocks
 gen_mocks: ## Generates mocks for testing
 	mockgen -source=./grpc/data_source.go -destination=./grpc/data_source_mock_test.go -package=grpc
+
+#############################
+### SQL Generator Targets ###
+#############################
+
+.PHONY: gen_sqlc
+gen_sqlc: ## Generates the SQLC code
+	sqlc generate -f ./postgres/sqlc/sqlc.yaml
