@@ -48,39 +48,40 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
 							ThroughputLimit:     1000,
 							CapacityLimit:       30,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_FREE",
+						Metadata: &proto.Metadata{
+							AccountId: "account_1",
+							PlanType:  "PLAN_FREE",
 						},
 					},
 					"endpoint_2": {
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_API_KEY_AUTH,
-							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: "secret_key_2",
+							AuthType: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "secr	et_key_2",
+								},
 							},
 						},
 						RateLimiting: &proto.RateLimiting{},
-						Metadata: map[string]string{
-							"account_id": "account_2",
-							"plan_type":  "PLAN_UNLIMITED",
+						Metadata: &proto.Metadata{
+							AccountId: "account_2",
+							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
 					"endpoint_3": {
 						EndpointId: "endpoint_3",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_API_KEY_AUTH,
-							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: "secret_key_3",
+							AuthType: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "secret_key_3",
+								},
 							},
 						},
 						RateLimiting: &proto.RateLimiting{
@@ -88,39 +89,39 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							CapacityLimit:       30,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_3",
-							"plan_type":  "PLAN_FREE",
+						Metadata: &proto.Metadata{
+							AccountId: "account_3",
+							PlanType:  "PLAN_FREE",
 						},
 					},
 					"endpoint_4": {
 						EndpointId: "endpoint_4",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
 							ThroughputLimit:     1000,
 							CapacityLimit:       30,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_FREE",
+						Metadata: &proto.Metadata{
+							AccountId: "account_1",
+							PlanType:  "PLAN_FREE",
 						},
 					},
 					"endpoint_5": {
 						EndpointId: "endpoint_5",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_API_KEY_AUTH,
-							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: "secret_key_5",
+							AuthType: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "secret_key_5",
+								},
 							},
 						},
 						RateLimiting: &proto.RateLimiting{},
-						Metadata: map[string]string{
-							"account_id": "account_2",
-							"plan_type":  "PLAN_UNLIMITED",
+						Metadata: &proto.Metadata{
+							AccountId: "account_2",
+							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
 				},

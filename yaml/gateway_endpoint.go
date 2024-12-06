@@ -13,31 +13,40 @@ import (
 type (
 	// gatewayEndpointYAML represents the structure of a single GatewayEndpoint in the YAML file.
 	gatewayEndpointYAML struct {
-		Auth         authYAML          `yaml:"auth"`
-		RateLimiting rateLimitingYAML  `yaml:"rate_limiting"`
-		Metadata     map[string]string `yaml:"metadata"`
+		// The authorization configuration for a gateway endpoint. If omitted, the endpoint will not require any authorization.
+		Auth authYAML `yaml:"auth"`
+		// The rate limiting configuration for a gateway endpoint. May be omitted for endpoints with no rate limiting.
+		RateLimiting rateLimitingYAML `yaml:"rate_limiting"`
+		// Metadata is an optional map of string keys to string values for additional information about the gateway endpoint.
+		Metadata metadataYAML `yaml:"metadata"`
 	}
 	// authYAML represents the Auth section of a single GatewayEndpoint in the YAML file.
 	authYAML struct {
-		AuthType           grpc_server.AuthType `yaml:"auth_type"`
-		APIKey             *string              `yaml:"api_key,omitempty"`
-		JWTAuthorizedUsers []string             `yaml:"jwt_authorized_users,omitempty"`
+		// APIKey is non-empty if the auth_type is AUTH_TYPE_API_KEY.
+		APIKey *string `yaml:"api_key,omitempty"`
+		// JWTAuthorizedUsers is non-empty if the auth_type is AUTH_TYPE_JWT.
+		JWTAuthorizedUsers []string `yaml:"jwt_authorized_users,omitempty"`
 	}
 	// rateLimitingYAML represents the RateLimiting section of a single GatewayEndpoint in the YAML file.
 	rateLimitingYAML struct {
-		ThroughputLimit     int                             `yaml:"throughput_limit"`
-		CapacityLimit       int                             `yaml:"capacity_limit"`
+		// ThroughputLimit defines the endpoint's per-second (TPS) rate limit.
+		ThroughputLimit int `yaml:"throughput_limit"`
+		// CapacityLimit defines the endpoint's rate limit over longer periods.
+		CapacityLimit int `yaml:"capacity_limit"`
+		// CapacityLimitPeriod defines the period over which the capacity limit is enforced.
 		CapacityLimitPeriod grpc_server.CapacityLimitPeriod `yaml:"capacity_limit_period"`
+	}
+	metadataYAML struct {
+		Name        string `yaml:"name"`        // The name of the GatewayEndpoint
+		AccountId   string `yaml:"account_id"`  // Unique identifier for the GatewayEndpoint's account
+		UserId      string `yaml:"user_id"`     // Identifier for a specific user within the system
+		PlanType    string `yaml:"plan_type"`   // Subscription or account plan type (e.g., "PLAN_FREE", "PLAN_UNLIMITED")
+		Email       string `yaml:"email"`       // The email address associated with the GatewayEndpoint
+		Environment string `yaml:"environment"` // The environment the GatewayEndpoint is in (e.g., "development", "staging", "production")
 	}
 )
 
 func (e *gatewayEndpointYAML) convertToProto(endpointID string) *proto.GatewayEndpoint {
-
-	metadata := map[string]string{}
-	for key, value := range e.Metadata {
-		metadata[key] = value
-	}
-
 	return &proto.GatewayEndpoint{
 		EndpointId: endpointID,
 		Auth:       e.Auth.convertToProto(),
@@ -46,41 +55,45 @@ func (e *gatewayEndpointYAML) convertToProto(endpointID string) *proto.GatewayEn
 			CapacityLimit:       int32(e.RateLimiting.CapacityLimit),
 			CapacityLimitPeriod: grpc_server.CapacityLimitPeriods[e.RateLimiting.CapacityLimitPeriod],
 		},
-		Metadata: metadata,
+		Metadata: &proto.Metadata{
+			Name:        e.Metadata.Name,
+			AccountId:   e.Metadata.AccountId,
+			UserId:      e.Metadata.UserId,
+			PlanType:    e.Metadata.PlanType,
+			Email:       e.Metadata.Email,
+			Environment: e.Metadata.Environment,
+		},
 	}
 }
 
 func (a *authYAML) convertToProto() *proto.Auth {
-	authProto := &proto.Auth{
-		AuthType: proto.Auth_AuthType(proto.Auth_AuthType_value[string(a.AuthType)]),
-	}
+	switch {
 
-	switch a.AuthType {
-
-	case grpc_server.AuthTypeAPIKey:
-		if a.APIKey != nil {
-			authProto.AuthTypeDetails = &proto.Auth_ApiKey{
-				ApiKey: *a.APIKey,
-			}
+	case a.APIKey != nil:
+		return &proto.Auth{
+			AuthType: &proto.Auth_StaticApiKey{
+				StaticApiKey: &proto.StaticAPIKey{
+					ApiKey: *a.APIKey,
+				},
+			},
 		}
 
-	case grpc_server.AuthTypeJWT:
-		if a.JWTAuthorizedUsers != nil {
-			jwtDetails := &proto.Auth_Jwt{
-				Jwt: &proto.JWT{AuthorizedUsers: make(map[string]*proto.Empty)},
-			}
-			for _, user := range a.JWTAuthorizedUsers {
-				jwtDetails.Jwt.AuthorizedUsers[user] = &proto.Empty{}
-			}
-			authProto.AuthTypeDetails = jwtDetails
+	case a.JWTAuthorizedUsers != nil:
+		authTypeJWT := &proto.Auth_Jwt{
+			Jwt: &proto.JWT{AuthorizedUsers: make(map[string]*proto.Empty)},
+		}
+		for _, user := range a.JWTAuthorizedUsers {
+			authTypeJWT.Jwt.AuthorizedUsers[user] = &proto.Empty{}
+		}
+		return &proto.Auth{
+			AuthType: authTypeJWT,
 		}
 
 	default:
-		authProto.AuthTypeDetails = &proto.Auth_NoAuth{}
-
+		return &proto.Auth{
+			AuthType: &proto.Auth_NoAuth{},
+		}
 	}
-
-	return authProto
 }
 
 // gatewayEndpoint.validate ensures all fields set for the gateway endpoint are valid.
@@ -101,24 +114,24 @@ func (e *gatewayEndpointYAML) validate(endpointID string) error {
 // checking that the correct fields are set for the given auth type and are not set
 // for any other auth type.
 func (a *authYAML) validate() error {
-	switch a.AuthType {
+	switch {
 
 	// API Key authorization requires an API key to be set for the endpoint.
-	case grpc_server.AuthTypeAPIKey:
+	case a.APIKey != nil:
 		if len(a.JWTAuthorizedUsers) > 0 {
-			return fmt.Errorf("jwt_authorized_users must not be set for auth_type: API_KEY_AUTH")
+			return fmt.Errorf("jwt_authorized_users must not be set for auth_type: AUTH_TYPE_API_KEY")
 		}
 		if a.APIKey == nil || *a.APIKey == "" {
-			return fmt.Errorf("api_key is required for auth_type: API_KEY_AUTH")
+			return fmt.Errorf("api_key is required for auth_type: AUTH_TYPE_API_KEY")
 		}
 
 	// JWT authorization requires a list of authorized user IDs to be set for the endpoint.
-	case grpc_server.AuthTypeJWT:
+	case a.JWTAuthorizedUsers != nil:
 		if a.APIKey != nil && *a.APIKey != "" {
-			return fmt.Errorf("api_key must not be set for auth_type: JWT_AUTH")
+			return fmt.Errorf("api_key must not be set for auth_type: AUTH_TYPE_JWT")
 		}
 		if len(a.JWTAuthorizedUsers) == 0 {
-			return fmt.Errorf("jwt_authorized_users is required for auth_type: JWT_AUTH")
+			return fmt.Errorf("jwt_authorized_users is required for auth_type: AUTH_TYPE_JWT")
 		}
 		for _, user := range a.JWTAuthorizedUsers {
 			if user == "" {

@@ -57,9 +57,9 @@ func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
 		EndpointId:   r.EndpointID,
 		Auth:         r.getAuthDetails(),
 		RateLimiting: rateLimiting,
-		Metadata: map[string]string{
-			"account_id": r.AccountID,
-			"plan_type":  r.Plan,
+		Metadata: &proto.Metadata{
+			AccountId: r.AccountID,
+			PlanType:  r.Plan,
 		},
 	}
 }
@@ -67,15 +67,15 @@ func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
 func (r *PortalApplicationRow) getAuthDetails() *proto.Auth {
 	if r.SecretKeyRequired {
 		return &proto.Auth{
-			AuthType: proto.Auth_API_KEY_AUTH,
-			AuthTypeDetails: &proto.Auth_ApiKey{
-				ApiKey: r.SecretKey,
+			AuthType: &proto.Auth_StaticApiKey{
+				StaticApiKey: &proto.StaticAPIKey{
+					ApiKey: r.SecretKey,
+				},
 			},
 		}
 	} else {
 		return &proto.Auth{
-			AuthType:        proto.Auth_NO_AUTH,
-			AuthTypeDetails: &proto.Auth_NoAuth{},
+			AuthType: &proto.Auth_NoAuth{},
 		}
 	}
 }

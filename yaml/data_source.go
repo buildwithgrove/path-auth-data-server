@@ -2,8 +2,7 @@
 Package yaml provides an implementation of the AuthDataSource interface for YAML files.
 
 It loads YAML data from a file which must match the format defined in gateway-endpoints.schema.yaml.
-
-An example `gateway-endpoints.example.yaml` is provided in the testdata directory.
+See an example here: yaml/testdata/gateway-endpoints.example.yaml.
 
 This package also uses a file watcher to detect changes to the YAML file and sends updates
 to the authDataUpdatesCh channel if any changes are detected.

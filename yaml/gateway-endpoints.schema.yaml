@@ -1,52 +1,50 @@
+description: "Defines the gateway endpoints available for a PATH deployment."
 type: object
-description: "The gateway endpoints YAML file defines the set of gateway endpoints available to a PATH deployment."
+additionalProperties: false
+required:
+  - endpoints
 properties:
   endpoints:
+    description: "A map of gateway endpoints, where each key is a unique endpoint ID. Keys must not be empty."
     type: object
-    description: "The key for each gateway endpoint is its unique ID and must not be empty."
     additionalProperties:
       type: object
+      additionalProperties: false
       properties:
         auth:
+          description: "Authorization configuration for a gateway endpoint. If omitted, the endpoint does not require authorization."
           type: object
-          description: "The authorization configuration for a gateway endpoint. If omitted, the endpoint will not require any authorization."
+          additionalProperties: false
           properties:
-            auth_type:
-              type: string
-              enum: ["API_KEY_AUTH", "JWT_AUTH"]
-              description: "The type of authorization being used."
             api_key:
-              type: string
               description: "The API key string. (Required for API Key authorization.)"
+              type: string
             jwt_authorized_users:
+              description: "An array of user IDs authorized to access this account's gateway endpoints. (Required for JWT authorization.)"
               type: array
               items:
                 type: string
-              description: "An array of user IDs authorized to access this account's gateway endpoints. (Required for JWT authorization.)"
           oneOf:
             - type: object
+              additionalProperties: false
+              required:
+                - api_key
               properties:
-                auth_type:
-                  enum: ["API_KEY_AUTH"]
                 api_key:
                   type: string
-              required:
-                - auth_type
-                - api_key
             - type: object
+              additionalProperties: false
+              required:
+                - jwt_authorized_users
               properties:
-                auth_type:
-                  enum: ["JWT_AUTH"]
                 jwt_authorized_users:
                   type: array
                   items:
                     type: string
-              required:
-                - auth_type
-                - jwt_authorized_users
         rate_limiting:
+          description: "Rate-limiting configuration for a gateway endpoint. If omitted, the endpoint has no rate-limiting constraints."
           type: object
-          description: "The rate limiting configuration for a gateway endpoint. May be omitted for endpoints with no rate limiting."
+          additionalProperties: false
           properties:
             throughput_limit:
               type: integer
@@ -63,12 +61,25 @@ properties:
               ]
               description: "The period over which the capacity limit is enforced."
         metadata:
+          description: "Optional metadata fields for a gateway endpoint. Can include any key-value pairs."
           type: object
-          description: "The optional metadata fields for a gateway endpoint. May be any key-value pairs."
-          additionalProperties:
-            type: string
-            description: "A map of string key-value pairs for metadata."
-      additionalProperties: false
-required:
-  - endpoints
-additionalProperties: false
+          additionalProperties: false
+          properties:
+            name:
+              description: "The user-defined name of the GatewayEndpoint."
+              type: string
+            account_id:
+              description: "Unique identifier for the account that the GatewayEndpoint is assigned to."
+              type: string
+            user_id:
+              description: "Identifier for a specific user within the system."
+              type: string
+            plan_type:
+              description: "Subscription or account plan type (e.g., 'PLAN_FREE', 'PLAN_UNLIMITED')."
+              type: string
+            email:
+              description: "The email address associated with the GatewayEndpoint."
+              type: string
+            environment:
+              description: "The environment the GatewayEndpoint is in (e.g., 'development', 'staging', 'production')."
+              type: string

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/buildwithgrove/path/envoy/auth_server/proto"
 	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
@@ -25,9 +26,10 @@ func Test_FetchAuthDataSync(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_API_KEY_AUTH,
-							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: "secret_key_1",
+							AuthType: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "secret_key_1",
+								},
 							},
 						},
 						RateLimiting: &proto.RateLimiting{
@@ -35,9 +37,9 @@ func Test_FetchAuthDataSync(t *testing.T) {
 							CapacityLimit:       1000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_DAILY,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_FREE",
+						Metadata: &proto.Metadata{
+							AccountId: "account_1",
+							PlanType:  "PLAN_FREE",
 						},
 					},
 				},
@@ -171,13 +173,6 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 			},
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint_1",
-					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_1",
-					},
-					Delete: false,
-				},
-				{
 					EndpointId: "endpoint_2",
 					GatewayEndpoint: &proto.GatewayEndpoint{
 						EndpointId: "endpoint_2",
@@ -233,6 +228,8 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 			c.NoError(err)
 
 			server.handleDataSourceUpdates(updateCh)
+
+			<-time.After(100 * time.Millisecond)
 
 			c.EqualValues(test.expectedDataAfterUpdates, server.gatewayEndpoints)
 		})

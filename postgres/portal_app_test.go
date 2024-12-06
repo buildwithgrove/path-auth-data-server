@@ -42,31 +42,31 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 					"endpoint_1": {
 						EndpointId: "endpoint_1",
 						Auth: &proto.Auth{
-							AuthType: proto.Auth_API_KEY_AUTH,
-							AuthTypeDetails: &proto.Auth_ApiKey{
-								ApiKey: "secret_key_1",
+							AuthType: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "secret_key_1",
+								},
 							},
 						},
 						RateLimiting: &proto.RateLimiting{},
-						Metadata: map[string]string{
-							"account_id": "account_1",
-							"plan_type":  "PLAN_UNLIMITED",
+						Metadata: &proto.Metadata{
+							AccountId: "account_1",
+							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
 					"endpoint_2": {
 						EndpointId: "endpoint_2",
 						Auth: &proto.Auth{
-							AuthType:        proto.Auth_NO_AUTH,
-							AuthTypeDetails: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
 							ThroughputLimit:     1_000,
 							CapacityLimit:       30,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
-						Metadata: map[string]string{
-							"account_id": "account_2",
-							"plan_type":  "PLAN_FREE",
+						Metadata: &proto.Metadata{
+							AccountId: "account_2",
+							PlanType:  "PLAN_FREE",
 						},
 					},
 				},
