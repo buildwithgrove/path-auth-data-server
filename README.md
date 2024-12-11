@@ -14,11 +14,13 @@
     - [3.1.1. Example YAML File](#311-example-yaml-file)
     - [3.1.2. YAML Schema](#312-yaml-schema)
   - [3.2. Postgres](#32-postgres)
+    - [3.2.1. Grove Portal DB Compatibility](#321-grove-portal-db-compatibility)
+    - [3.2.2. SQLC Autogeneration](#322-sqlc-autogeneration)
 - [4. gRPC Proto File](#4-grpc-proto-file)
 
 ## 1. Introduction
 
-<!-- TODO_DOCUMENT(@commoddity): Make sure these docs are accessible in https://path.grove.city/ -->
+<!-- TODO_MVP(@commoddity): Move these documents over to path.grove.city -->
 
 **PADS** (PATH Auth Data Server) is a gRPC server that provides `Gateway Endpoint` data from a data source to the `Go External Authorization Server` in order to enable authorization for [the PATH Gateway](https://github.com/buildwithgrove/path). The nature of the data source is configurable, for example it could be a YAML file or a Postgres database.
 
@@ -87,25 +89,26 @@ Hot reloading is supported, so changes to the YAML file will be reflected in the
 endpoints:
   # 1. Example of a gateway endpoint using API Key Authorization
   # This endpoint has no rate limits defined (the rate_limiting field is omitted entirely in this case).
-  endpoint_1:                                                # The unique identifier for a gateway endpoint.
-  
-    auth:                                                    # The auth field is required for all endpoints that use authorization. 
-      api_key: "api_key_1"                                   # For API Key Authorization, the API key string is required.
+  endpoint_1: # The unique identifier for a gateway endpoint.
+    auth: # The auth field is required for all endpoints that use authorization.
+      api_key: "api_key_1" # For API Key Authorization, the API key string is required.
 
   # 2. Example of a gateway endpoint using JWT Authorization
   endpoint_2:
-    auth:      
-      jwt_authorized_users:                                  # For JWT Authorization, the jwt_authorized_users array is required.
-        - "auth0|user_1"                                     # The user ID of an authorized user (in this case, a user ID provided by Auth0).
+    auth:
+      jwt_authorized_users: # For JWT Authorization, the jwt_authorized_users array is required.
+        - "auth0|user_1" # The user ID of an authorized user (in this case, a user ID provided by Auth0).
         - "auth0|user_2"
 
-  # 3. Example of a gateway endpoint with no authorization (the auth field is omitted entirely in this case).
+  # 3. Example of a gateway endpoint with rate limiting enabled and no authorization required
+  # (The auth field is omitted entirely in this case).
   endpoint_3:
-    rate_limiting:                                           # This endpoint has a rate limit defined
-      throughput_limit: 30                                   # Throughput limit defines the endpoint's per-second (TPS) rate limit.
-      capacity_limit: 100000                                 # Capacity limit defines the endpoint's rate limit over longer periods.
+    rate_limiting: # This endpoint has a rate limit defined
+      throughput_limit: 30 # Throughput limit defines the endpoint's per-second (TPS) rate limit.
+      capacity_limit: 100000 # Capacity limit defines the endpoint's rate limit over longer periods.
       capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY" # Capacity limit period defines the period over which the capacity limit is enforced.
 ```
+
 [Full Example Gateway Endpoints YAML File](./yaml/testdata/gateway-endpoints.example.yaml)
 
 #### 3.1.2. YAML Schema
@@ -116,7 +119,31 @@ endpoints:
 
 If the `POSTGRES_CONNECTION_STRING` environment variable is set, PADS will connect to the specified Postgres database.
 
-<!-- TODO(@commoddity) - add further details on Postgres implementation -->
+#### 3.2.1. Grove Portal DB Compatibility
+
+The [Postgres Driver schema file](postgres/sqlc/schema.sql) uses tables from the existing Grove Portal database schema, allowing PATH to source its authorization data from the existing Grove Portal DB.
+
+It converts the data stored in the `portal_applications` table and its associated tables into the `proto.GatewayEndpoint` format expected by PATH's Go External Authorization Server.
+
+It also listens for updates to the Grove Portal DB and streams updates to the `Go External Authorization Server` in real time as changes are made to the connected Postgres database.
+
+[For the full Grove Portal DB schema, refer to the database schema defined in the Portal HTTP DB (PHD) repository](https://github.com/pokt-foundation/portal-http-**db**/blob/master/postgres-driver/sqlc/schema.sql).
+
+#### 3.2.2. SQLC Autogeneration
+
+<div align="center">
+<a href="https://docs.sqlc.dev/en/stable">
+<img src="https://docs.sqlc.dev/en/stable/_static/logo.png" alt="SQLC logo" width="150"/>
+<div>https://docs.sqlc.dev/en/stable</div>
+</a>
+</div>
+<br/>
+
+The Postgres Driver uses `SQLC` to autogenerate the Postgres Go code needed to interact with the Postgres database
+
+The Make target `make gen_sqlc` will regenerate the Go code from the SQLC schema file. This will output autogenerated code to the [postgres/sqlc/schema.sql](postgres/sqlc/schema.sql) and [postgres/sqlc/query.sql](postgres/sqlc/query.sql) files to the [postgres/sqlc](postgres/sqlc) directory.
+
+`SQLC` configuration is defined in the [postgres/sqlc/sqlc.yaml](postgres/sqlc/sqlc.yaml) file.
 
 ## 4. gRPC Proto File
 
