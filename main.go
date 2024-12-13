@@ -78,11 +78,11 @@ func main() {
 /* ------------------------------- Get Auth Data Source ------------------------------- */
 
 // getAuthDataSource returns an AuthDataSource and a cleanup function.
-// The cleanup function should be deferred to ensure resources are released.
+// The cleanup function must be invoked by the caller to ensure resources are released.
 func getAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
 
 	// Environment variables are validated in gatherEnvVars, so
-	// only one variable checked for in the switch will be set.
+	// only one variable is checked in the switch statement at a time.
 
 	// The auth data source used depends on which environment variable is set.
 	switch {
@@ -102,8 +102,8 @@ func getAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthData
 }
 
 // getPostgresAuthDataSource initializes a Postgres data source and returns it along with a cleanup function.
+// The cleanup function must be invoked by the caller to ensure resources are released.
 func getPostgresAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
-
 	logger.Info().Msg("Using Postgres data source")
 
 	authDataSource, cleanup, err := postgres.NewPostgresDataSource(
@@ -120,7 +120,6 @@ func getPostgresAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.
 
 // getYAMLAuthDataSource initializes a YAML data source and returns it.
 func getYAMLAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
-
 	logger.Info().Msg("Using YAML data source")
 
 	authDataSource, err := yaml.NewYAMLDataSource(env.yamlFilepath, logger)
