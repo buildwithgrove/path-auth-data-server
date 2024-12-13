@@ -38,4 +38,4 @@ gen_mocks: ## Generates mocks for testing
 
 .PHONY: gen_sqlc
 gen_sqlc: ## Generates the SQLC code
-	sqlc generate -f ./postgres/sqlc/sqlc.yaml
+	sqlc generate -f ./postgres/grove/sqlc/sqlc.yaml

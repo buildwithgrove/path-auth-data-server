@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
-	"github.com/buildwithgrove/path-auth-data-server/postgres"
+	grove_postgres "github.com/buildwithgrove/path-auth-data-server/postgres/grove"
 	"github.com/buildwithgrove/path-auth-data-server/yaml"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -103,10 +103,12 @@ func getAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthData
 
 // getPostgresAuthDataSource initializes a Postgres data source and returns it along with a cleanup function.
 // The cleanup function must be invoked by the caller to ensure resources are released.
+//
+// DEV_NOTE: This data source is highly opionionated and comatible with the Grove Portal DB's schema.
 func getPostgresAuthDataSource(env envVars, logger polylog.Logger) (grpc_server.AuthDataSource, func(), error) {
 	logger.Info().Msg("Using Postgres data source")
 
-	authDataSource, cleanup, err := postgres.NewPostgresDataSource(
+	authDataSource, cleanup, err := grove_postgres.NewGrovePostgresDataSource(
 		context.Background(),
 		env.postgresConnectionString,
 		logger,

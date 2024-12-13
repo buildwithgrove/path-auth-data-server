@@ -4,7 +4,7 @@
 
 -- name: SelectPortalApplications :many
 SELECT 
-    pa.id AS endpoint_id,
+    pa.id,
     pas.secret_key,
     pas.secret_key_required,
     pa.account_id,
@@ -28,7 +28,7 @@ GROUP BY
 
 -- name: SelectPortalApplication :one
 SELECT 
-    pa.id AS endpoint_id,
+    pa.id,
     pas.secret_key,
     pas.secret_key_required,
     pa.account_id,
