@@ -34,6 +34,7 @@ func gatherEnvVars() (envVars, error) {
 // confirms that only one data source will be used,
 // and hydrates defaults for any optional values that are not set.
 func (env *envVars) validateAndHydrate() error {
+	// Return an error if both postgres and yaml configs are empty
 	if env.postgresConnectionString == "" && env.yamlFilepath == "" {
 		return fmt.Errorf("neither %s nor %s is set", postgresConnectionStringEnv, yamlFilePathEnv)
 	}
