@@ -1,4 +1,4 @@
-package postgres
+package grove
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 
-	"github.com/buildwithgrove/path-auth-data-server/postgres/sqlc"
+	"github.com/buildwithgrove/path-auth-data-server/postgres/grove/sqlc"
 )
 
 func Test_convertPortalApplicationsRows(t *testing.T) {
@@ -21,14 +21,14 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 			name: "should convert rows to auth data response successfully",
 			rows: []sqlc.SelectPortalApplicationsRow{
 				{
-					EndpointID:        "endpoint_1",
+					ID:                "endpoint_1",
 					AccountID:         pgtype.Text{String: "account_1", Valid: true},
 					Plan:              pgtype.Text{String: "PLAN_UNLIMITED", Valid: true},
 					SecretKeyRequired: pgtype.Bool{Bool: true, Valid: true},
 					SecretKey:         pgtype.Text{String: "secret_key_1", Valid: true},
 				},
 				{
-					EndpointID:        "endpoint_2",
+					ID:                "endpoint_2",
 					AccountID:         pgtype.Text{String: "account_2", Valid: true},
 					Plan:              pgtype.Text{String: "PLAN_FREE", Valid: true},
 					SecretKeyRequired: pgtype.Bool{Bool: false, Valid: true},

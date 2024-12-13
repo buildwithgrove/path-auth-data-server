@@ -1,61 +1,10 @@
--- This file is used by SQLC to autogenerate the Go code needed by the database driver. 
--- It contains all tables required for storing user data needed by the Gateway.
--- See: https://docs.sqlc.dev/en/latest/tutorials/getting-started-postgresql.html#schema-and-queries
+-- This file contains the triggers that listen for changes to the Grove Portal DB and stream updates to the Go External Authorization Server.
 
--- It uses the tables defined in the Grove Portal database schema defined in the Portal HTTP DB (PHD) repo:
--- https://github.com/pokt-foundation/portal-http-db/blob/master/postgres-driver/sqlc/schema.sql
-
--- The `portal_applications` and its associated tables are converted to the `proto.GatewayEndpoint` format.
-
--- Plans Tables
-CREATE TABLE pay_plans (
-    plan_type VARCHAR(25) PRIMARY KEY,
-    monthly_relay_limit INT NOT NULL, -- GatewayEndpoint.RateLimiting.ThroughputLimit
-    throughput_limit INT NOT NULL -- GatewayEndpoint.RateLimiting.CapacityLimit
-);
-
--- Accounts Tables
-CREATE TABLE accounts (
-    id VARCHAR(10) PRIMARY KEY, -- GatewayEndpoint.UserAccount.AccountId
-    plan_type VARCHAR(25) NOT NULL REFERENCES pay_plans(plan_type) -- GatewayEndpoint.UserAccount.PlanType
-);
-
--- Users Tables
-CREATE TABLE users (
-    id VARCHAR(10) PRIMARY KEY
-);
-
--- User Auth Providers Tables
-CREATE TYPE auth_type AS ENUM ('auth0_github', 'auth0_username', 'auth0_google');
-CREATE TABLE user_auth_providers (
-    id SERIAL PRIMARY KEY,
-    user_id VARCHAR(10) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type auth_type NOT NULL,
-    provider_user_id VARCHAR(255) NOT NULL, -- GatewayEndpoint.Auth.AuthorizedUsers[key]
-    UNIQUE(user_id, type)
-);
-
--- Account Users Tables
-CREATE TABLE account_users (
-    id SERIAL PRIMARY KEY,
-    user_id VARCHAR(10) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    account_id VARCHAR(10) NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    UNIQUE (user_id, account_id)
-);
-
--- Portal Application Tables
-CREATE TABLE portal_applications (
-    id VARCHAR(24) PRIMARY KEY UNIQUE, -- GatewayEndpoint.EndpointId
-    account_id VARCHAR(10) REFERENCES accounts(id)
-); 
-
--- Portal Application Settings Table
-CREATE TABLE portal_application_settings (
-    id SERIAL PRIMARY KEY,
-    application_id VARCHAR(24) NOT NULL UNIQUE REFERENCES portal_applications(id) ON DELETE CASCADE,
-    secret_key VARCHAR(64),
-    secret_key_required BOOLEAN
-);
+-- These triggers are used to listen for changes to Portal Applications and their associated tables.
+-- When updates are detected, the triggers insert a row into the `portal_application_changes` table.
+-- The `log_portal_application_changes` function is then called to handle the update.
+-- The function sends a minimal notification to the `portal_application_changes` channel, which is listened for by the Go External Authorization Server.
+-- The Go External Authorization Server then updates its Gateway Endpoint Data Store with the new data, which streams the updates to the Go External Authorization Server connected to Envoy Proxy in PATH.
 
 -- /*-------------------- Listener Updates --------------------*/
 

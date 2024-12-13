@@ -1,4 +1,4 @@
-package postgres
+package grove
 
 import (
 	"context"
@@ -51,8 +51,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							AuthType: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     1000,
-							CapacityLimit:       30,
+							ThroughputLimit:     30,
+							CapacityLimit:       1_000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Metadata: &proto.Metadata{
@@ -65,7 +65,7 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{
-									ApiKey: "secr	et_key_2",
+									ApiKey: "secret_key_2",
 								},
 							},
 						},
@@ -85,8 +85,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							},
 						},
 						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     1000,
-							CapacityLimit:       30,
+							ThroughputLimit:     30,
+							CapacityLimit:       1_000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Metadata: &proto.Metadata{
@@ -100,8 +100,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							AuthType: &proto.Auth_NoAuth{},
 						},
 						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     1000,
-							CapacityLimit:       30,
+							ThroughputLimit:     30,
+							CapacityLimit:       1_000,
 							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Metadata: &proto.Metadata{
@@ -133,7 +133,7 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			c := require.New(t)
 
-			dataSource, _, err := NewPostgresDataSource(context.Background(), connectionString, polyzero.NewLogger())
+			dataSource, _, err := NewGrovePostgresDataSource(context.Background(), connectionString, polyzero.NewLogger())
 			c.NoError(err)
 
 			authData, err := dataSource.FetchAuthDataSync()
