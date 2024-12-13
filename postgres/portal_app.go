@@ -80,15 +80,6 @@ func (r *PortalApplicationRow) getAuthDetails() *proto.Auth {
 	}
 }
 
-// TODO - use this method when we have JWT auth
-// func convertToProtoAuthorizedUsers(users []string) map[string]*proto.Empty {
-// 	authUsers := make(map[string]*proto.Empty, len(users))
-// 	for _, user := range users {
-// 		authUsers[user] = &proto.Empty{}
-// 	}
-// 	return authUsers
-// }
-
 func convertPortalApplicationsRows(rows []sqlc.SelectPortalApplicationsRow) *proto.AuthDataResponse {
 	endpointsProto := make(map[string]*proto.GatewayEndpoint, len(rows))
 	for _, row := range rows {
