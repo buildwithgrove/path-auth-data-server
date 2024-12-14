@@ -31,9 +31,10 @@ It also listens for updates to the Grove Portal DB and streams updates to the `G
 
 [For the full Grove Portal DB schema, refer to the database schema defined in the Portal HTTP DB (PHD) repository](https://github.com/pokt-foundation/portal-http-db/blob/master/postgres-driver/sqlc/schema.sql).
 
-## 1.1 Entity Relationship Diagram 
+## 1.1 Entity Relationship Diagram
 
 This ERD shows the subset of tables from the full Grove Portal DB schema that are used by the Grove Postgres Driver in PADS.
+
 ```mermaid
 erDiagram
     PAY_PLANS {
