@@ -37,15 +37,15 @@ VALUES ('user_1', 'account_1'),
 -- Insert into the 'portal_applications' table
 INSERT INTO portal_applications (id, account_id)
 VALUES ('endpoint_1_no_auth', 'account_1'),
-    ('endpoint_2_jwt', 'account_2'),
-    ('endpoint_3_no_auth_static_key', 'account_3'),
+    ('endpoint_2_static_key', 'account_2'),
+    ('endpoint_3_static_key', 'account_3'),
     ('endpoint_4_no_auth', 'account_1'),
     ('endpoint_5_static_key', 'account_2');
 
 -- Insert into the 'portal_application_settings' table
 INSERT INTO portal_application_settings (application_id, secret_key_required, secret_key)
 VALUES ('endpoint_1_no_auth', FALSE, NULL),
-    ('endpoint_2_jwt', TRUE, 'secret_key_2'),
-    ('endpoint_3_no_auth_static_key', TRUE, 'secret_key_3'),
+    ('endpoint_2_static_key', TRUE, 'secret_key_2'),
+    ('endpoint_3_static_key', TRUE, 'secret_key_3'),
     ('endpoint_4_no_auth', FALSE, NULL),
     ('endpoint_5_static_key', TRUE, 'secret_key_5');
