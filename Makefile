@@ -36,6 +36,6 @@ gen_mocks: ## Generates mocks for testing
 ### SQL Generator Targets ###
 #############################
 
-.PHONY: gen_sqlc
-gen_sqlc: ## Generates the SQLC code
+.PHONY: grove_gen_sqlc
+grove_gen_sqlc: ## Generates the SQLC code for Grove's portal schema
 	sqlc generate -f ./postgres/grove/sqlc/sqlc.yaml
