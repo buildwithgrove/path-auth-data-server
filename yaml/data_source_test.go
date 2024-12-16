@@ -24,8 +24,8 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 			filePath: "./testdata/gateway-endpoints.example.yaml",
 			want: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
-					"endpoint_1": {
-						EndpointId: "endpoint_1",
+					"endpoint_1_static_key": {
+						EndpointId: "endpoint_1_static_key",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{
@@ -40,8 +40,8 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 							Email:     "amos.burton@opa.belt",
 						},
 					},
-					"endpoint_2": {
-						EndpointId: "endpoint_2",
+					"endpoint_2_jwt": {
+						EndpointId: "endpoint_2_jwt",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_Jwt{
 								Jwt: &proto.JWT{
@@ -59,8 +59,8 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 							Email:     "paul.atreides@arrakis.com",
 						},
 					},
-					"endpoint_3": {
-						EndpointId: "endpoint_3",
+					"endpoint_3_no_auth": {
+						EndpointId: "endpoint_3_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -110,8 +110,8 @@ endpoints:
 			filePath: "./testdata/invalid_capacity_limit_period.yaml",
 			fileContents: `
 endpoints:
-  endpoint_1:
-    endpoint_id: "endpoint_1"
+  endpoint_2_jwt:
+    endpoint_id: "endpoint_2_jwt"
     auth:
       auth_type: "AUTH_TYPE_JWT"
       jwt_authorized_users:

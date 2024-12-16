@@ -46,6 +46,7 @@ type (
 )
 
 /* ---------- Postgres Connection Funcs ---------- */
+// TODO_IMPROVE(@commoddity): generalize these for other postgres users in the future
 
 // Regular expression to match a valid PostgreSQL connection string
 var postgresConnectionStringRegex = regexp.MustCompile(`^postgres(?:ql)?:\/\/[^:]+:[^@]+@[^:]+:\d+\/[^?]+(?:\?.+)?$`)
@@ -113,7 +114,7 @@ func (d *postgresDataSource) FetchAuthDataSync() (*proto.AuthDataResponse, error
 		return nil, err
 	}
 
-	return convertPortalApplicationsRows(rows), nil
+	return sqlcPortalAppsToProto(rows), nil
 }
 
 // AuthDataUpdatesChan returns a channel that streams updates when the Postgres database changes.
@@ -207,12 +208,12 @@ func (d *postgresDataSource) processPortalApplicationChanges(ctx context.Context
 				continue
 			}
 
-			gatewayEndpoint := convertSelectPortalApplicationRow(portalAppRow).convertToProto()
+			gatewayEndpointProto := sqlcPortalAppToPortalAppRow(portalAppRow).convertToProto()
 
 			// Send the update
 			update := &proto.AuthDataUpdate{
-				EndpointId:      gatewayEndpoint.EndpointId,
-				GatewayEndpoint: gatewayEndpoint,
+				EndpointId:      gatewayEndpointProto.EndpointId,
+				GatewayEndpoint: gatewayEndpointProto,
 			}
 			d.updatesCh <- update
 		}

@@ -6,10 +6,10 @@ import (
 	"github.com/buildwithgrove/path-auth-data-server/postgres/grove/sqlc"
 )
 
-// PortalApplicationRow is a struct that represents a row from the portal_applications table
+// portalApplicationRow is a struct that represents a row from the portal_applications table
 // in the existing Grove Portal Database. It is necessary to convert the existing `portal_applications`
 // table schema to the new `GatewayEndpoint` struct expected by the PATH Go External Authorization Server.
-type PortalApplicationRow struct {
+type portalApplicationRow struct {
 	ID                string `json:"id"`                  // The PortalApp ID maps to the GatewayEndpoint.EndpointId
 	SecretKey         string `json:"secret_key"`          // The PortalApp SecretKey maps to the GatewayEndpoint.Auth.AuthType.StaticApiKey.ApiKey
 	SecretKeyRequired bool   `json:"secret_key_required"` // The PortalApp SecretKeyRequired determines whether the auth type is StaticApiKey or NoAuth
@@ -19,8 +19,11 @@ type PortalApplicationRow struct {
 	Plan              string `json:"plan"`                // The PortalApp Plan maps to the GatewayEndpoint.Metadata.PlanType
 }
 
-func convertSelectPortalApplicationsRow(r sqlc.SelectPortalApplicationsRow) *PortalApplicationRow {
-	return &PortalApplicationRow{
+// sqlcPortalAppsToPortalAppRow converts a row from the `SelectPortalApplicationsRow` query to the intermediate
+// portalApplicationRow struct. This is necessary because SQLC generates a specific struct for each query,
+// and we need to convert it to a common struct before converting to the proto.GatewayEndpoint struct.
+func sqlcPortalAppsToPortalAppRow(r sqlc.SelectPortalApplicationsRow) *portalApplicationRow {
+	return &portalApplicationRow{
 		ID:                r.ID,
 		SecretKey:         r.SecretKey.String,
 		SecretKeyRequired: r.SecretKeyRequired.Bool,
@@ -31,8 +34,11 @@ func convertSelectPortalApplicationsRow(r sqlc.SelectPortalApplicationsRow) *Por
 	}
 }
 
-func convertSelectPortalApplicationRow(r sqlc.SelectPortalApplicationRow) *PortalApplicationRow {
-	return &PortalApplicationRow{
+// sqlcPortalAppToPortalAppRow converts a row from the `SelectPortalApplicationRow` query to the intermediate
+// portalApplicationRow struct. This is necessary because SQLC generates a specific struct for each query,
+// and we need to convert it to a common struct before converting to the proto.GatewayEndpoint struct.
+func sqlcPortalAppToPortalAppRow(r sqlc.SelectPortalApplicationRow) *portalApplicationRow {
+	return &portalApplicationRow{
 		ID:                r.ID,
 		SecretKey:         r.SecretKey.String,
 		SecretKeyRequired: r.SecretKeyRequired.Bool,
@@ -43,7 +49,7 @@ func convertSelectPortalApplicationRow(r sqlc.SelectPortalApplicationRow) *Porta
 	}
 }
 
-func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
+func (r *portalApplicationRow) convertToProto() *proto.GatewayEndpoint {
 	rateLimiting := &proto.RateLimiting{
 		ThroughputLimit: int32(r.ThroughputLimit),
 		CapacityLimit:   int32(r.CapacityLimit),
@@ -64,7 +70,7 @@ func (r *PortalApplicationRow) convertToProto() *proto.GatewayEndpoint {
 	}
 }
 
-func (r *PortalApplicationRow) getAuthDetails() *proto.Auth {
+func (r *portalApplicationRow) getAuthDetails() *proto.Auth {
 	if r.SecretKeyRequired {
 		return &proto.Auth{
 			AuthType: &proto.Auth_StaticApiKey{
@@ -80,10 +86,10 @@ func (r *PortalApplicationRow) getAuthDetails() *proto.Auth {
 	}
 }
 
-func convertPortalApplicationsRows(rows []sqlc.SelectPortalApplicationsRow) *proto.AuthDataResponse {
+func sqlcPortalAppsToProto(rows []sqlc.SelectPortalApplicationsRow) *proto.AuthDataResponse {
 	endpointsProto := make(map[string]*proto.GatewayEndpoint, len(rows))
 	for _, row := range rows {
-		portalAppRow := convertSelectPortalApplicationsRow(row)
+		portalAppRow := sqlcPortalAppsToPortalAppRow(row)
 		endpointsProto[portalAppRow.ID] = portalAppRow.convertToProto()
 	}
 

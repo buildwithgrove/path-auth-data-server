@@ -64,6 +64,20 @@ func setupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 		os.Exit(1)
 	}
 
+	// Print container logs in a goroutine to prevent blocking
+	go func() {
+		if err := pool.Client.Logs(docker.LogsOptions{
+			Container:    resource.Container.ID,
+			OutputStream: os.Stdout,
+			ErrorStream:  os.Stderr,
+			Stdout:       true,
+			Stderr:       true,
+			Follow:       true,
+		}); err != nil {
+			fmt.Printf("could not fetch logs for PATH container: %s", err)
+		}
+	}()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {

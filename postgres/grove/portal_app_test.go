@@ -10,7 +10,7 @@ import (
 	"github.com/buildwithgrove/path-auth-data-server/postgres/grove/sqlc"
 )
 
-func Test_convertPortalApplicationsRows(t *testing.T) {
+func Test_sqlcPortalAppsToProto(t *testing.T) {
 	tests := []struct {
 		name     string
 		rows     []sqlc.SelectPortalApplicationsRow
@@ -21,14 +21,14 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 			name: "should convert rows to auth data response successfully",
 			rows: []sqlc.SelectPortalApplicationsRow{
 				{
-					ID:                "endpoint_1",
+					ID:                "endpoint_1_static_key",
 					AccountID:         pgtype.Text{String: "account_1", Valid: true},
 					Plan:              pgtype.Text{String: "PLAN_UNLIMITED", Valid: true},
 					SecretKeyRequired: pgtype.Bool{Bool: true, Valid: true},
 					SecretKey:         pgtype.Text{String: "secret_key_1", Valid: true},
 				},
 				{
-					ID:                "endpoint_2",
+					ID:                "endpoint_2_no_auth",
 					AccountID:         pgtype.Text{String: "account_2", Valid: true},
 					Plan:              pgtype.Text{String: "PLAN_FREE", Valid: true},
 					SecretKeyRequired: pgtype.Bool{Bool: false, Valid: true},
@@ -39,8 +39,8 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 			},
 			expected: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
-					"endpoint_1": {
-						EndpointId: "endpoint_1",
+					"endpoint_1_static_key": {
+						EndpointId: "endpoint_1_static_key",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{
@@ -54,8 +54,8 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
-					"endpoint_2": {
-						EndpointId: "endpoint_2",
+					"endpoint_2_no_auth": {
+						EndpointId: "endpoint_2_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -77,7 +77,7 @@ func Test_convertPortalApplicationsRows(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result := convertPortalApplicationsRows(test.rows)
+			result := sqlcPortalAppsToProto(test.rows)
 			require.Equal(t, test.expected, result)
 		})
 	}

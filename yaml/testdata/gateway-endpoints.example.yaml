@@ -11,7 +11,7 @@
 endpoints:
   # 1. Example of a gateway endpoint using API Key Authorization
   # This endpoint has no rate limits defined (the rate_limiting field is omitted entirely in this case).
-  endpoint_1:                                                # The unique identifier for a gateway endpoint.
+  endpoint_1_static_key:                                     # The unique identifier for a gateway endpoint.
   
     auth:                                                    # The auth field is required for all endpoints that use authorization. 
                                                              # One of the following sub-fields is required: 'api_key' or 'jwt_authorized_users'.
@@ -25,7 +25,7 @@ endpoints:
       email: "amos.burton@opa.belt"                          # Example of a key-value pair (in this case, an owner email).
 
   # 2. Example of a gateway endpoint using JWT Authorization
-  endpoint_2:
+  endpoint_2_jwt:
     auth:      
       jwt_authorized_users:                                  # For JWT Authorization, the jwt_authorized_users array is required.
         - "auth0|user_1"                                     # The user ID of an authorized user (in this case, a user ID provided by Auth0).
@@ -37,7 +37,7 @@ endpoints:
       email: "paul.atreides@arrakis.com"
 
   # 3. Example of a gateway endpoint with no authorization (the auth field is omitted entirely in this case).
-  endpoint_3:
+  endpoint_3_no_auth:
     rate_limiting:                                           # This endpoint has a rate limit defined
       throughput_limit: 30                                   # Throughput limit defines the endpoint's per-second (TPS) rate limit.
       capacity_limit: 100000                                 # Capacity limit defines the endpoint's rate limit over longer periods.

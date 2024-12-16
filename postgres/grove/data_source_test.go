@@ -45,8 +45,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 			name: "should retrieve all gateway endpoints data correctly",
 			expected: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
-					"endpoint_1": {
-						EndpointId: "endpoint_1",
+					"endpoint_1_no_auth": {
+						EndpointId: "endpoint_1_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -60,8 +60,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							PlanType:  "PLAN_FREE",
 						},
 					},
-					"endpoint_2": {
-						EndpointId: "endpoint_2",
+					"endpoint_2_static_key": {
+						EndpointId: "endpoint_2_static_key",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{
@@ -75,8 +75,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
-					"endpoint_3": {
-						EndpointId: "endpoint_3",
+					"endpoint_3_static_key": {
+						EndpointId: "endpoint_3_static_key",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{
@@ -94,8 +94,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							PlanType:  "PLAN_FREE",
 						},
 					},
-					"endpoint_4": {
-						EndpointId: "endpoint_4",
+					"endpoint_4_no_auth": {
+						EndpointId: "endpoint_4_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -109,8 +109,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							PlanType:  "PLAN_FREE",
 						},
 					},
-					"endpoint_5": {
-						EndpointId: "endpoint_5",
+					"endpoint_5_static_key": {
+						EndpointId: "endpoint_5_static_key",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{

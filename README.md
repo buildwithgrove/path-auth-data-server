@@ -89,12 +89,12 @@ Hot reloading is supported, so changes to the YAML file will be reflected in the
 endpoints:
   # 1. Example of a gateway endpoint using API Key Authorization
   # This endpoint has no rate limits defined (the rate_limiting field is omitted entirely in this case).
-  endpoint_1: # The unique identifier for a gateway endpoint.
+  endpoint_1_static_key: # The unique identifier for a gateway endpoint.
     auth: # The auth field is required for all endpoints that use authorization.
       api_key: "api_key_1" # For API Key Authorization, the API key string is required.
 
   # 2. Example of a gateway endpoint using JWT Authorization
-  endpoint_2:
+  endpoint_2_jwt:
     auth:
       jwt_authorized_users: # For JWT Authorization, the jwt_authorized_users array is required.
         - "auth0|user_1" # The user ID of an authorized user (in this case, a user ID provided by Auth0).
@@ -102,7 +102,7 @@ endpoints:
 
   # 3. Example of a gateway endpoint with rate limiting enabled and no authorization required
   # (The auth field is omitted entirely in this case).
-  endpoint_3:
+  endpoint_3_no_auth:
     rate_limiting: # This endpoint has a rate limit defined
       throughput_limit: 30 # Throughput limit defines the endpoint's per-second (TPS) rate limit.
       capacity_limit: 100000 # Capacity limit defines the endpoint's rate limit over longer periods.
