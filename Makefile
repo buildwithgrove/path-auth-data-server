@@ -17,11 +17,11 @@ help: ## Prints all the targets in all the Makefiles
 
 .PHONY: test_all
 test_all: ## Runs all unit tests
-	go test ./... -count=1
-
-.PHONY: test_unit
-test_unit: ## Runs unit tests
 	go test ./... -short -count=1
+
+.PHONY: test_all_verbose
+test_all_verbose: ## Runs all unit tests with verbose output enabled
+	go test -v ./... -count=1
 
 ####################
 ### Mock Targets ###
