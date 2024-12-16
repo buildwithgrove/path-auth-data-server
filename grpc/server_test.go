@@ -23,8 +23,8 @@ func Test_FetchAuthDataSync(t *testing.T) {
 			name: "should return Gateway Endpoints successfully",
 			expectedResponse: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
-					"endpoint_1": {
-						EndpointId: "endpoint_1",
+					"endpoint_1_static_key": {
+						EndpointId: "endpoint_1_static_key",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{
@@ -96,14 +96,14 @@ func Test_StreamUpdates(t *testing.T) {
 			name: "should stream updates successfully",
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint_1",
+					EndpointId: "endpoint_1_static_key",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_1",
+						EndpointId: "endpoint_1_static_key",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint_2",
+					EndpointId: "endpoint_2_jwt",
 					Delete:     true,
 				},
 			},
@@ -167,40 +167,40 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 		{
 			name: "should update server state with new updates",
 			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
-				"endpoint_1": {
-					EndpointId: "endpoint_1",
+				"endpoint_1_static_key": {
+					EndpointId: "endpoint_1_static_key",
 				},
 			},
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint_2",
+					EndpointId: "endpoint_2_jwt",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_2",
+						EndpointId: "endpoint_2_jwt",
 					},
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint_1",
+					EndpointId: "endpoint_1_static_key",
 					Delete:     true,
 				},
 			},
 			expectedDataAfterUpdates: map[string]*proto.GatewayEndpoint{
-				"endpoint_2": {
-					EndpointId: "endpoint_2",
+				"endpoint_2_jwt": {
+					EndpointId: "endpoint_2_jwt",
 				},
 			},
 		},
 		{
 			name: "should handle no updates",
 			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
-				"endpoint_1": {
-					EndpointId: "endpoint_1",
+				"endpoint_1_static_key": {
+					EndpointId: "endpoint_1_static_key",
 				},
 			},
 			updates: []*proto.AuthDataUpdate{},
 			expectedDataAfterUpdates: map[string]*proto.GatewayEndpoint{
-				"endpoint_1": {
-					EndpointId: "endpoint_1",
+				"endpoint_1_static_key": {
+					EndpointId: "endpoint_1_static_key",
 				},
 			},
 		},

@@ -8,7 +8,7 @@ path-auth-data-server
 .DS_Store
 
 # YAML
-*.yaml
+.*.yaml
 !gateway-endpoints.schema.yaml
 !gateway-endpoints.example.yaml
 

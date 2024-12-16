@@ -19,7 +19,7 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 			name: "should convert YAML to proto format correctly",
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
-					"endpoint_1": {
+					"endpoint_2_jwt": {
 						Auth: authYAML{
 							JWTAuthorizedUsers: []string{
 								"auth0|user_1",
@@ -40,8 +40,8 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 			},
 			expected: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
-					"endpoint_1": {
-						EndpointId: "endpoint_1",
+					"endpoint_2_jwt": {
+						EndpointId: "endpoint_2_jwt",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_Jwt{
 								Jwt: &proto.JWT{
@@ -87,7 +87,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 			name: "valid endpoints",
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
-					"endpoint_1": {
+					"endpoint_2_jwt": {
 						Auth: authYAML{
 							JWTAuthorizedUsers: []string{
 								"auth0|user_1",
@@ -99,7 +99,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 							CapacityLimitPeriod: grpc_server.CapacityLimitPeriodMonthly,
 						},
 					},
-					"endpoint_2": {
+					"endpoint_1_static_key": {
 						Auth: authYAML{
 							APIKey: stringPtr("some_api_key"),
 						},
@@ -130,7 +130,7 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 			name: "invalid endpoint with incorrect capacity_limit_period",
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
-					"endpoint_1": {
+					"endpoint_2_jwt": {
 						Auth: authYAML{
 							JWTAuthorizedUsers: []string{
 								"auth0|user_1",

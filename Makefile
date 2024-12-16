@@ -16,11 +16,15 @@ help: ## Prints all the targets in all the Makefiles
 ####################
 
 .PHONY: test_all
-test_all: ## Runs all unit tests
+test_all: ## Runs all tests
 	go test ./... -count=1
 
+.PHONY: test_all_verbose
+test_all_verbose: ## Runs all tests with verbose output enabled
+	go test -v ./... -count=1
+
 .PHONY: test_unit
-test_unit: ## Runs unit tests
+test_unit: ## Runs unit tests only (excludes Postgres Docker integration tests)
 	go test ./... -short -count=1
 
 ####################
@@ -31,3 +35,11 @@ test_unit: ## Runs unit tests
 .PHONY: gen_mocks
 gen_mocks: ## Generates mocks for testing
 	mockgen -source=./grpc/data_source.go -destination=./grpc/data_source_mock_test.go -package=grpc
+
+#############################
+### SQL Generator Targets ###
+#############################
+
+.PHONY: grove_gen_sqlc
+grove_gen_sqlc: ## Generates the SQLC code for Grove's portal schema
+	sqlc generate -f ./postgres/grove/sqlc/sqlc.yaml
