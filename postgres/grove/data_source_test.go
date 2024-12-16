@@ -60,8 +60,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							PlanType:  "PLAN_FREE",
 						},
 					},
-					"endpoint_2_static_key": {
-						EndpointId: "endpoint_2_static_key",
+					"endpoint_2_jwt": {
+						EndpointId: "endpoint_2_jwt",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{
@@ -75,8 +75,8 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
-					"endpoint_3_static_key": {
-						EndpointId: "endpoint_3_static_key",
+					"endpoint_3_no_auth_static_key": {
+						EndpointId: "endpoint_3_no_auth_static_key",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_StaticApiKey{
 								StaticApiKey: &proto.StaticAPIKey{

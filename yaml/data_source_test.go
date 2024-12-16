@@ -161,16 +161,16 @@ func Test_watchFile(t *testing.T) {
 			name: "should detect and send updates on file change",
 			gatewayEndpoints: `
 endpoints:
-  endpoint_1:
-    endpoint_id: "endpoint_1"
+  endpoint_1_static_key:
+    endpoint_id: "endpoint_1_static_key"
     auth:
       auth_type: "AUTH_TYPE_API_KEY"
       api_key: "api_key_1"
     metadata:
       account_id: "account_1"
       plan_type: "PLAN_UNLIMITED"
-  endpoint_2:
-    endpoint_id: "endpoint_2"
+  endpoint_2_jwt:
+    endpoint_id: "endpoint_2_jwt"
     auth:
       auth_type: "AUTH_TYPE_JWT"
       jwt_authorized_users:
@@ -181,22 +181,22 @@ endpoints:
 `,
 			updatedData: `
 endpoints:
-  endpoint_1:
-    endpoint_id: "endpoint_1"
+  endpoint_1_static_key:
+    endpoint_id: "endpoint_1_static_key"
     auth:
       auth_type: "NO_AUTH"
     metadata:
       account_id: "account_1"
       plan_type: "PLAN_UNLIMITED"
-  endpoint_2:
-    endpoint_id: "endpoint_2"
+  endpoint_2_jwt:
+    endpoint_id: "endpoint_2_jwt"
     auth:
       auth_type: "NO_AUTH"
     metadata:
       account_id: "account_2"
       plan_type: "PLAN_FREE"
-  endpoint_3:
-    endpoint_id: "endpoint_3"
+  endpoint_3_no_auth:
+    endpoint_id: "endpoint_3_no_auth"
     rate_limiting:
       throughput_limit: 50
       capacity_limit: 200
@@ -207,9 +207,9 @@ endpoints:
 `,
 			expectedUpdates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint_1",
+					EndpointId: "endpoint_1_static_key",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_1",
+						EndpointId: "endpoint_1_static_key",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -221,9 +221,9 @@ endpoints:
 					},
 				},
 				{
-					EndpointId: "endpoint_2",
+					EndpointId: "endpoint_2_jwt",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_2",
+						EndpointId: "endpoint_2_jwt",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -235,9 +235,9 @@ endpoints:
 					},
 				},
 				{
-					EndpointId: "endpoint_3",
+					EndpointId: "endpoint_3_no_auth",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_3",
+						EndpointId: "endpoint_3_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -312,8 +312,8 @@ func Test_handleUpdates(t *testing.T) {
 		{
 			name: "should send updates for new and modified endpoints",
 			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
-				"endpoint_1": {
-					EndpointId: "endpoint_1",
+				"endpoint_1_static_key": {
+					EndpointId: "endpoint_1_static_key",
 					Auth: &proto.Auth{
 						AuthType: &proto.Auth_StaticApiKey{
 							StaticApiKey: &proto.StaticAPIKey{
@@ -328,8 +328,8 @@ func Test_handleUpdates(t *testing.T) {
 				},
 			},
 			newEndpoints: map[string]*proto.GatewayEndpoint{
-				"endpoint_1": {
-					EndpointId: "endpoint_1",
+				"endpoint_1_static_key": {
+					EndpointId: "endpoint_1_static_key",
 					Auth: &proto.Auth{
 						AuthType: &proto.Auth_NoAuth{},
 					},
@@ -338,8 +338,8 @@ func Test_handleUpdates(t *testing.T) {
 						PlanType:  "PLAN_UNLIMITED",
 					},
 				},
-				"endpoint_2": {
-					EndpointId: "endpoint_2",
+				"endpoint_2_jwt": {
+					EndpointId: "endpoint_2_jwt",
 					Auth: &proto.Auth{
 						AuthType: &proto.Auth_NoAuth{},
 					},
@@ -351,9 +351,9 @@ func Test_handleUpdates(t *testing.T) {
 			},
 			expectedUpdates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint_1",
+					EndpointId: "endpoint_1_static_key",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_1",
+						EndpointId: "endpoint_1_static_key",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -364,9 +364,9 @@ func Test_handleUpdates(t *testing.T) {
 					},
 				},
 				{
-					EndpointId: "endpoint_2",
+					EndpointId: "endpoint_2_jwt",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_2",
+						EndpointId: "endpoint_2_jwt",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -381,8 +381,8 @@ func Test_handleUpdates(t *testing.T) {
 		{
 			name: "should send delete updates for removed endpoints",
 			gatewayEndpoints: map[string]*proto.GatewayEndpoint{
-				"endpoint_1": {
-					EndpointId: "endpoint_1",
+				"endpoint_1_static_key": {
+					EndpointId: "endpoint_1_static_key",
 					Auth: &proto.Auth{
 						AuthType: &proto.Auth_StaticApiKey{
 							StaticApiKey: &proto.StaticAPIKey{
@@ -399,7 +399,7 @@ func Test_handleUpdates(t *testing.T) {
 			newEndpoints: map[string]*proto.GatewayEndpoint{},
 			expectedUpdates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint_1",
+					EndpointId: "endpoint_1_static_key",
 					Delete:     true,
 				},
 			},
