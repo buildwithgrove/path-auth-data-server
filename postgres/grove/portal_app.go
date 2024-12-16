@@ -73,10 +73,10 @@ func (r *PortalApplicationRow) getAuthDetails() *proto.Auth {
 				},
 			},
 		}
-	} else {
-		return &proto.Auth{
-			AuthType: &proto.Auth_NoAuth{},
-		}
+	}
+	
+	return &proto.Auth{
+		AuthType: &proto.Auth_NoAuth{},
 	}
 }
 
