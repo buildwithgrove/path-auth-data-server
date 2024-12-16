@@ -19,9 +19,10 @@ type portalApplicationRow struct {
 	Plan              string `json:"plan"`                // The PortalApp Plan maps to the GatewayEndpoint.Metadata.PlanType
 }
 
-// sqlcPortalAppsToPortalAppRow converts a row from the `SelectPortalApplicationsRow` query to the intermediate
-// portalApplicationRow struct. This is necessary because SQLC generates a specific struct for each query,
-// and we need to convert it to a common struct before converting to the proto.GatewayEndpoint struct.
+// sqlcPortalAppsToPortalAppRow (not the plurality of Apps) converts a row from the
+// `SelectPortalApplicationsRow` query to the intermediate portalApplicationRow struct.
+// This is necessary because SQLC generates a specific struct for each query, which needs
+// to be converted to a common struct before converting to the proto.GatewayEndpoint struct.
 func sqlcPortalAppsToPortalAppRow(r sqlc.SelectPortalApplicationsRow) *portalApplicationRow {
 	return &portalApplicationRow{
 		ID:                r.ID,
@@ -34,9 +35,10 @@ func sqlcPortalAppsToPortalAppRow(r sqlc.SelectPortalApplicationsRow) *portalApp
 	}
 }
 
-// sqlcPortalAppToPortalAppRow converts a row from the `SelectPortalApplicationRow` query to the intermediate
-// portalApplicationRow struct. This is necessary because SQLC generates a specific struct for each query,
-// and we need to convert it to a common struct before converting to the proto.GatewayEndpoint struct.
+// sqlcPortalAppToPortalAppRow (not the singularity of App) converts a row from the
+// `SelectPortalApplicationRow` query to the intermediate portalApplicationRow struct.
+// This is necessary because SQLC generates a specific struct for each query, which needs
+// to be converted to a common struct before converting to the proto.GatewayEndpoint struct.
 func sqlcPortalAppToPortalAppRow(r sqlc.SelectPortalApplicationRow) *portalApplicationRow {
 	return &portalApplicationRow{
 		ID:                r.ID,
