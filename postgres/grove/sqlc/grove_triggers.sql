@@ -3,8 +3,9 @@
 -- These triggers are used to listen for changes to Portal Applications and their associated tables.
 -- When updates are detected, the triggers insert a row into the `portal_application_changes` table.
 -- The `log_portal_application_changes` function is then called to handle the update.
--- The function sends a minimal notification to the `portal_application_changes` channel, which is listened for by the Go External Authorization Server.
--- The Go External Authorization Server then updates its Gateway Endpoint Data Store with the new data, which streams the updates to the Go External Authorization Server connected to Envoy Proxy in PATH.
+-- The function sends a minimal notification to the `portal_application_changes` channel, which is handled by the `portalApplicationChangesChannel` in the Postgres data source.
+-- See implementation here: https://github.com/buildwithgrove/path-auth-data-server/blob/main/postgres/grove/data_source.go#L163
+-- PADS then streams the updated data to the Go External Auth Server over gRPC, which updates its Gateway Endpoints store used to authorize requests to PATH.
 
 -- /*-------------------- Listener Updates --------------------*/
 
