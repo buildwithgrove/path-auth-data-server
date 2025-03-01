@@ -12,7 +12,7 @@ const (
 	yamlFilePathEnv             = "YAML_FILEPATH"
 
 	portEnv     = "PORT"
-	defaultPort = "50051"
+	defaultPort = "10002"
 )
 
 type envVars struct {
