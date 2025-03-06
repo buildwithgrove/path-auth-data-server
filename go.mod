@@ -2,10 +2,8 @@ module github.com/buildwithgrove/path-auth-data-server
 
 go 1.23.1
 
-replace github.com/buildwithgrove/path-external-auth-server => ../path-external-auth-server
-
 require (
-	github.com/buildwithgrove/path-external-auth-server v0.0.2
+	github.com/buildwithgrove/path-external-auth-server v0.0.3
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/joho/godotenv v1.5.1
 	github.com/pokt-network/poktroll v0.0.9
