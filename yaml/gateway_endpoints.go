@@ -3,7 +3,7 @@ package yaml
 import (
 	"fmt"
 
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 )
 
 /* ----------------------------- GatewayEndpoints YAML Struct ----------------------------- */

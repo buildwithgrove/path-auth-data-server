@@ -1,6 +1,6 @@
 package grpc
 
-import "github.com/buildwithgrove/path/envoy/auth_server/proto"
+import "github.com/buildwithgrove/path-external-auth-server/proto"
 
 // DEV_NOTE: These enums exist to simplify the usage of converting from data source types to
 // the types expected by the proto package.

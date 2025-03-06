@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 	"github.com/pokt-network/poktroll/pkg/polylog"
 )
 

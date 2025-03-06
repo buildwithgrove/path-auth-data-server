@@ -43,25 +43,6 @@ BEGIN
         FROM portal_applications pa
         WHERE pa.account_id = COALESCE(NEW.id, OLD.id);
 
-    ELSIF TG_TABLE_NAME = 'account_users' THEN
-        SELECT array_agg(pa.id) INTO portal_app_ids
-        FROM portal_applications pa
-        WHERE pa.account_id = COALESCE(NEW.account_id, OLD.account_id);
-
-    ELSIF TG_TABLE_NAME = 'users' THEN
-        SELECT array_agg(pa.id) INTO portal_app_ids
-        FROM portal_applications pa
-        JOIN accounts a ON pa.account_id = a.id
-        JOIN account_users au ON au.account_id = a.id
-        WHERE au.user_id = COALESCE(NEW.id, OLD.id);
-
-    ELSIF TG_TABLE_NAME = 'user_auth_providers' THEN
-        SELECT array_agg(pa.id) INTO portal_app_ids
-        FROM portal_applications pa
-        JOIN accounts a ON pa.account_id = a.id
-        JOIN account_users au ON au.account_id = a.id
-        WHERE au.user_id = COALESCE(NEW.user_id, OLD.user_id);
-
     ELSIF TG_TABLE_NAME = 'pay_plans' THEN
         SELECT array_agg(pa.id) INTO portal_app_ids
         FROM portal_applications pa
@@ -97,18 +78,6 @@ FOR EACH ROW EXECUTE FUNCTION log_portal_application_changes();
 
 CREATE TRIGGER accounts_change_trigger
 AFTER INSERT OR UPDATE OR DELETE ON accounts
-FOR EACH ROW EXECUTE FUNCTION log_portal_application_changes();
-
-CREATE TRIGGER account_users_change_trigger
-AFTER INSERT OR UPDATE OR DELETE ON account_users
-FOR EACH ROW EXECUTE FUNCTION log_portal_application_changes();
-
-CREATE TRIGGER users_change_trigger
-AFTER INSERT OR UPDATE OR DELETE ON users
-FOR EACH ROW EXECUTE FUNCTION log_portal_application_changes();
-
-CREATE TRIGGER user_auth_providers_change_trigger
-AFTER INSERT OR UPDATE OR DELETE ON user_auth_providers
 FOR EACH ROW EXECUTE FUNCTION log_portal_application_changes();
 
 CREATE TRIGGER pay_plans_change_trigger

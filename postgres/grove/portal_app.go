@@ -1,7 +1,7 @@
 package grove
 
 import (
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 
 	"github.com/buildwithgrove/path-auth-data-server/postgres/grove/sqlc"
 )
@@ -82,7 +82,7 @@ func (r *portalApplicationRow) getAuthDetails() *proto.Auth {
 			},
 		}
 	}
-	
+
 	return &proto.Auth{
 		AuthType: &proto.Auth_NoAuth{},
 	}
