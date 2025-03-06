@@ -3,7 +3,7 @@ package yaml
 import (
 	"testing"
 
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 	"github.com/stretchr/testify/require"
 
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
@@ -18,12 +18,10 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 	}{
 		{
 			name:       "should convert gatewayEndpointYAML to proto format correctly",
-			endpointID: "endpoint_2_jwt",
+			endpointID: "endpoint_1_static_key",
 			input: gatewayEndpointYAML{
 				Auth: authYAML{
-					JWTAuthorizedUsers: []string{
-						"auth0|user_1",
-					},
+					APIKey: stringPtr("some_api_key"),
 				},
 				RateLimiting: rateLimitingYAML{
 					ThroughputLimit:     30,
@@ -37,13 +35,11 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 				},
 			},
 			expected: &proto.GatewayEndpoint{
-				EndpointId: "endpoint_2_jwt",
+				EndpointId: "endpoint_1_static_key",
 				Auth: &proto.Auth{
-					AuthType: &proto.Auth_Jwt{
-						Jwt: &proto.JWT{
-							AuthorizedUsers: map[string]*proto.Empty{
-								"auth0|user_1": {},
-							},
+					AuthType: &proto.Auth_StaticApiKey{
+						StaticApiKey: &proto.StaticAPIKey{
+							ApiKey: "some_api_key",
 						},
 					},
 				},
@@ -80,18 +76,12 @@ func Test_authYAML_convertToProto(t *testing.T) {
 		{
 			name: "should convert authYAML to proto format correctly",
 			input: authYAML{
-				JWTAuthorizedUsers: []string{
-					"auth0|user_1",
-					"auth0|user_2",
-				},
+				APIKey: stringPtr("some_api_key"),
 			},
 			expected: &proto.Auth{
-				AuthType: &proto.Auth_Jwt{
-					Jwt: &proto.JWT{
-						AuthorizedUsers: map[string]*proto.Empty{
-							"auth0|user_1": {},
-							"auth0|user_2": {},
-						},
+				AuthType: &proto.Auth_StaticApiKey{
+					StaticApiKey: &proto.StaticAPIKey{
+						ApiKey: "some_api_key",
 					},
 				},
 			},
@@ -123,13 +113,11 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name:       "valid endpoint with JWT auth",
-			endpointID: "endpoint_2_jwt",
+			name:       "valid endpoint with API key auth",
+			endpointID: "endpoint_1_static_key",
 			input: gatewayEndpointYAML{
 				Auth: authYAML{
-					JWTAuthorizedUsers: []string{
-						"auth0|user_1",
-					},
+					APIKey: stringPtr("some_api_key"),
 				},
 				RateLimiting: rateLimitingYAML{
 					ThroughputLimit:     30,
@@ -200,20 +188,11 @@ func Test_authYAML_validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "valid JWT auth",
+			name: "valid API key auth",
 			input: authYAML{
-				JWTAuthorizedUsers: []string{
-					"user_1",
-				},
+				APIKey: stringPtr("some_api_key"),
 			},
 			wantErr: false,
-		},
-		{
-			name: "missing jwt_authorized_users for JWT auth",
-			input: authYAML{
-				JWTAuthorizedUsers: []string{},
-			},
-			wantErr: true,
 		},
 	}
 

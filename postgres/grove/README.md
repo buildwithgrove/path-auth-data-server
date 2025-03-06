@@ -7,13 +7,13 @@
 
 # Table of Contents <!-- omit in toc -->
 
-- [1. Grove Postgres Database Schema](#1-grove-postgres-database-schema)
-  - [1.1 Entity Relationship Diagram](#11-entity-relationship-diagram)
-- [2. SQLC Autogeneration](#2-sqlc-autogeneration)
+- [Grove Postgres Database Schema](#grove-postgres-database-schema)
+    - [Entity Relationship Diagram](#entity-relationship-diagram)
+- [SQLC Autogeneration](#sqlc-autogeneration)
 
 <br/>
 
-# 1. Grove Postgres Database Schema
+# Grove Postgres Database Schema
 
 <div align="center">
 <a href="https://www.postgresql.org/">
@@ -32,7 +32,7 @@ It also listens for updates to the Grove Portal DB and streams updates to the `G
 
 [For the full Grove Portal DB schema, refer to the database schema defined in the Portal HTTP DB (PHD) repository](https://github.com/pokt-foundation/portal-http-db/blob/master/postgres-driver/sqlc/schema.sql).
 
-## 1.1 Entity Relationship Diagram
+### Entity Relationship Diagram
 
 This ERD shows the subset of tables from the full Grove Portal DB schema that are used by the Grove Postgres Driver in PADS.
 
@@ -47,23 +47,6 @@ erDiagram
     ACCOUNTS {
         VARCHAR(10) id PK
         VARCHAR(25) plan_type FK
-    }
-
-    USERS {
-        VARCHAR(10) id PK
-    }
-
-    USER_AUTH_PROVIDERS {
-        SERIAL id PK
-        VARCHAR(10) user_id FK
-        VARCHAR(255) provider_user_id
-        VARCHAR type
-    }
-
-    ACCOUNT_USERS {
-        SERIAL id PK
-        VARCHAR(10) user_id FK
-        VARCHAR(10) account_id FK
     }
 
     PORTAL_APPLICATIONS {
@@ -86,14 +69,11 @@ erDiagram
     }
 
     PAY_PLANS ||--o{ ACCOUNTS : "plan_type"
-    ACCOUNTS ||--o{ ACCOUNT_USERS : "id"
-    USERS ||--o{ ACCOUNT_USERS : "id"
-    USERS ||--o{ USER_AUTH_PROVIDERS : "id"
     ACCOUNTS ||--o{ PORTAL_APPLICATIONS : "id"
     PORTAL_APPLICATIONS ||--o{ PORTAL_APPLICATION_SETTINGS : "id"
 ```
 
-# 2. SQLC Autogeneration
+# SQLC Autogeneration
 
 <div align="center">
 <a href="https://docs.sqlc.dev/en/stable">

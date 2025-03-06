@@ -3,7 +3,7 @@ package yaml
 import (
 	"testing"
 
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 	"github.com/stretchr/testify/require"
 
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
@@ -19,11 +19,9 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 			name: "should convert YAML to proto format correctly",
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
-					"endpoint_2_jwt": {
+					"endpoint_1_static_key": {
 						Auth: authYAML{
-							JWTAuthorizedUsers: []string{
-								"auth0|user_1",
-							},
+							APIKey: stringPtr("some_api_key"),
 						},
 						RateLimiting: rateLimitingYAML{
 							ThroughputLimit:     30,
@@ -40,14 +38,12 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 			},
 			expected: &proto.AuthDataResponse{
 				Endpoints: map[string]*proto.GatewayEndpoint{
-					"endpoint_2_jwt": {
-						EndpointId: "endpoint_2_jwt",
+					"endpoint_1_static_key": {
+						EndpointId: "endpoint_1_static_key",
 						Auth: &proto.Auth{
-							AuthType: &proto.Auth_Jwt{
-								Jwt: &proto.JWT{
-									AuthorizedUsers: map[string]*proto.Empty{
-										"auth0|user_1": {},
-									},
+							AuthType: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "some_api_key",
 								},
 							},
 						},
@@ -87,12 +83,8 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 			name: "valid endpoints",
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
-					"endpoint_2_jwt": {
-						Auth: authYAML{
-							JWTAuthorizedUsers: []string{
-								"auth0|user_1",
-							},
-						},
+					"endpoint_1_no_auth": {
+						Auth: authYAML{},
 						RateLimiting: rateLimitingYAML{
 							ThroughputLimit:     30,
 							CapacityLimit:       100_000,
@@ -130,12 +122,8 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 			name: "invalid endpoint with incorrect capacity_limit_period",
 			input: gatewayEndpointsYAML{
 				Endpoints: map[string]gatewayEndpointYAML{
-					"endpoint_2_jwt": {
-						Auth: authYAML{
-							JWTAuthorizedUsers: []string{
-								"auth0|user_1",
-							},
-						},
+					"endpoint_1_no_auth": {
+						Auth: authYAML{},
 						RateLimiting: rateLimitingYAML{
 							CapacityLimit:       100_000,
 							CapacityLimitPeriod: "CAPACITY_LIMIT_PERIOD_YEARLY",

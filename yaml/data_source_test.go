@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
 	"github.com/stretchr/testify/require"
 )
@@ -40,27 +40,8 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 							Email:     "amos.burton@opa.belt",
 						},
 					},
-					"endpoint_2_jwt": {
-						EndpointId: "endpoint_2_jwt",
-						Auth: &proto.Auth{
-							AuthType: &proto.Auth_Jwt{
-								Jwt: &proto.JWT{
-									AuthorizedUsers: map[string]*proto.Empty{
-										"auth0|user_1": {},
-										"auth0|user_2": {},
-									},
-								},
-							},
-						},
-						RateLimiting: &proto.RateLimiting{},
-						Metadata: &proto.Metadata{
-							AccountId: "account_2",
-							PlanType:  "PLAN_UNLIMITED",
-							Email:     "paul.atreides@arrakis.com",
-						},
-					},
-					"endpoint_3_no_auth": {
-						EndpointId: "endpoint_3_no_auth",
+					"endpoint_2_no_auth": {
+						EndpointId: "endpoint_2_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
@@ -97,7 +78,6 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 endpoints:
   "":
     auth:
-      auth_type: "AUTH_TYPE_API_KEY"
       api_key: "api_key_1"
     metadata:
       account_id: "account_1"
@@ -110,12 +90,10 @@ endpoints:
 			filePath: "./testdata/invalid_capacity_limit_period.yaml",
 			fileContents: `
 endpoints:
-  endpoint_2_jwt:
-    endpoint_id: "endpoint_2_jwt"
+  endpoint_1_static_key:
+    endpoint_id: "endpoint_1_static_key"
     auth:
-      auth_type: "AUTH_TYPE_JWT"
-      jwt_authorized_users:
-        - "auth0|user_1"
+      api_key: "api_key_1"
     rate_limiting:
       capacity_limit: 100
       capacity_limit_period: "yearly"
@@ -164,17 +142,12 @@ endpoints:
   endpoint_1_static_key:
     endpoint_id: "endpoint_1_static_key"
     auth:
-      auth_type: "AUTH_TYPE_API_KEY"
       api_key: "api_key_1"
     metadata:
       account_id: "account_1"
       plan_type: "PLAN_UNLIMITED"
-  endpoint_2_jwt:
-    endpoint_id: "endpoint_2_jwt"
-    auth:
-      auth_type: "AUTH_TYPE_JWT"
-      jwt_authorized_users:
-        - "auth0|user_2"
+  endpoint_2_no_auth:
+    endpoint_id: "endpoint_2_no_auth"
     metadata:
       account_id: "account_2"
       plan_type: "PLAN_UNLIMITED"
@@ -183,27 +156,16 @@ endpoints:
 endpoints:
   endpoint_1_static_key:
     endpoint_id: "endpoint_1_static_key"
-    auth:
-      auth_type: "NO_AUTH"
     metadata:
       account_id: "account_1"
       plan_type: "PLAN_UNLIMITED"
-  endpoint_2_jwt:
-    endpoint_id: "endpoint_2_jwt"
+  endpoint_2_no_auth:
+    endpoint_id: "endpoint_2_no_auth"
     auth:
-      auth_type: "NO_AUTH"
+      api_key: "api_key_2"
     metadata:
       account_id: "account_2"
       plan_type: "PLAN_FREE"
-  endpoint_3_no_auth:
-    endpoint_id: "endpoint_3_no_auth"
-    rate_limiting:
-      throughput_limit: 50
-      capacity_limit: 200
-      capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY"
-    metadata:
-      account_id: "account_3"
-      plan_type: "PLAN_UNLIMITED"
 `,
 			expectedUpdates: []*proto.AuthDataUpdate{
 				{
@@ -221,34 +183,20 @@ endpoints:
 					},
 				},
 				{
-					EndpointId: "endpoint_2_jwt",
+					EndpointId: "endpoint_2_no_auth",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_2_jwt",
+						EndpointId: "endpoint_2_no_auth",
 						Auth: &proto.Auth{
-							AuthType: &proto.Auth_NoAuth{},
+							AuthType: &proto.Auth_StaticApiKey{
+								StaticApiKey: &proto.StaticAPIKey{
+									ApiKey: "api_key_2",
+								},
+							},
 						},
 						RateLimiting: &proto.RateLimiting{},
 						Metadata: &proto.Metadata{
 							AccountId: "account_2",
 							PlanType:  "PLAN_FREE",
-						},
-					},
-				},
-				{
-					EndpointId: "endpoint_3_no_auth",
-					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_3_no_auth",
-						Auth: &proto.Auth{
-							AuthType: &proto.Auth_NoAuth{},
-						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     50,
-							CapacityLimit:       200,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
-						},
-						Metadata: &proto.Metadata{
-							AccountId: "account_3",
-							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
 				},
@@ -338,8 +286,8 @@ func Test_handleUpdates(t *testing.T) {
 						PlanType:  "PLAN_UNLIMITED",
 					},
 				},
-				"endpoint_2_jwt": {
-					EndpointId: "endpoint_2_jwt",
+				"endpoint_2_no_auth": {
+					EndpointId: "endpoint_2_no_auth",
 					Auth: &proto.Auth{
 						AuthType: &proto.Auth_NoAuth{},
 					},
@@ -364,9 +312,9 @@ func Test_handleUpdates(t *testing.T) {
 					},
 				},
 				{
-					EndpointId: "endpoint_2_jwt",
+					EndpointId: "endpoint_2_no_auth",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_2_jwt",
+						EndpointId: "endpoint_2_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},

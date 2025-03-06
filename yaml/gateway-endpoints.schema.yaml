@@ -19,11 +19,6 @@ properties:
             api_key:
               description: "The API key string. (Required for API Key authorization.)"
               type: string
-            jwt_authorized_users:
-              description: "An array of user IDs authorized to access this account's gateway endpoints. (Required for JWT authorization.)"
-              type: array
-              items:
-                type: string
           oneOf:
             - type: object
               additionalProperties: false
@@ -32,15 +27,6 @@ properties:
               properties:
                 api_key:
                   type: string
-            - type: object
-              additionalProperties: false
-              required:
-                - jwt_authorized_users
-              properties:
-                jwt_authorized_users:
-                  type: array
-                  items:
-                    type: string
         rate_limiting:
           description: "Rate-limiting configuration for a gateway endpoint. If omitted, the endpoint has no rate-limiting constraints."
           type: object

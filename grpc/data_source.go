@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 )
 
 // AuthDataSource is an interface that abstracts the data source.

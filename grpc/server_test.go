@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
@@ -103,7 +103,7 @@ func Test_StreamUpdates(t *testing.T) {
 					Delete: false,
 				},
 				{
-					EndpointId: "endpoint_2_jwt",
+					EndpointId: "endpoint_2_no_auth",
 					Delete:     true,
 				},
 			},
@@ -173,9 +173,9 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 			},
 			updates: []*proto.AuthDataUpdate{
 				{
-					EndpointId: "endpoint_2_jwt",
+					EndpointId: "endpoint_2_no_auth",
 					GatewayEndpoint: &proto.GatewayEndpoint{
-						EndpointId: "endpoint_2_jwt",
+						EndpointId: "endpoint_2_no_auth",
 					},
 					Delete: false,
 				},
@@ -185,8 +185,8 @@ func Test_handleDataSourceUpdates(t *testing.T) {
 				},
 			},
 			expectedDataAfterUpdates: map[string]*proto.GatewayEndpoint{
-				"endpoint_2_jwt": {
-					EndpointId: "endpoint_2_jwt",
+				"endpoint_2_no_auth": {
+					EndpointId: "endpoint_2_no_auth",
 				},
 			},
 		},

@@ -3,7 +3,7 @@ package yaml
 import (
 	"fmt"
 
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 
 	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
@@ -24,8 +24,6 @@ type (
 	authYAML struct {
 		// APIKey is non-empty if the auth_type is AUTH_TYPE_API_KEY.
 		APIKey *string `yaml:"api_key,omitempty"`
-		// JWTAuthorizedUsers is non-empty if the auth_type is AUTH_TYPE_JWT.
-		JWTAuthorizedUsers []string `yaml:"jwt_authorized_users,omitempty"`
 	}
 	// rateLimitingYAML represents the RateLimiting section of a single GatewayEndpoint in the YAML file.
 	rateLimitingYAML struct {
@@ -78,17 +76,6 @@ func (a *authYAML) convertToProto() *proto.Auth {
 			},
 		}
 
-	case a.JWTAuthorizedUsers != nil:
-		authTypeJWT := &proto.Auth_Jwt{
-			Jwt: &proto.JWT{AuthorizedUsers: make(map[string]*proto.Empty)},
-		}
-		for _, user := range a.JWTAuthorizedUsers {
-			authTypeJWT.Jwt.AuthorizedUsers[user] = &proto.Empty{}
-		}
-		return &proto.Auth{
-			AuthType: authTypeJWT,
-		}
-
 	default:
 		return &proto.Auth{
 			AuthType: &proto.Auth_NoAuth{},
@@ -118,25 +105,8 @@ func (a *authYAML) validate() error {
 
 	// API Key authorization requires an API key to be set for the endpoint.
 	case a.APIKey != nil:
-		if len(a.JWTAuthorizedUsers) > 0 {
-			return fmt.Errorf("jwt_authorized_users must not be set for auth_type: AUTH_TYPE_API_KEY")
-		}
 		if a.APIKey == nil || *a.APIKey == "" {
 			return fmt.Errorf("api_key is required for auth_type: AUTH_TYPE_API_KEY")
-		}
-
-	// JWT authorization requires a list of authorized user IDs to be set for the endpoint.
-	case a.JWTAuthorizedUsers != nil:
-		if a.APIKey != nil && *a.APIKey != "" {
-			return fmt.Errorf("api_key must not be set for auth_type: AUTH_TYPE_JWT")
-		}
-		if len(a.JWTAuthorizedUsers) == 0 {
-			return fmt.Errorf("jwt_authorized_users is required for auth_type: AUTH_TYPE_JWT")
-		}
-		for _, user := range a.JWTAuthorizedUsers {
-			if user == "" {
-				return fmt.Errorf("jwt_authorized_users must not contain empty strings")
-			}
 		}
 
 	// Default case means no auth is set for the endpoint, which
@@ -144,9 +114,6 @@ func (a *authYAML) validate() error {
 	default:
 		if a.APIKey != nil && *a.APIKey != "" {
 			return fmt.Errorf("api_key must not be set if no auth is set for the endpoint")
-		}
-		if len(a.JWTAuthorizedUsers) > 0 {
-			return fmt.Errorf("jwt_authorized_users must not be set if no auth is set for the endpoint")
 		}
 	}
 

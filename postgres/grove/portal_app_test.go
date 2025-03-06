@@ -3,7 +3,7 @@ package grove
 import (
 	"testing"
 
-	"github.com/buildwithgrove/path/envoy/auth_server/proto"
+	"github.com/buildwithgrove/path-external-auth-server/proto"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 
@@ -28,7 +28,7 @@ func Test_sqlcPortalAppsToProto(t *testing.T) {
 					SecretKey:         pgtype.Text{String: "secret_key_1", Valid: true},
 				},
 				{
-					ID:                "endpoint_2_jwt_no_auth",
+					ID:                "endpoint_2_no_auth",
 					AccountID:         pgtype.Text{String: "account_2", Valid: true},
 					Plan:              pgtype.Text{String: "PLAN_FREE", Valid: true},
 					SecretKeyRequired: pgtype.Bool{Bool: false, Valid: true},
@@ -54,8 +54,8 @@ func Test_sqlcPortalAppsToProto(t *testing.T) {
 							PlanType:  "PLAN_UNLIMITED",
 						},
 					},
-					"endpoint_2_jwt_no_auth": {
-						EndpointId: "endpoint_2_jwt_no_auth",
+					"endpoint_2_no_auth": {
+						EndpointId: "endpoint_2_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},

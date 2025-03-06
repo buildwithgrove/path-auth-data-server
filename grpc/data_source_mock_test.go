@@ -12,7 +12,7 @@ package grpc
 import (
 	reflect "reflect"
 
-	proto "github.com/buildwithgrove/path/envoy/auth_server/proto"
+	proto "github.com/buildwithgrove/path-external-auth-server/proto"
 	gomock "go.uber.org/mock/gomock"
 )
 
