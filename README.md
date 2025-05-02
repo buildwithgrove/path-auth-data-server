@@ -20,13 +20,13 @@
 
 <!-- TODO_MVP(@commoddity): Move these documents over to path.grove.city -->
 
-**PADS** (PATH Auth Data Server) is a gRPC server that provides `Gateway Endpoint` data from a data source to the `Go External Authorization Server` in order to enable authorization for [the PATH Gateway](https://github.com/buildwithgrove/path). The nature of the data source is configurable, for example it could be a YAML file or a Postgres database.
+**PADS** (PATH Auth Data Server) is a gRPC server that provides `Gateway Endpoint` data from a data source to [`PEAS (PATH External Auth Server)`](https://github.com/buildwithgrove/path-external-auth-server) in order to enable authorization for [PATH](https://github.com/buildwithgrove/path). 
+
+The nature of the data source is configurable, for example it could be a YAML file or a Postgres database.
 
 ## 2. Gateway Endpoints
 
-[The PATH repo](https://github.com/buildwithgrove/path) contains [the `auth_server` package](https://github.com/buildwithgrove/path/tree/main/envoy/auth_server) which contains the `Go External Authorization Server`.
-
-[This package also defines the `gateway_endpoint.proto` file](https://github.com/buildwithgrove/path/blob/main/envoy/auth_server/proto/gateway_endpoint.proto), which contains the definitions for the `GatewayEndpoints` that PADS must provides to the `Go External Authorization Server`.
+The [PEAS repo](https://github.com/buildwithgrove/path-external-auth-server) contains [the `proto` package](https://github.com/buildwithgrove/path-external-auth-server/tree/main/proto) which contains [the `gateway_endpoint.proto` file](https://github.com/buildwithgrove/path-external-auth-server/blob/main/proto/gateway_endpoint.proto), which contains the definitions for the `GatewayEndpoints` that PADS must provides to `PEAS`.
 
 A single `GatewayEndpoint` represents a single authorized endpoint of the PATH Gateway service, which may be authorized for use by any number of users.
 
@@ -62,7 +62,7 @@ type GatewayEndpoint struct {
 
 ## 3. Data Sources
 
-The `server` package contains the `DataSource` interface, which abstracts the data source that provides GatewayEndpoints to the `Go External Authorization Server`.
+The `grpc` package contains the [`AuthDataSource`](https://github.com/buildwithgrove/path-auth-data-server/blob/main/grpc/data_source.go) interface, which abstracts the data source that provides `GatewayEndpoint`s to `PEAS`.
 
 ```go
 type GatewayEndpointsClient interface {
@@ -126,6 +126,6 @@ If the `POSTGRES_CONNECTION_STRING` environment variable is set, PADS will conne
 
 #### 3.2.1. Grove Portal DB Driver
 
-A highly opinionated Postgres driver that is compatible with the Grove Portal DB is provided in this repository.
+A highly opinionated Postgres driver that is compatible with the Grove Portal DB is provided in this repository for use in the Grove Portal's authentication implementation.
 
 For more details, see the [Grove Portal DB Driver README.md](https://github.com/buildwithgrove/path-auth-data-server/blob/main/postgres/grove/README.md) documentation.
