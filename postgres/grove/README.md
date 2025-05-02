@@ -26,11 +26,9 @@
 The [Grove Postgres Driver schema file](https://github.com/buildwithgrove/path-auth-data-server/blob/main/postgres/grove/sqlc/grove_schema.sql)
 uses a subset of tables from the existing Grove Portal database schema, allowing `PATH` to source its authorization data from the existing Grove Portal DB.
 
-It converts the data stored in the `portal_applications` table and its associated tables into the `proto.GatewayEndpoint` format expected by PATH's Go External Authorization Server.
+It converts the data stored in the `portal_applications` table and its associated tables into the `proto.GatewayEndpoint` format expected by `PEAS`.
 
-It also listens for updates to the Grove Portal DB and streams updates to the `Go External Authorization Server` in real time as changes are made to the connected Postgres database.
-
-[For the full Grove Portal DB schema, refer to the database schema defined in the Portal HTTP DB (PHD) repository](https://github.com/pokt-foundation/portal-http-db/blob/master/postgres-driver/sqlc/schema.sql).
+It also listens for updates to the Grove Portal DB and streams updates to `PEAS` in real time as changes are made to the connected Postgres database.
 
 ### Entity Relationship Diagram
 
