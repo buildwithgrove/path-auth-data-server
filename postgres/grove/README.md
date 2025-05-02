@@ -75,7 +75,7 @@ erDiagram
 
 <div align="center">
 <a href="https://docs.sqlc.dev/en/stable">
-<img src="https://docs.sqlc.dev/en/stable/_static/logo.png" alt="SQLC logo" width="150"/>
+<img src="../../.github/img/sqlc.png" alt="SQLC logo" width="150"/>
 <div>https://docs.sqlc.dev/en/stable</div>
 </a>
 </div>
