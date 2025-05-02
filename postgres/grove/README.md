@@ -75,7 +75,7 @@ erDiagram
 
 <div align="center">
 <a href="https://docs.sqlc.dev/en/stable">
-<img src="../../.github/img/sqlc.png" alt="SQLC logo" width="150"/>
+<img src="https://github.com/buildwithgrove/path-auth-data-server/blob/main/.github/img/sqlc.png?raw=true" alt="SQLC logo" width="150"/>
 <div>https://docs.sqlc.dev/en/stable</div>
 </a>
 </div>
