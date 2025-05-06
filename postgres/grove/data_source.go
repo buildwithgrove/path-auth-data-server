@@ -1,9 +1,7 @@
 package grove
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"regexp"
 
@@ -196,9 +194,6 @@ func (d *postgresDataSource) processPortalApplicationChanges(ctx context.Context
 	var changeIDs []int32
 
 	for _, change := range changes {
-
-		PrettyLog("DEBUG PADS - received change", change)
-
 		if change.IsDelete {
 			update := &proto.AuthDataUpdate{
 				EndpointId: change.PortalAppID,
@@ -232,16 +227,4 @@ func (d *postgresDataSource) processPortalApplicationChanges(ctx context.Context
 	}
 
 	return nil
-}
-
-func PrettyLog(args ...interface{}) {
-	for _, arg := range args {
-		var prettyJSON bytes.Buffer
-		jsonArg, _ := json.Marshal(arg)
-		str := string(jsonArg)
-		_ = json.Indent(&prettyJSON, []byte(str), "", "    ")
-		output := prettyJSON.String()
-
-		fmt.Println(output)
-	}
 }
