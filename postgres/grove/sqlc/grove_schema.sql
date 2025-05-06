@@ -28,7 +28,9 @@ CREATE TABLE accounts (
 -- Portal Application Tables
 CREATE TABLE portal_applications (
     id VARCHAR(24) PRIMARY KEY UNIQUE, -- GatewayEndpoint.EndpointId
-    account_id VARCHAR(10) REFERENCES accounts(id)
+    account_id VARCHAR(10) REFERENCES accounts(id),
+    deleted BOOLEAN NOT NULL DEFAULT false,
+    deleted_at TIMESTAMPTZ NULL
 ); 
 
 -- Portal Application Settings Table

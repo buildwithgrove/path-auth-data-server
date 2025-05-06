@@ -18,6 +18,7 @@ LEFT JOIN accounts a
     ON pa.account_id = a.id
 LEFT JOIN pay_plans p 
     ON a.plan_type = p.plan_type
+WHERE pa.deleted = false
 GROUP BY 
     pa.id,
     pas.secret_key,
@@ -42,7 +43,7 @@ LEFT JOIN accounts a
     ON pa.account_id = a.id
 LEFT JOIN pay_plans p 
     ON a.plan_type = p.plan_type
-WHERE pa.id = $1
+WHERE pa.id = $1 AND pa.deleted = false
 GROUP BY 
     pa.id,
     pas.secret_key,
