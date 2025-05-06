@@ -50,6 +50,8 @@ erDiagram
     PORTAL_APPLICATIONS {
         VARCHAR(24) id PK
         VARCHAR(10) account_id FK
+        BOOLEAN deleted
+        TIMESTAMP deleted_at
     }
 
     PORTAL_APPLICATION_SETTINGS {
