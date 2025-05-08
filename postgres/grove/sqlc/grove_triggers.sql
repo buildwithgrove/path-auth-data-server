@@ -46,11 +46,6 @@ BEGIN
         FROM portal_applications pa
         WHERE pa.account_id = COALESCE(NEW.id, OLD.id);
 
-    ELSIF TG_TABLE_NAME = 'pay_plans' THEN
-        SELECT array_agg(pa.id) INTO portal_app_ids
-        FROM portal_applications pa
-        JOIN accounts a ON pa.account_id = a.id
-        WHERE a.plan_type = COALESCE(NEW.plan_type, OLD.plan_type);
     END IF;
 
     -- Remove duplicates
@@ -81,8 +76,4 @@ FOR EACH ROW EXECUTE FUNCTION log_portal_application_changes();
 
 CREATE TRIGGER accounts_change_trigger
 AFTER INSERT OR UPDATE OR DELETE ON accounts
-FOR EACH ROW EXECUTE FUNCTION log_portal_application_changes();
-
-CREATE TRIGGER pay_plans_change_trigger
-AFTER INSERT OR UPDATE OR DELETE ON pay_plans
 FOR EACH ROW EXECUTE FUNCTION log_portal_application_changes();

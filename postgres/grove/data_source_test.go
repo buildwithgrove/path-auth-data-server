@@ -50,11 +50,6 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     30,
-							CapacityLimit:       1_000,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
-						},
 						Metadata: &proto.Metadata{
 							AccountId: "account_1",
 							PlanType:  "PLAN_FREE",
@@ -69,7 +64,6 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 								},
 							},
 						},
-						RateLimiting: &proto.RateLimiting{},
 						Metadata: &proto.Metadata{
 							AccountId: "account_2",
 							PlanType:  "PLAN_UNLIMITED",
@@ -84,11 +78,6 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 								},
 							},
 						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     30,
-							CapacityLimit:       1_000,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
-						},
 						Metadata: &proto.Metadata{
 							AccountId: "account_3",
 							PlanType:  "PLAN_FREE",
@@ -98,11 +87,6 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 						EndpointId: "endpoint_4_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
-						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     30,
-							CapacityLimit:       1_000,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Metadata: &proto.Metadata{
 							AccountId: "account_1",
@@ -118,7 +102,6 @@ func Test_Integration_FetchAuthDataSync(t *testing.T) {
 								},
 							},
 						},
-						RateLimiting: &proto.RateLimiting{},
 						Metadata: &proto.Metadata{
 							AccountId: "account_2",
 							PlanType:  "PLAN_UNLIMITED",

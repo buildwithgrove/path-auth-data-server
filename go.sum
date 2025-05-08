@@ -8,8 +8,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 h1:TngWCqHvy9oXAN6lEVMRuU21PR1EtLVZJmdB18Gu3Rw=
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5/go.mod h1:lmUJ/7eu/Q8D7ML55dXQrVaamCz2vxCfdQBasLZfHKk=
-github.com/buildwithgrove/path-external-auth-server v0.0.3 h1:DCmWXUPHhutDbLm0c35dtGDcZJP8W9UOTcqBIyIcIAE=
-github.com/buildwithgrove/path-external-auth-server v0.0.3/go.mod h1:nMyXpDt4ztMtqXKkVZXNMdLvqvmT04UTbGFgbe1ZecM=
+github.com/buildwithgrove/path-external-auth-server v0.0.8 h1:QCN668HKBEPHzKdxOnVL1rcc4dzJNGHtXQenxEPQ9rE=
+github.com/buildwithgrove/path-external-auth-server v0.0.8/go.mod h1:nMyXpDt4ztMtqXKkVZXNMdLvqvmT04UTbGFgbe1ZecM=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=
 github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/containerd/continuity v0.4.3 h1:6HVkalIp+2u1ZLH1J/pYX2oBVXlJZvh1X1A7bEZ9Su8=

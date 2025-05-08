@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/buildwithgrove/path-external-auth-server/proto"
-
-	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
 /* ----------------------------- GatewayEndpoint YAML Struct ----------------------------- */
@@ -15,8 +13,6 @@ type (
 	gatewayEndpointYAML struct {
 		// The authorization configuration for a gateway endpoint. If omitted, the endpoint will not require any authorization.
 		Auth authYAML `yaml:"auth"`
-		// The rate limiting configuration for a gateway endpoint. May be omitted for endpoints with no rate limiting.
-		RateLimiting rateLimitingYAML `yaml:"rate_limiting"`
 		// Metadata is an optional map of string keys to string values for additional information about the gateway endpoint.
 		Metadata metadataYAML `yaml:"metadata"`
 	}
@@ -24,15 +20,6 @@ type (
 	authYAML struct {
 		// APIKey is non-empty if the auth_type is AUTH_TYPE_API_KEY.
 		APIKey *string `yaml:"api_key,omitempty"`
-	}
-	// rateLimitingYAML represents the RateLimiting section of a single GatewayEndpoint in the YAML file.
-	rateLimitingYAML struct {
-		// ThroughputLimit defines the endpoint's per-second (TPS) rate limit.
-		ThroughputLimit int `yaml:"throughput_limit"`
-		// CapacityLimit defines the endpoint's rate limit over longer periods.
-		CapacityLimit int `yaml:"capacity_limit"`
-		// CapacityLimitPeriod defines the period over which the capacity limit is enforced.
-		CapacityLimitPeriod grpc_server.CapacityLimitPeriod `yaml:"capacity_limit_period"`
 	}
 	metadataYAML struct {
 		Name        string `yaml:"name"`        // The name of the GatewayEndpoint
@@ -48,11 +35,6 @@ func (e *gatewayEndpointYAML) convertToProto(endpointID string) *proto.GatewayEn
 	return &proto.GatewayEndpoint{
 		EndpointId: endpointID,
 		Auth:       e.Auth.convertToProto(),
-		RateLimiting: &proto.RateLimiting{
-			ThroughputLimit:     int32(e.RateLimiting.ThroughputLimit),
-			CapacityLimit:       int32(e.RateLimiting.CapacityLimit),
-			CapacityLimitPeriod: grpc_server.CapacityLimitPeriods[e.RateLimiting.CapacityLimitPeriod],
-		},
 		Metadata: &proto.Metadata{
 			Name:        e.Metadata.Name,
 			AccountId:   e.Metadata.AccountId,
@@ -91,9 +73,6 @@ func (e *gatewayEndpointYAML) validate(endpointID string) error {
 	if err := e.Auth.validate(); err != nil {
 		return err
 	}
-	if err := e.RateLimiting.validate(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -117,26 +96,5 @@ func (a *authYAML) validate() error {
 		}
 	}
 
-	return nil
-}
-
-// rateLimitingYAML.validate ensures that the rate limiting section of a GatewayEndpoint
-// is valid by checking that the capacity limit period is one of the allowed values.
-func (r *rateLimitingYAML) validate() error {
-	if r.ThroughputLimit < 0 {
-		return fmt.Errorf("throughput_limit must not be negative")
-	}
-	if r.CapacityLimit < 0 {
-		return fmt.Errorf("capacity_limit must not be negative")
-	}
-	if r.CapacityLimit > 0 {
-		if !r.CapacityLimitPeriod.IsValid() {
-			return fmt.Errorf("capacity_limit_period must be one of %s, %s, or %s",
-				grpc_server.CapacityLimitPeriodDaily,
-				grpc_server.CapacityLimitPeriodWeekly,
-				grpc_server.CapacityLimitPeriodMonthly,
-			)
-		}
-	}
 	return nil
 }

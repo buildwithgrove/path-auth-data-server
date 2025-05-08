@@ -5,8 +5,6 @@ import (
 
 	"github.com/buildwithgrove/path-external-auth-server/proto"
 	"github.com/stretchr/testify/require"
-
-	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
 func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
@@ -23,11 +21,6 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 				Auth: authYAML{
 					APIKey: stringPtr("some_api_key"),
 				},
-				RateLimiting: rateLimitingYAML{
-					ThroughputLimit:     30,
-					CapacityLimit:       100_000,
-					CapacityLimitPeriod: grpc_server.CapacityLimitPeriodMonthly,
-				},
 				Metadata: metadataYAML{
 					Name:      "grove_city_test_endpoint",
 					AccountId: "account_1",
@@ -42,11 +35,6 @@ func Test_gatewayEndpointYAML_convertToProto(t *testing.T) {
 							ApiKey: "some_api_key",
 						},
 					},
-				},
-				RateLimiting: &proto.RateLimiting{
-					ThroughputLimit:     30,
-					CapacityLimit:       100_000,
-					CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 				},
 				Metadata: &proto.Metadata{
 					Name:      "grove_city_test_endpoint",
@@ -119,11 +107,6 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 				Auth: authYAML{
 					APIKey: stringPtr("some_api_key"),
 				},
-				RateLimiting: rateLimitingYAML{
-					ThroughputLimit:     30,
-					CapacityLimit:       100_000,
-					CapacityLimitPeriod: grpc_server.CapacityLimitPeriodMonthly,
-				},
 			},
 			wantErr: false,
 		},
@@ -133,20 +116,6 @@ func Test_gatewayEndpointYAML_validate(t *testing.T) {
 			input: gatewayEndpointYAML{
 				Auth: authYAML{
 					APIKey: stringPtr("some_api_key"),
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name:       "invalid capacity_limit_period",
-			endpointID: "endpoint_1_static_key",
-			input: gatewayEndpointYAML{
-				Auth: authYAML{
-					APIKey: stringPtr("some_api_key"),
-				},
-				RateLimiting: rateLimitingYAML{
-					CapacityLimit:       100_000,
-					CapacityLimitPeriod: "CAPACITY_LIMIT_PERIOD_YEARLY",
 				},
 			},
 			wantErr: true,

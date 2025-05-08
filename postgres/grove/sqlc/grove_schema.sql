@@ -12,17 +12,10 @@
 -- The `portal_applications` and its associated tables are converted to the `proto.GatewayEndpoint` format.
 -- The inline comments indicate the fields in the `proto.GatewayEndpoint` that correspond to the columns in the `portal_applications` table.
 
--- Plans Tables
-CREATE TABLE pay_plans (
-    plan_type VARCHAR(25) PRIMARY KEY,
-    monthly_relay_limit INT NOT NULL, -- GatewayEndpoint.RateLimiting.CapacityLimit
-    throughput_limit INT NOT NULL -- GatewayEndpoint.RateLimiting.ThroughputLimit
-);
-
 -- Accounts Tables
 CREATE TABLE accounts (
     id VARCHAR(10) PRIMARY KEY, -- GatewayEndpoint.Metadata.AccountId
-    plan_type VARCHAR(25) NOT NULL REFERENCES pay_plans(plan_type) -- GatewayEndpoint.Metadata.PlanType
+    plan_type VARCHAR(25)
 );
 
 -- Portal Application Tables

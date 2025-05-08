@@ -60,24 +60,18 @@ SELECT
     pas.secret_key,
     pas.secret_key_required,
     pa.account_id,
-    a.plan_type AS plan,
-    p.throughput_limit AS throughput_limit,
-    p.monthly_relay_limit AS capacity_limit
+    a.plan_type AS plan
 FROM portal_applications pa
 LEFT JOIN portal_application_settings pas
     ON pa.id = pas.application_id
 LEFT JOIN accounts a 
     ON pa.account_id = a.id
-LEFT JOIN pay_plans p 
-    ON a.plan_type = p.plan_type
 WHERE pa.id = $1 AND pa.deleted = false
 GROUP BY 
     pa.id,
     pas.secret_key,
     pas.secret_key_required,
-    a.plan_type,
-    p.throughput_limit,
-    p.monthly_relay_limit
+    a.plan_type
 `
 
 type SelectPortalApplicationRow struct {
@@ -86,8 +80,6 @@ type SelectPortalApplicationRow struct {
 	SecretKeyRequired pgtype.Bool `json:"secret_key_required"`
 	AccountID         pgtype.Text `json:"account_id"`
 	Plan              pgtype.Text `json:"plan"`
-	ThroughputLimit   pgtype.Int4 `json:"throughput_limit"`
-	CapacityLimit     pgtype.Int4 `json:"capacity_limit"`
 }
 
 func (q *Queries) SelectPortalApplication(ctx context.Context, id string) (SelectPortalApplicationRow, error) {
@@ -99,8 +91,6 @@ func (q *Queries) SelectPortalApplication(ctx context.Context, id string) (Selec
 		&i.SecretKeyRequired,
 		&i.AccountID,
 		&i.Plan,
-		&i.ThroughputLimit,
-		&i.CapacityLimit,
 	)
 	return i, err
 }
@@ -112,24 +102,18 @@ SELECT
     pas.secret_key,
     pas.secret_key_required,
     pa.account_id,
-    a.plan_type AS plan,
-    p.throughput_limit AS throughput_limit,
-    p.monthly_relay_limit AS capacity_limit
+    a.plan_type AS plan
 FROM portal_applications pa
 LEFT JOIN portal_application_settings pas
     ON pa.id = pas.application_id
 LEFT JOIN accounts a 
     ON pa.account_id = a.id
-LEFT JOIN pay_plans p 
-    ON a.plan_type = p.plan_type
 WHERE pa.deleted = false
 GROUP BY 
     pa.id,
     pas.secret_key,
     pas.secret_key_required,
-    a.plan_type,
-    p.throughput_limit,
-    p.monthly_relay_limit
+    a.plan_type
 `
 
 type SelectPortalApplicationsRow struct {
@@ -138,8 +122,6 @@ type SelectPortalApplicationsRow struct {
 	SecretKeyRequired pgtype.Bool `json:"secret_key_required"`
 	AccountID         pgtype.Text `json:"account_id"`
 	Plan              pgtype.Text `json:"plan"`
-	ThroughputLimit   pgtype.Int4 `json:"throughput_limit"`
-	CapacityLimit     pgtype.Int4 `json:"capacity_limit"`
 }
 
 // This file is used by SQLC to autogenerate the Go code needed by the database driver.
@@ -160,8 +142,6 @@ func (q *Queries) SelectPortalApplications(ctx context.Context) ([]SelectPortalA
 			&i.SecretKeyRequired,
 			&i.AccountID,
 			&i.Plan,
-			&i.ThroughputLimit,
-			&i.CapacityLimit,
 		); err != nil {
 			return nil, err
 		}

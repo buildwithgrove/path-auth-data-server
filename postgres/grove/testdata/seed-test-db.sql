@@ -1,15 +1,6 @@
 -- This file updates the ephemeral Docker Postgres test database initialized in postgres/docker_test.go
 -- with just enough data to run the test of the database driver using an actual Postgres DB instance.
 
--- Insert into the 'pay_plans' table
-INSERT INTO pay_plans (
-    plan_type,
-    monthly_relay_limit,
-    throughput_limit
-)
-VALUES ('PLAN_FREE', 1000, 30),
-    ('PLAN_UNLIMITED', 0, 0);
- 
 -- Insert into the 'accounts' table
 INSERT INTO accounts (id, plan_type)
 VALUES ('account_1', 'PLAN_FREE'),

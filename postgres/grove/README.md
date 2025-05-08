@@ -36,12 +36,6 @@ This ERD shows the subset of tables from the full Grove Portal DB schema that ar
 
 ```mermaid
 erDiagram
-    PAY_PLANS {
-        VARCHAR(25) plan_type PK
-        INT monthly_relay_limit
-        INT throughput_limit
-    }
-
     ACCOUNTS {
         VARCHAR(10) id PK
         VARCHAR(25) plan_type FK
@@ -68,7 +62,6 @@ erDiagram
         TIMESTAMP changed_at
     }
 
-    PAY_PLANS ||--o{ ACCOUNTS : "plan_type"
     ACCOUNTS ||--o{ PORTAL_APPLICATIONS : "id"
     PORTAL_APPLICATIONS ||--o{ PORTAL_APPLICATION_SETTINGS : "id"
 ```

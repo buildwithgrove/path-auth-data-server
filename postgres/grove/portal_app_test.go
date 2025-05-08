@@ -33,8 +33,6 @@ func Test_sqlcPortalAppsToProto(t *testing.T) {
 					Plan:              pgtype.Text{String: "PLAN_FREE", Valid: true},
 					SecretKeyRequired: pgtype.Bool{Bool: false, Valid: true},
 					SecretKey:         pgtype.Text{String: "secret_key_2", Valid: true},
-					CapacityLimit:     pgtype.Int4{Int32: 30, Valid: true},
-					ThroughputLimit:   pgtype.Int4{Int32: 1000, Valid: true},
 				},
 			},
 			expected: &proto.AuthDataResponse{
@@ -48,7 +46,6 @@ func Test_sqlcPortalAppsToProto(t *testing.T) {
 								},
 							},
 						},
-						RateLimiting: &proto.RateLimiting{},
 						Metadata: &proto.Metadata{
 							AccountId: "account_1",
 							PlanType:  "PLAN_UNLIMITED",
@@ -58,11 +55,6 @@ func Test_sqlcPortalAppsToProto(t *testing.T) {
 						EndpointId: "endpoint_2_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
-						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     1_000,
-							CapacityLimit:       30,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Metadata: &proto.Metadata{
 							AccountId: "account_2",

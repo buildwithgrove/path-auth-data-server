@@ -33,7 +33,6 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 								},
 							},
 						},
-						RateLimiting: &proto.RateLimiting{},
 						Metadata: &proto.Metadata{
 							AccountId: "account_1",
 							PlanType:  "PLAN_UNLIMITED",
@@ -44,11 +43,6 @@ func Test_LoadGatewayEndpointsFromYAML(t *testing.T) {
 						EndpointId: "endpoint_2_no_auth",
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
-						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     30,
-							CapacityLimit:       100_000,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Metadata: &proto.Metadata{
 							AccountId: "account_2",
@@ -79,24 +73,6 @@ endpoints:
   "":
     auth:
       api_key: "api_key_1"
-    metadata:
-      account_id: "account_1"
-      plan_type: "PLAN_UNLIMITED"
-`,
-			wantErr: true,
-		},
-		{
-			name:     "should return error for invalid capacity_limit_period",
-			filePath: "./testdata/invalid_capacity_limit_period.yaml",
-			fileContents: `
-endpoints:
-  endpoint_1_static_key:
-    endpoint_id: "endpoint_1_static_key"
-    auth:
-      api_key: "api_key_1"
-    rate_limiting:
-      capacity_limit: 100
-      capacity_limit_period: "yearly"
     metadata:
       account_id: "account_1"
       plan_type: "PLAN_UNLIMITED"
@@ -175,7 +151,6 @@ endpoints:
 						Auth: &proto.Auth{
 							AuthType: &proto.Auth_NoAuth{},
 						},
-						RateLimiting: &proto.RateLimiting{},
 						Metadata: &proto.Metadata{
 							AccountId: "account_1",
 							PlanType:  "PLAN_UNLIMITED",
@@ -193,7 +168,6 @@ endpoints:
 								},
 							},
 						},
-						RateLimiting: &proto.RateLimiting{},
 						Metadata: &proto.Metadata{
 							AccountId: "account_2",
 							PlanType:  "PLAN_FREE",

@@ -35,7 +35,7 @@ A single `GatewayEndpoint` represents a single authorized endpoint of the PATH G
 // PADS must provide to the `Go External Authorization Server`.
 type GatewayEndpoint struct {
     EndpointId string
-    // AuthType will be one of the following structs:
+    // AuthType will be exactly one of the following structs:
     AuthType {
         // 1. No Authorization Required
         NoAuth struct{}
@@ -43,11 +43,6 @@ type GatewayEndpoint struct {
         StaticApiKey struct {
           ApiKey string
         }
-    }
-    RateLimiting struct {
-        ThroughputLimit int32
-        CapacityLimit int32
-        CapacityLimitPeriod CapacityLimitPeriod
     }
     Metadata struct {
         Name string
@@ -95,7 +90,7 @@ endpoints:
       # The sub-field 'api_key' is required for API Key Authorization.
       # If auth is not set, the endpoint will be treated as using no authorization.
       api_key: "api_key_1" # For API Key Authorization, the API key string is required.
-    
+
     metadata: # Metadata fields may be any key-value pairs and are optional.
       plan_type: "PLAN_UNLIMITED" # Example of a key-value pair (in this case, a pricing plan).
       account_id: "account_1" # Example of a key-value pair (in this case, an account ID).
@@ -103,11 +98,6 @@ endpoints:
 
   # 2. Example of a gateway endpoint with no authorization (the auth field is omitted entirely in this case).
   endpoint_2_no_auth:
-    rate_limiting: # This endpoint has a rate limit defined
-      throughput_limit: 30 # Throughput limit defines the endpoint's per-second (TPS) rate limit.
-      capacity_limit: 100000 # Capacity limit defines the endpoint's rate limit over longer periods.
-      capacity_limit_period: "CAPACITY_LIMIT_PERIOD_MONTHLY" # Capacity limit period defines the period over which the capacity limit is enforced.
-    
     metadata:
       plan_type: "PLAN_FREE"
       account_id: "account_2"

@@ -5,8 +5,6 @@ import (
 
 	"github.com/buildwithgrove/path-external-auth-server/proto"
 	"github.com/stretchr/testify/require"
-
-	grpc_server "github.com/buildwithgrove/path-auth-data-server/grpc"
 )
 
 func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
@@ -22,11 +20,6 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 					"endpoint_1_static_key": {
 						Auth: authYAML{
 							APIKey: stringPtr("some_api_key"),
-						},
-						RateLimiting: rateLimitingYAML{
-							ThroughputLimit:     30,
-							CapacityLimit:       100_000,
-							CapacityLimitPeriod: grpc_server.CapacityLimitPeriodMonthly,
 						},
 						Metadata: metadataYAML{
 							Name:      "grove_city_test_endpoint",
@@ -46,11 +39,6 @@ func Test_gatewayEndpointsYAML_convertToProto(t *testing.T) {
 									ApiKey: "some_api_key",
 								},
 							},
-						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     30,
-							CapacityLimit:       100_000,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_MONTHLY,
 						},
 						Metadata: &proto.Metadata{
 							Name:      "grove_city_test_endpoint",
@@ -85,20 +73,10 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 				Endpoints: map[string]gatewayEndpointYAML{
 					"endpoint_1_no_auth": {
 						Auth: authYAML{},
-						RateLimiting: rateLimitingYAML{
-							ThroughputLimit:     30,
-							CapacityLimit:       100_000,
-							CapacityLimitPeriod: grpc_server.CapacityLimitPeriodMonthly,
-						},
 					},
 					"endpoint_1_static_key": {
 						Auth: authYAML{
 							APIKey: stringPtr("some_api_key"),
-						},
-						RateLimiting: rateLimitingYAML{
-							ThroughputLimit:     50,
-							CapacityLimit:       200_000,
-							CapacityLimitPeriod: grpc_server.CapacityLimitPeriodDaily,
 						},
 					},
 				},
@@ -112,21 +90,6 @@ func Test_gatewayEndpointsYAML_validate(t *testing.T) {
 					"": {
 						Auth: authYAML{
 							APIKey: stringPtr("some_api_key"),
-						},
-					},
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid endpoint with incorrect capacity_limit_period",
-			input: gatewayEndpointsYAML{
-				Endpoints: map[string]gatewayEndpointYAML{
-					"endpoint_1_no_auth": {
-						Auth: authYAML{},
-						RateLimiting: rateLimitingYAML{
-							CapacityLimit:       100_000,
-							CapacityLimitPeriod: "CAPACITY_LIMIT_PERIOD_YEARLY",
 						},
 					},
 				},

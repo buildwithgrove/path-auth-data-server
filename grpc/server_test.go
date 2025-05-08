@@ -32,11 +32,6 @@ func Test_FetchAuthDataSync(t *testing.T) {
 								},
 							},
 						},
-						RateLimiting: &proto.RateLimiting{
-							ThroughputLimit:     100,
-							CapacityLimit:       1000,
-							CapacityLimitPeriod: proto.CapacityLimitPeriod_CAPACITY_LIMIT_PERIOD_DAILY,
-						},
 						Metadata: &proto.Metadata{
 							AccountId: "account_1",
 							PlanType:  "PLAN_FREE",
