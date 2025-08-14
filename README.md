@@ -1,3 +1,7 @@
+**Update, August 2025**: _This repo (PADS) is no longer needed. It's business logic was rolled over into [PEAS](https://github.com/buildwithgrove/path-external-auth-server)._
+
+---
+
 <div align="center">
 <h1>🐾 PADS<br/>PATH Auth Data Server</h1>
 <img src="https://storage.googleapis.com/grove-brand-assets/Presskit/Logo%20Joined-2.png" alt="Grove logo" width="500"/>
